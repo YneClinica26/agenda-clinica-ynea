@@ -20,3 +20,178 @@ function openCita(d={}){$('citaDialogTitle').textContent='Nueva cita';$('citaId'
 async function saveCita(){const row={fecha:$('citaFecha').value,hora:$('citaHora').value,duracion_minutos:Number($('citaDuracion').value),estado:$('citaEstado').value,paciente_id:$('citaPacienteId').value||null,profesional_id:$('citaProfesional').value||null,consulta_id:$('citaConsulta').value||null,tipo_cita_id:$('citaTipo').value||null,observaciones:$('citaObs').value||null};if(!row.paciente_id)return alert('Selecciona un paciente.');const id=$('citaId').value,res=id?await supabase.from('citas').update(row).eq('id',id):await supabase.from('citas').insert(row);if(res.error)return alert(res.error.message);$('citaDialog').close();loadAll()}async function insert(table,row){const res=await supabase.from(table).insert(row);if(res.error)return alert(res.error.message);loadAll()}
 function setupEvents(){document.querySelectorAll('nav button').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('main section').forEach(s=>s.classList.remove('active'));$(btn.dataset.view).classList.add('active');renderAll()});$('prevWeek').onclick=()=>{weekStart=addDays(weekStart,-7);renderWeek()};$('nextWeek').onclick=()=>{weekStart=addDays(weekStart,7);renderWeek()};$('todayWeek').onclick=()=>{weekStart=monday(new Date());renderWeek()};$('weekPicker').onchange=()=>{weekStart=monday(new Date($('weekPicker').value));renderWeek()};$('filterProfessional').onchange=renderWeek;$('mapProf').onchange=renderMap;$('allTipos').onclick=()=>saveMap(true);$('noneTipos').onclick=()=>saveMap(false);$('saveTiposProf').onclick=()=>saveMap();$('savePaciente').onclick=()=>insert('pacientes',{nombre:$('pacNombre').value,telefono:$('pacTelefono').value,email:$('pacEmail').value,observaciones:$('pacObs').value});$('buscarPaciente').oninput=renderPatients;$('saveProfesional').onclick=()=>insert('profesionales',{nombre:$('profNombre').value});$('saveConsulta').onclick=()=>insert('consultas',{nombre:$('consultaNombre').value});$('saveTipo').onclick=()=>insert('tipos_cita',{nombre:$('tipoNombre').value,duracion_minutos:Number($('tipoDuracion').value),descripcion:$('tipoDescripcion').value});$('saveBloqueo').onclick=()=>insert('bloqueos',{profesional_id:$('bloqProf').value||null,todos_profesionales:!$('bloqProf').value,fecha:$('bloqFecha').value,hora_inicio:$('bloqInicio').value,hora_fin:$('bloqFin').value,motivo:$('bloqMotivo').value});$('citaProfesional').onchange=()=>updateTipoOptions();$('citaTipo').onchange=applyTipoDuration;$('saveCita').onclick=saveCita;$('deleteCita').onclick=async()=>{const id=$('citaId').value;if(!confirm('¿Eliminar esta cita?'))return;await supabase.from('citas').delete().eq('id',id);$('citaDialog').close();loadAll()};$('cancelCita').onclick=()=>$('citaDialog').close();$('citaPacienteSearch').oninput=()=>{const q=norm($('citaPacienteSearch').value),rows=state.pacientes.filter(p=>norm(`${p.nombre} ${p.telefono} ${p.email}`).includes(q)).slice(0,10);$('pacienteResults').innerHTML=rows.map(p=>`<div class="searchItem" data-id="${p.id}"><strong>${p.nombre}</strong><br><span>${p.telefono||''} ${p.email||''}</span></div>`).join('');$('pacienteResults').style.display='block';document.querySelectorAll('.searchItem').forEach(i=>i.onclick=()=>{const p=state.pacientes.find(x=>x.id===i.dataset.id);$('citaPacienteId').value=p.id;$('citaPacienteSearch').value=p.nombre;$('pacienteResults').style.display='none'})};$('quickPaciente').onclick=async()=>{const nombre=prompt('Nombre del nuevo paciente');if(!nombre)return;const telefono=prompt('Teléfono')||'',email=prompt('Email')||'';const res=await supabase.from('pacientes').insert({nombre,telefono,email}).select().single();if(res.error)return alert(res.error.message);state.pacientes.push(res.data);$('citaPacienteId').value=res.data.id;$('citaPacienteSearch').value=res.data.nombre};horas.forEach(h=>$('citaHora').insertAdjacentHTML('beforeend',`<option>${h}</option>`));$('avisosFecha').value=iso(new Date());$('bloqFecha').value=iso(new Date())}
 setupEvents();loadAll().catch(e=>alert('Error conectando con Supabase: '+e.message));
+
+
+// ===== YNEA V3: eliminar y limpiar duplicados =====
+function _keyDup(v){
+  return String(v||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
+async function deleteRowYnea(table, id, label){
+  if(!confirm('¿Eliminar ' + label + '?')) return;
+  const r = await supabase.from(table).delete().eq('id', id);
+  if(r.error){
+    alert('No se pudo eliminar: ' + r.error.message);
+    return;
+  }
+  await loadAll();
+}
+
+async function deleteProfesional(id){ await deleteRowYnea('profesionales', id, 'este profesional'); }
+async function deleteConsulta(id){ await deleteRowYnea('consultas', id, 'esta consulta'); }
+async function deleteTipo(id){ await deleteRowYnea('tipos_cita', id, 'este tipo de cita'); }
+async function deletePaciente(id){ await deleteRowYnea('pacientes', id, 'este paciente'); }
+
+async function mergeDuplicados(table, rows, label, updateRefs){
+  const groups = new Map();
+  rows.forEach(r=>{
+    const k=_keyDup(r.nombre);
+    if(!k) return;
+    if(!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(r);
+  });
+
+  let merged = 0;
+
+  for(const group of groups.values()){
+    if(group.length < 2) continue;
+
+    const keep = group[0];
+    const dups = group.slice(1);
+
+    for(const dup of dups){
+      await updateRefs(dup.id, keep.id);
+      const del = await supabase.from(table).delete().eq('id', dup.id);
+      if(del.error){
+        alert('Error eliminando duplicado de ' + label + ': ' + del.error.message);
+        return merged;
+      }
+      merged++;
+    }
+  }
+  return merged;
+}
+
+async function limpiarDuplicadosTodo(){
+  if(!confirm('Esto fusionará duplicados con el mismo nombre y conservará sus citas. ¿Continuar?')) return;
+
+  try{
+    let total = 0;
+
+    total += await mergeDuplicados('pacientes', state.pacientes, 'pacientes', async(oldId,newId)=>{
+      await supabase.from('citas').update({paciente_id:newId}).eq('paciente_id', oldId);
+    });
+
+    total += await mergeDuplicados('profesionales', state.profesionales, 'profesionales', async(oldId,newId)=>{
+      await supabase.from('citas').update({profesional_id:newId}).eq('profesional_id', oldId);
+      await supabase.from('bloqueos').update({profesional_id:newId}).eq('profesional_id', oldId);
+      await supabase.from('tipos_profesional').update({profesional_id:newId}).eq('profesional_id', oldId);
+    });
+
+    total += await mergeDuplicados('consultas', state.consultas, 'consultas', async(oldId,newId)=>{
+      await supabase.from('citas').update({consulta_id:newId}).eq('consulta_id', oldId);
+    });
+
+    total += await mergeDuplicados('tipos_cita', state.tipos, 'tipos de cita', async(oldId,newId)=>{
+      await supabase.from('citas').update({tipo_cita_id:newId}).eq('tipo_cita_id', oldId);
+      await supabase.from('tipos_profesional').update({tipo_cita_id:newId}).eq('tipo_cita_id', oldId);
+    });
+
+    alert('Duplicados limpiados: ' + total);
+    await loadAll();
+  }catch(e){
+    alert('Error limpiando duplicados: ' + e.message);
+  }
+}
+
+// Override render de pacientes con botón eliminar
+renderPatients = function(){
+  const q=norm($('buscarPaciente')?.value||'');
+  const rows=state.pacientes.filter(p=>norm(`${p.nombre} ${p.telefono} ${p.email}`).includes(q));
+  $('pacientesTable').innerHTML='<thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Acciones</th></tr></thead><tbody>'+
+    rows.map(p=>`<tr>
+      <td><input value="${p.nombre||''}" data-pac-n="${p.id}"></td>
+      <td><input value="${p.telefono||''}" data-pac-t="${p.id}"></td>
+      <td><input value="${p.email||''}" data-pac-e="${p.id}"></td>
+      <td>
+        <button class="secondary" data-save-pac="${p.id}">Guardar</button>
+        <button class="danger" onclick="deletePaciente('${p.id}')">Eliminar</button>
+      </td>
+    </tr>`).join('')+'</tbody>';
+
+  document.querySelectorAll('[data-save-pac]').forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.savePac;
+    const r = await supabase.from('pacientes').update({
+      nombre:document.querySelector(`[data-pac-n="${id}"]`).value,
+      telefono:document.querySelector(`[data-pac-t="${id}"]`).value,
+      email:document.querySelector(`[data-pac-e="${id}"]`).value
+    }).eq('id',id);
+    if(r.error){alert('Error guardando paciente: '+r.error.message);return;}
+    alert('Paciente guardado');
+    loadAll();
+  });
+};
+
+// Override renderConfig con botones eliminar
+renderConfig = function(){
+  $('profTable').innerHTML='<thead><tr><th>Profesional</th><th>Acciones</th></tr></thead><tbody>'+
+    state.profesionales.map(p=>`<tr>
+      <td><input value="${p.nombre}" data-prof="${p.id}"></td>
+      <td>
+        <button class="secondary" data-save-prof="${p.id}">Guardar</button>
+        <button class="danger" onclick="deleteProfesional('${p.id}')">Eliminar</button>
+      </td>
+    </tr>`).join('')+'</tbody>';
+
+  $('consultaTable').innerHTML='<thead><tr><th>Consulta</th><th>Acciones</th></tr></thead><tbody>'+
+    state.consultas.map(c=>`<tr>
+      <td><input value="${c.nombre}" data-cons="${c.id}"></td>
+      <td>
+        <button class="secondary" data-save-cons="${c.id}">Guardar</button>
+        <button class="danger" onclick="deleteConsulta('${c.id}')">Eliminar</button>
+      </td>
+    </tr>`).join('')+'</tbody>';
+
+  $('tipoTable').innerHTML='<thead><tr><th>Nombre</th><th>Duración</th><th>Descripción</th><th>Acciones</th></tr></thead><tbody>'+
+    state.tipos.map(t=>`<tr>
+      <td><input value="${t.nombre}" data-tipo-n="${t.id}"></td>
+      <td><select data-tipo-d="${t.id}">${[10,20,30,40,50,60,90].map(n=>`<option ${n==t.duracion_minutos?'selected':''}>${n}</option>`).join('')}</select></td>
+      <td><input value="${t.descripcion||''}" data-tipo-desc="${t.id}"></td>
+      <td>
+        <button class="secondary" data-save-tipo="${t.id}">Guardar</button>
+        <button class="danger" onclick="deleteTipo('${t.id}')">Eliminar</button>
+      </td>
+    </tr>`).join('')+'</tbody>';
+
+  document.querySelectorAll('[data-save-prof]').forEach(b=>b.onclick=async()=>{
+    const r=await supabase.from('profesionales').update({nombre:document.querySelector(`[data-prof="${b.dataset.saveProf}"]`).value}).eq('id',b.dataset.saveProf);
+    if(r.error){alert('Error guardando profesional: '+r.error.message);return;}
+    alert('Profesional guardado');
+    loadAll();
+  });
+
+  document.querySelectorAll('[data-save-cons]').forEach(b=>b.onclick=async()=>{
+    const r=await supabase.from('consultas').update({nombre:document.querySelector(`[data-cons="${b.dataset.saveCons}"]`).value}).eq('id',b.dataset.saveCons);
+    if(r.error){alert('Error guardando consulta: '+r.error.message);return;}
+    alert('Consulta guardada');
+    loadAll();
+  });
+
+  document.querySelectorAll('[data-save-tipo]').forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.saveTipo;
+    const r=await supabase.from('tipos_cita').update({
+      nombre:document.querySelector(`[data-tipo-n="${id}"]`).value,
+      duracion_minutos:Number(document.querySelector(`[data-tipo-d="${id}"]`).value),
+      descripcion:document.querySelector(`[data-tipo-desc="${id}"]`).value
+    }).eq('id',id);
+    if(r.error){alert('Error guardando tipo de cita: '+r.error.message);return;}
+    alert('Tipo de cita guardado');
+    loadAll();
+  });
+};
+
+window.limpiarDuplicadosTodo = limpiarDuplicadosTodo;
+window.deleteProfesional = deleteProfesional;
+window.deleteConsulta = deleteConsulta;
+window.deleteTipo = deleteTipo;
+window.deletePaciente = deletePaciente;
