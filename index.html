@@ -387,6 +387,15 @@ button:not(.secondary):not(.danger):not(.tab){
 .yneaCloudStatus b{color:#e94f86}
 </style>
 
+
+<meta name="application-name" content="Ynea Citas">
+<meta name="apple-mobile-web-app-title" content="Ynea Citas">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+
 </head>
 <body>
 <header>
@@ -419,6 +428,7 @@ button:not(.secondary):not(.danger):not(.tab){
     <button class="tab" onclick="setView('infoDiaria', this)">Información diaria</button>
     <button class="tab" onclick="setView('avisos', this)">Avisos</button>
     <button class="tab" onclick="setView('copias', this)">Copias de seguridad</button>
+    <button id="installPwaBtn" class="tab" style="display:none;background:#9f244f;color:#fff" onclick="instalarYneaApp()">Instalar app</button>
   </div>
 </header>
 
@@ -3628,6 +3638,35 @@ document.addEventListener("click", function(e){
     initCloud();
   }
 })();
+</script>
+
+
+<script id="pwa-register">
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(err => console.warn("Service worker no registrado:", err));
+  });
+}
+
+let deferredInstallPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById("installPwaBtn");
+  if (btn) btn.style.display = "inline-block";
+});
+
+async function instalarYneaApp(){
+  if (!deferredInstallPrompt) {
+    alert("Si Chrome no muestra todavía la instalación, refresca la página con Ctrl+R. También puedes usar ⋮ > Guardar y compartir > Instalar página como aplicación.");
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  const btn = document.getElementById("installPwaBtn");
+  if (btn) btn.style.display = "none";
+}
 </script>
 
 </body>
