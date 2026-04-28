@@ -1,0 +1,9 @@
+{
+  "name": "Ynea calendario de citaci\u00f3n",
+  "short_name": "Ynea Citas",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#e94f86",
+  "icons": []
+}

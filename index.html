@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ynea · calendario de citación</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#e94f86">
+  <style>
+    :root { --pink:#e94f86; --soft:#fff0f6; --line:#e5e7eb; --text:#0f172a; --muted:#64748b; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Arial, Helvetica, sans-serif; background:linear-gradient(135deg,#fff,#fff7fb); color:var(--text); }
+    header { background:#fff; border-bottom:1px solid var(--line); padding:18px 24px; display:flex; gap:18px; align-items:center; flex-wrap:wrap; position:sticky; top:0; z-index:10; }
+    .logo { width:82px; height:82px; border-radius:22px; background:var(--soft); display:grid; place-items:center; color:var(--pink); font-size:34px; font-weight:800; }
+    .brand { display:flex; align-items:center; gap:16px; }
+    h1 { margin:0; font-size:30px; color:#9f244f; }
+    .subtitle { margin:4px 0 0; color:var(--muted); }
+    nav { display:flex; gap:8px; flex-wrap:wrap; margin-left:auto; }
+    nav button { border:0; border-radius:12px; padding:11px 14px; background:#fff; color:var(--text); cursor:pointer; font-weight:600; }
+    nav button.active { background:var(--pink); color:#fff; }
+    main { padding:24px; max-width:1500px; margin:0 auto; }
+    section { display:none; }
+    section.active { display:block; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
+    .card { background:#fff; border:1px solid var(--line); border-radius:20px; padding:18px; box-shadow:0 12px 38px rgba(15,23,42,.05); }
+    label { display:block; font-weight:700; margin:10px 0 5px; }
+    input, select, textarea { width:100%; padding:11px; border:1px solid #cbd5e1; border-radius:12px; font:inherit; }
+    textarea { min-height:80px; }
+    button { border:0; border-radius:12px; padding:11px 14px; background:var(--pink); color:#fff; cursor:pointer; font-weight:700; }
+    button.secondary { background:#fff; color:var(--pink); border:1px solid #f6b7cf; }
+    button.danger { background:#ef4444; }
+    table { width:100%; border-collapse:collapse; min-width:900px; }
+    th, td { border-bottom:1px solid var(--line); padding:10px; vertical-align:top; text-align:left; }
+    th { background:#fff2f7; }
+    .tableWrap { overflow:auto; border:1px solid var(--line); border-radius:16px; background:#fff; }
+    .weekbar { display:flex; gap:12px; align-items:end; flex-wrap:wrap; margin-bottom:14px; }
+    .slot { min-width:180px; height:54px; cursor:pointer; }
+    .appt { background:#fff1f6; border:1px solid #f9a8c5; border-radius:12px; padding:8px; margin:4px 0; cursor:pointer; }
+    .badge { display:inline-block; margin-top:4px; border-radius:999px; padding:3px 8px; background:#f8fafc; font-size:12px; }
+    .notice { background:#fff7fb; color:#9f244f; border:1px solid #f8cfe0; border-radius:14px; padding:12px; margin-bottom:14px; }
+    .relative { position:relative; }
+    .searchResults { position:absolute; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:0 12px 35px rgba(15,23,42,.14); max-height:220px; overflow:auto; z-index:20; left:0; right:0; display:none; }
+    .searchItem { padding:10px; border-bottom:1px solid #f1f5f9; cursor:pointer; }
+    .searchItem:hover { background:#fff7fb; }
+    .small { font-size:13px; color:var(--muted); }
+    dialog { border:0; border-radius:24px; width:min(760px,94vw); padding:0; box-shadow:0 24px 90px rgba(15,23,42,.25); }
+    dialog .modal { padding:22px; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media(max-width:800px) { .row { grid-template-columns:1fr; } nav { margin-left:0; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><div class="logo">Y</div><div><h1>calendario de citación</h1><p class="subtitle">Ynea · gestión clínica online</p></div></div>
+    <nav>
+      <button data-view="calendario" class="active">Calendario</button>
+      <button data-view="pacientes">Pacientes</button>
+      <button data-view="config">Configuración</button>
+      <button data-view="bloqueos">Bloqueos</button>
+      <button data-view="avisos">Avisos</button>
+      <button data-view="info">Información diaria</button>
+    </nav>
+  </header>
+  <main>
+    <section id="calendario" class="active"><div class="card"><h2>Calendario semanal</h2><div class="weekbar"><button class="secondary" id="prevWeek">← Semana anterior</button><div><label>Semana</label><input type="date" id="weekPicker"></div><button class="secondary" id="todayWeek">Hoy</button><button class="secondary" id="nextWeek">Semana siguiente →</button><div><label>Profesional</label><select id="filterProfessional"><option value="">Todos</option></select></div></div><p id="weekTitle" class="small"></p><div class="tableWrap"><table id="weekTable"></table></div></div></section>
+    <section id="pacientes"><div class="grid"><div class="card"><h2>Nuevo paciente</h2><label>Nombre</label><input id="pacNombre"><label>Teléfono</label><input id="pacTelefono"><label>Email</label><input id="pacEmail"><label>Observaciones</label><textarea id="pacObs"></textarea><button id="savePaciente">Guardar paciente</button></div><div class="card"><h2>Pacientes</h2><input id="buscarPaciente" placeholder="Buscar por nombre, teléfono o email"><div class="tableWrap" style="margin-top:12px"><table id="pacientesTable"></table></div></div></div></section>
+    <section id="config"><div class="grid"><div class="card"><h2>Profesionales</h2><label>Nombre</label><input id="profNombre"><button id="saveProfesional">Añadir profesional</button><div class="tableWrap" style="margin-top:12px"><table id="profTable"></table></div></div><div class="card"><h2>Consultas</h2><label>Nombre</label><input id="consultaNombre"><button id="saveConsulta">Añadir consulta</button><div class="tableWrap" style="margin-top:12px"><table id="consultaTable"></table></div></div><div class="card"><h2>Tipos de cita</h2><label>Nombre</label><input id="tipoNombre"><label>Duración</label><select id="tipoDuracion"><option>10</option><option>20</option><option>30</option><option>40</option><option>50</option><option>60</option><option>90</option></select><label>Descripción</label><textarea id="tipoDescripcion"></textarea><button id="saveTipo">Añadir tipo</button><div class="tableWrap" style="margin-top:12px"><table id="tipoTable"></table></div></div></div></section>
+    <section id="bloqueos"><div class="card"><h2>Bloqueos</h2><div class="notice">Bloqueos por fecha, profesional o todos.</div><div class="row"><div><label>Profesional</label><select id="bloqProf"><option value="">Todos</option></select></div><div><label>Fecha</label><input type="date" id="bloqFecha"></div></div><div class="row"><div><label>Desde</label><input type="time" id="bloqInicio" value="09:30"></div><div><label>Hasta</label><input type="time" id="bloqFin" value="20:30"></div></div><label>Motivo</label><input id="bloqMotivo"><button id="saveBloqueo">Guardar bloqueo</button><div class="tableWrap" style="margin-top:14px"><table id="bloqTable"></table></div></div></section>
+    <section id="avisos"><div class="card"><h2>Avisos 48h</h2><div class="notice">Muestra citas cuyo aviso toca enviar 48 horas antes.</div><label>Fecha de revisión</label><input type="date" id="avisosFecha"><div class="tableWrap" style="margin-top:14px"><table id="avisosTable"></table></div></div></section>
+    <section id="info"><div class="card"><h2>Información diaria</h2><div id="infoGrid" class="grid"></div></div></section>
+  </main>
+  <dialog id="citaDialog"><div class="modal"><h2 id="citaDialogTitle">Nueva cita</h2><input type="hidden" id="citaId"><div class="row"><div><label>Fecha</label><input type="date" id="citaFecha"></div><div><label>Hora</label><select id="citaHora"></select></div></div><div class="row"><div><label>Duración</label><select id="citaDuracion"><option>10</option><option>20</option><option>30</option><option>40</option><option>50</option><option>60</option><option>90</option></select></div><div><label>Estado</label><select id="citaEstado"><option>Pendiente</option><option>Confirmada</option><option>Realizada</option><option>Cancelada</option><option>No acude</option></select></div></div><label>Paciente</label><div class="relative"><input id="citaPacienteSearch" placeholder="Buscar por nombre, teléfono o email"><input type="hidden" id="citaPacienteId"><div class="searchResults" id="pacienteResults"></div></div><button class="secondary" id="quickPaciente">➕ Nuevo paciente</button><div class="row"><div><label>Profesional</label><select id="citaProfesional"></select></div><div><label>Consulta</label><select id="citaConsulta"></select></div></div><label>Tipo de cita</label><select id="citaTipo"></select><label>Observaciones</label><textarea id="citaObs"></textarea><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px"><button class="danger" id="deleteCita" style="display:none">Eliminar</button><button class="secondary" id="cancelCita">Cancelar</button><button id="saveCita">Guardar</button></div></div></dialog>
+  <script type="module" src="app.js"></script>
+</body></html>
