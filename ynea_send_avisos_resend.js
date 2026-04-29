@@ -102,7 +102,8 @@ async function main() {
   if (!RESEND_API_KEY) throw new Error("Falta RESEND_API_KEY en GitHub Secrets.");
 
   const nowMadrid = madridParts();
-
+console.log("MODO PRUEBA ACTIVADO");
+nowMadrid.hour = 11;
   if (nowMadrid.hour !== 11) {
     console.log(`No es hora de envío en Madrid. Hora actual: ${nowMadrid.hour}:${nowMadrid.minute}`);
     return;
