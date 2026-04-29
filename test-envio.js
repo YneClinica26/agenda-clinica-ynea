@@ -1,5 +1,5 @@
 const SUPABASE_URL = "https://vadohvwjoxghubceffpn.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhZG9odndqb3hnaHViY2VmZnBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMzQxMjksImV4cCI6MjA5MjkxMDEyOX0.hrO9FcE32tlw6fL0I6EFu1sLFpBq_k6QBJ-LJIsvk24";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6InZhZG9odndqb3hnaHViY2VmZnBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMzQxMjksImV4cCI6MjA5MjkxMDEyOX0.hrO9FcE32tlw6fL0I6EFu1sLFpBq_k6QBJ-LJIsvk24";
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const APP_STATE_KEY = "agenda_ynea_definitiva";
 const FROM_EMAIL = process.env.FROM_EMAIL || "Ynea <onboarding@resend.dev>";
@@ -45,27 +45,49 @@ function mensajeEmail(data, cita) {
   return `
 <!doctype html>
 <html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      @media only screen and (max-width: 620px) {
+        .outer-padding { padding: 12px 8px !important; }
+        .container { width: 100% !important; max-width: 100% !important; }
+        .content-pad { padding-left: 22px !important; padding-right: 22px !important; }
+        .title { font-size: 24px !important; line-height: 30px !important; }
+        .bodytext { font-size: 17px !important; line-height: 26px !important; }
+        .detailtext { font-size: 17px !important; line-height: 28px !important; }
+        .footertext { font-size: 14px !important; line-height: 21px !important; }
+        .logo { width: 150px !important; max-width: 150px !important; }
+        .footer-logo-cell { width: 170px !important; }
+      }
+    </style>
+  </head>
   <body style="margin:0;padding:0;background:#f7f7f7;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f7f7f7;margin:0;padding:24px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f7f7f7;margin:0;">
       <tr>
-        <td align="center">
-          <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:560px;max-width:560px;background:#ffffff;border:1px solid #ead5de;border-collapse:collapse;">
+        <td align="center" class="outer-padding" style="padding:24px 0;">
+
+          <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" class="container" style="width:560px;max-width:560px;background:#ffffff;border:1px solid #ead5de;border-collapse:collapse;">
+
             <tr>
-              <td style="padding:24px 28px 10px 28px;font-family:Arial,Helvetica,sans-serif;">
-                <h1 style="margin:0;color:#9f244f;font-size:20px;line-height:26px;font-weight:700;">Recordatorio de cita</h1>
+              <td class="content-pad" style="padding:24px 28px 10px 28px;font-family:Arial,Helvetica,sans-serif;">
+                <h1 class="title" style="margin:0;color:#9f244f;font-size:20px;line-height:26px;font-weight:700;">
+                  Recordatorio de cita
+                </h1>
               </td>
             </tr>
+
             <tr>
-              <td style="padding:8px 28px 0 28px;font-family:Arial,Helvetica,sans-serif;color:#111827;font-size:14px;line-height:21px;">
+              <td class="content-pad bodytext" style="padding:8px 28px 0 28px;font-family:Arial,Helvetica,sans-serif;color:#111827;font-size:14px;line-height:21px;">
                 <p style="margin:0 0 14px 0;">Hola ${nombre},</p>
                 <p style="margin:0 0 18px 0;">Le recordamos que tiene la siguiente cita en nuestra clínica:</p>
               </td>
             </tr>
+
             <tr>
-              <td style="padding:0 28px 20px 28px;">
+              <td class="content-pad" style="padding:0 28px 20px 28px;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fff3f8;border:1px solid #f1c7d8;border-collapse:collapse;">
                   <tr>
-                    <td style="padding:14px 16px;font-family:Arial,Helvetica,sans-serif;color:#111827;font-size:14px;line-height:22px;">
+                    <td class="detailtext" style="padding:14px 16px;font-family:Arial,Helvetica,sans-serif;color:#111827;font-size:14px;line-height:22px;">
                       <p style="margin:0 0 7px 0;"><strong>Fecha:</strong> ${formatoFechaES(cita.fecha)}</p>
                       <p style="margin:0 0 7px 0;"><strong>Hora:</strong> ${cita.hora}</p>
                       <p style="margin:0 0 7px 0;"><strong>Profesional:</strong> ${cita.profesional || ""}</p>
@@ -75,20 +97,22 @@ function mensajeEmail(data, cita) {
                 </table>
               </td>
             </tr>
+
             <tr>
-              <td style="padding:0 28px 22px 28px;font-family:Arial,Helvetica,sans-serif;color:#111827;font-size:14px;line-height:21px;">
+              <td class="content-pad bodytext" style="padding:0 28px 22px 28px;font-family:Arial,Helvetica,sans-serif;color:#111827;font-size:14px;line-height:21px;">
                 <p style="margin:0 0 10px 0;">Si no puede asistir, por favor comuníquenoslo respondiendo a este email.</p>
                 <p style="margin:0;">Gracias.</p>
               </td>
             </tr>
+
             <tr>
-              <td style="padding:14px 28px 18px 28px;border-top:1px solid #ead5de;background:#fffafc;">
+              <td class="content-pad" style="padding:14px 28px 18px 28px;border-top:1px solid #ead5de;background:#fffafc;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>
-                    <td width="145" valign="top" style="width:145px;padding-right:16px;">
-                      <img src="${LOGO_YNEA}" width="120" alt="Ynea" style="display:block;width:120px;max-width:120px;height:auto;border:0;outline:none;text-decoration:none;">
+                    <td width="145" valign="top" class="footer-logo-cell" style="width:145px;padding-right:16px;">
+                      <img src="${LOGO_YNEA}" width="120" alt="Ynea" class="logo" style="display:block;width:120px;max-width:120px;height:auto;border:0;outline:none;text-decoration:none;">
                     </td>
-                    <td valign="top" style="font-family:Arial,Helvetica,sans-serif;color:#374151;font-size:12px;line-height:18px;border-left:1px solid #ead5de;padding-left:16px;">
+                    <td valign="top" class="footertext" style="font-family:Arial,Helvetica,sans-serif;color:#374151;font-size:12px;line-height:18px;border-left:1px solid #ead5de;padding-left:16px;">
                       Avenida Jacinto Benavente, 26<br>
                       Valencia, 46005<br>
                       Tel. 963 95 59 31<br>
@@ -98,7 +122,9 @@ function mensajeEmail(data, cita) {
                 </table>
               </td>
             </tr>
+
           </table>
+
         </td>
       </tr>
     </table>
@@ -136,7 +162,7 @@ async function main() {
   if (!RESEND_API_KEY) throw new Error("Falta RESEND_API_KEY en GitHub Secrets.");
   const nowMadrid = madridParts();
 
-  if (false) {
+  if (nowMadrid.hour !== 11) {
     console.log(`No es hora de envío en Madrid. Hora actual: ${nowMadrid.hour}:${nowMadrid.minute}`);
     return;
   }
