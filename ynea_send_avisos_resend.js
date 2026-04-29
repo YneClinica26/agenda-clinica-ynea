@@ -104,8 +104,8 @@ async function main() {
   const nowMadrid = madridParts();
 console.log("MODO PRUEBA ACTIVADO");
 nowMadrid.hour = 11;
-  if (nowMadrid.hour !== 11) {
-    console.log(`No es hora de envío en Madrid. Hora actual: ${nowMadrid.hour}:${nowMadrid.minute}`);
+  if (false) {
+    console.log(¨No es hora de envío en Madrid¨);
     return;
   }
 
