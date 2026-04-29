@@ -41,25 +41,24 @@ function mensajeEmail(data, cita) {
   return `
   <div style="margin:0;padding:0;background:#fff7fb;font-family:Arial,Helvetica,sans-serif;color:#111827;">
     <div style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #f8cfe0;border-radius:18px;overflow:hidden;">
-      <div style="padding:26px 30px 18px 30px;border-bottom:1px solid #f8cfe0;">
-        <img src="${LOGO_YNEA}" alt="Ynea" style="height:58px;max-width:260px;display:block;">
-      </div>
+      
       <div style="padding:28px 30px;">
         <h2 style="margin:0 0 18px 0;color:#9f244f;font-size:24px;font-weight:700;">Recordatorio de cita</h2>
         <p style="font-size:16px;line-height:1.6;margin:0 0 14px 0;">Hola ${nombre},</p>
-        <p style="font-size:16px;line-height:1.6;margin:0 0 22px 0;">Le recordamos su cita en Ynea:</p>
+        <p style="font-size:16px;line-height:1.6;margin:0 0 22px 0;">Le recordamos que tiene la siguiente cita en nuestra clínica:</p>
         <div style="background:#fff0f6;border:1px solid #f8cfe0;border-radius:14px;padding:18px 20px;margin:0 0 24px 0;">
           <p style="margin:0 0 10px 0;font-size:16px;"><strong>Fecha:</strong> ${formatoFechaES(cita.fecha)}</p>
           <p style="margin:0 0 10px 0;font-size:16px;"><strong>Hora:</strong> ${cita.hora}</p>
           <p style="margin:0 0 10px 0;font-size:16px;"><strong>Profesional:</strong> ${cita.profesional || ""}</p>
           <p style="margin:0;font-size:16px;"><strong>Tipo:</strong> ${cita.tipo || ""}</p>
         </div>
-        <p style="font-size:16px;line-height:1.6;margin:0 0 6px 0;">Si no puede asistir, por favor contacte con la clínica.</p>
+        <p style="font-size:16px;line-height:1.6;margin:0 0 6px 0;">Si no puede asistir, por favor comuníquenoslo respondiendo a este email.</p>
         <p style="font-size:16px;line-height:1.6;margin:0;">Gracias.</p>
       </div>
       <div style="padding:22px 30px;background:#fff7fb;border-top:1px solid #f8cfe0;">
-        <img src="${LOGO_YNEA}" alt="Ynea" style="height:48px;max-width:240px;display:block;margin-bottom:14px;">
+        <img src="${LOGO_YNEA}" alt="Ynea" style="height:32px;max-width:160px;display:block;margin-bottom:10px;">
         <div style="font-size:14px;line-height:1.6;color:#374151;">
+        
           Avenida Jacinto Benavente, 26<br>
           Valencia, 46005<br>
           Tel. 963 95 59 31<br>
