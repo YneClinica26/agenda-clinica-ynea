@@ -64,7 +64,7 @@ function mensajeEmail(data, cita) {
 <tr><td align="center" class="outer-padding" style="padding:24px 0;">
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" class="container" style="width:560px;max-width:560px;background:#ffffff;border:1px solid #ead5de;border-collapse:collapse;">
 <tr><td class="content-pad" style="padding:24px 28px 10px 28px;font-family:Arial,Helvetica,sans-serif;">
-<h1 class="title" style="margin:0;color:#9f244f;font-size:20px;line-height:26px;font-weight:700;">Recordatorio de su cita</h1>
+<h1 class="title" style="margin:0;color:#9f244f;font-size:20px;line-height:26px;font-weight:700;">Recordatorio de  cita</h1>
 <p style="margin:6px 0 0 0;color:#6b7280;font-size:13px;">
 Clínica Ynea
 </p>
