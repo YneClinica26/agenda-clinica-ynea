@@ -59,7 +59,7 @@ function mensajeEmail(data, cita) {
         <img src="${LOGO_YNEA}" alt="Ynea" style="height:32px;max-width:160px;display:block;margin-bottom:10px;">
         <div style="font-size:14px;line-height:1.6;color:#374151;">
         
-          Avenida Jacinto Benavente, 26<br>
+          Avenida de Jacinto Benavente, 26<br>
           Valencia, 46005<br>
           Tel. 963 95 59 31<br>
           ynea.es
