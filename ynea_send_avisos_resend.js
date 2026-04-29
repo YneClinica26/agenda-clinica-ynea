@@ -1,6 +1,7 @@
 const SUPABASE_URL = "https://vadohvwjoxghubceffpn.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhZG9odndqb3hnaHViY2VmZnBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMzQxMjksImV4cCI6MjA5MjkxMDEyOX0.hrO9FcE32tlw6fL0I6EFu1sLFpBq_k6QBJ-LJIsvk24";
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
+
 console.log("ARCHIVO MODIFICADO DE PRUEBA");
 const APP_STATE_KEY = "agenda_ynea_definitiva";
 const FROM_EMAIL = process.env.FROM_EMAIL || "Ynea <onboarding@resend.dev>";
