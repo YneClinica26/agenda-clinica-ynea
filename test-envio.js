@@ -86,7 +86,7 @@ function mensajeEmail(data, cita) {
 
             <tr>
               <td class="content-pad" style="padding:0 28px 20px 28px;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fff3f8;border:1px solid #f1c7d8;border-collapse:collapse;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fff3f8;border:1px solid #f1c7d8;border-;">radius:12px;border-collapse:separate;
                   <tr>
                     <td class="detailtext" style="padding:14px 16px;font-family:Arial,Helvetica,sans-serif;color:#111827;font-size:14px;line-height:22px;">
                       <p style="margin:0 0 7px 0;"><strong>Fecha:</strong> ${formatoFechaES(cita.fecha)}</p>
@@ -109,12 +109,19 @@ function mensajeEmail(data, cita) {
             <tr>
               <td class="content-pad" style="padding:14px 28px 18px 28px;border-top:1px solid #ead5de;background:#fffafc;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                  <tr>
-                    <td width="145" valign="top" class="footer-logo-cell" style="width:145px;padding-right:16px;">
-                      <img src="${LOGO_YNEA}" width="120" alt="Ynea" class="logo" style="display:block;width:120px;max-width:120px;height:auto;border:0;outline:none;text-decoration:none;">
-                    </td>
+                  
                     <td valign="top" class="footertext footer-info-cell" style="font-family:Arial,Helvetica,sans-serif;color:#374151;font-size:12px;line-height:18px;border-left:1px solid #ead5de;padding-left:16px;">
-                      Avenida Jacinto Benavente, 26<br>
+                      Aveni<tr>
+  <td style="padding:14px 28px 18px 28px;border-top:1px solid #ead5de;background:#fffafc;">
+    <img src="${LOGO_YNEA}" width="120" alt="Ynea" style="display:block;width:120px;max-width:120px;height:auto;border:0;margin-bottom:12px;">
+    <div style="font-family:Arial,Helvetica,sans-serif;color:#374151;font-size:12px;line-height:18px;">
+      Avenida Jacinto Benavente, 26<br>
+      Valencia, 46005<br>
+      Tel. 963 95 59 31<br>
+      ynea.es
+    </div>
+  </td>
+</tr>da Jacinto Benavente, 26<br>
                       Valencia, 46005<br>
                       Tel. 963 95 59 31<br>
                       ynea.es
