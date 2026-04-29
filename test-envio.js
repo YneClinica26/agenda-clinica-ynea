@@ -84,16 +84,29 @@ function mensajeEmail(data, cita) {
 <p style="margin:0 0 10px 0;">Si no puede asistir, por favor comuníquenoslo respondiendo a este email.</p>
 <p style="margin:0;">Gracias.</p>
 </td></tr>
-<tr><td class="content-pad" style="padding:16px 28px 18px 28px;border-top:1px solid #ead5de;background:#fffafc;font-family:Arial,Helvetica,sans-serif;color:#374151;">
-<img src="${LOGO_YNEA}" width="120" alt="Ynea" class="logo" style="display:block;width:120px;max-width:120px;height:auto;border:0;outline:none;text-decoration:none;margin:0 0 12px 0;">
-<div class="footertext" style="font-size:12px;line-height:18px;color:#374151;">
-Avda. de Jacinto Benavente, 26<br>
-Valencia, 46005<br>
-Tel. 963 95 59 31<br>
-ynea.es
-</div>
-</td></tr>
-</table>
+<tr><td class="content-pad" style="padding:0 28px 24px 28px;">
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+         style="background:#fff3f8;border:1px solid #f1c7d8;border-radius:12px;border-collapse:separate;">
+    
+    <tr>
+      <td style="padding:16px;font-family:Arial,Helvetica,sans-serif;color:#374151;">
+
+        <img src="${LOGO_YNEA}" width="120"
+             style="display:block;width:120px;max-width:120px;margin-bottom:12px;">
+
+        <div style="font-size:12px;line-height:18px;">
+          Avda. de Jacinto Benavente, 26<br>
+          Valencia, 46005<br>
+          Tel. 963 95 59 31<br>
+          ynea.es
+        </div>
+
+      </td>
+    </tr>
+
+  </table>
+
 </td></tr>
 </table>
 </body>
