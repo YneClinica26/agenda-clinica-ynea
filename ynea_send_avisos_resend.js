@@ -97,7 +97,7 @@ async function sendEmail(to, subject, html) {
 async function main() {
   if (!RESEND_API_KEY) throw new Error("Falta RESEND_API_KEY en GitHub Secrets.");
   const nowMadrid = madridParts();
-
+  nowMadrid.hour = 11;
   // PRODUCCIÓN: solo envía a las 11:00 hora de Madrid.
   // PRUEBA: cambia temporalmente la siguiente línea por: if (false) {
   if (false) {
