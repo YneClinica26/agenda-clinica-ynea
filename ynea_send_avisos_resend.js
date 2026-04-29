@@ -100,7 +100,7 @@ async function main() {
 
   // PRODUCCIÓN: solo envía a las 11:00 hora de Madrid.
   // PRUEBA: cambia temporalmente la siguiente línea por: if (false) {
-  if (nowMadrid.hour !== 11) {
+  if (false) {
     console.log(`No es hora de envío en Madrid. Hora actual: ${nowMadrid.hour}:${nowMadrid.minute}`);
     return;
   }
