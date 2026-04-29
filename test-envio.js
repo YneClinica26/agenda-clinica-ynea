@@ -102,6 +102,29 @@ function mensajeEmail(data, cita) {
             <tr>
               <td class="content-pad bodytext" style="padding:0 28px 22px 28px;font-family:Arial,Helvetica,sans-serif;color:#111827;font-size:14px;line-height:21px;">
                 <p style="margin:0 0 10px 0;">Si no puede asistir, por favor comuníquenoslo respondiendo a este email.</p>
+                <div style="margin:18px 0 6px 0;">
+
+  <!-- Botón Confirmar -->
+  <a href="mailto:yneaclinica@gmail.com?subject=Confirmación cita&body=Confirmo mi cita del ${formatoFechaES(cita.fecha)} a las ${cita.hora}"
+     style="display:inline-block;background:#d6336c;color:#ffffff;text-decoration:none;padding:10px 16px;margin-right:8px;border-radius:6px;font-size:13px;font-weight:600;">
+     Confirmar cita
+  </a>
+
+  <!-- Botón Cambiar -->
+  <a href="mailto:yneaclinica@gmail.com?subject=Cambio cita&body=Quiero modificar mi cita del ${formatoFechaES(cita.fecha)} a las ${cita.hora}"
+     style="display:inline-block;background:#ffffff;color:#d6336c;text-decoration:none;padding:10px 16px;border:1px solid #d6336c;border-radius:6px;font-size:13px;font-weight:600;">
+     Solicitar cambio
+  </a>
+
+</div>
+
+<!-- Botón WhatsApp -->
+<div style="margin-top:8px;">
+  <a href="https://wa.me/34675661621?text=Hola,%20tengo%20una%20cita%20el%20${formatoFechaES(cita.fecha)}%20a%20las%20${cita.hora}"
+     style="display:inline-block;background:#25D366;color:#ffffff;text-decoration:none;padding:10px 16px;border-radius:6px;font-size:13px;font-weight:600;">
+     Contactar por WhatsApp
+  </a>
+</div>
                 <p style="margin:0;">Gracias.</p>
               </td>
             </tr>
