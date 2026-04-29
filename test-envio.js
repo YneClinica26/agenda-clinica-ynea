@@ -87,7 +87,7 @@ function mensajeEmail(data, cita) {
 <tr><td class="content-pad" style="padding:16px 28px 18px 28px;border-top:1px solid #ead5de;background:#fffafc;font-family:Arial,Helvetica,sans-serif;color:#374151;">
 <img src="${LOGO_YNEA}" width="120" alt="Ynea" class="logo" style="display:block;width:120px;max-width:120px;height:auto;border:0;outline:none;text-decoration:none;margin:0 0 12px 0;">
 <div class="footertext" style="font-size:12px;line-height:18px;color:#374151;">
-Avenida Jacinto Benavente, 26<br>
+Avda. de Jacinto Benavente, 26<br>
 Valencia, 46005<br>
 Tel. 963 95 59 31<br>
 ynea.es
