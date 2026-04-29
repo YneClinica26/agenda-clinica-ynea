@@ -58,6 +58,7 @@ function mensajeEmail(data, cita) {
         .footertext { font-size: 14px !important; line-height: 21px !important; }
         .logo { width: 150px !important; max-width: 150px !important; }
         .footer-logo-cell { width: 170px !important; }
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhZG9odndqb3hnaHViY2VmZnBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMzQxMjksImV4cCI6MjA5MjkxMDEyOX0.hrO9FcE32tlw6fL0I6EFu1sLFpBq_k6QBJ-LJIsvk24";
       }
     </style>
   </head>
@@ -112,7 +113,7 @@ function mensajeEmail(data, cita) {
                     <td width="145" valign="top" class="footer-logo-cell" style="width:145px;padding-right:16px;">
                       <img src="${LOGO_YNEA}" width="120" alt="Ynea" class="logo" style="display:block;width:120px;max-width:120px;height:auto;border:0;outline:none;text-decoration:none;">
                     </td>
-                    <td valign="top" class="footertext" style="font-family:Arial,Helvetica,sans-serif;color:#374151;font-size:12px;line-height:18px;border-left:1px solid #ead5de;padding-left:16px;">
+                    <td valign="top" class="footertext footer-info-cell" style="font-family:Arial,Helvetica,sans-serif;color:#374151;font-size:12px;line-height:18px;border-left:1px solid #ead5de;padding-left:16px;">
                       Avenida Jacinto Benavente, 26<br>
                       Valencia, 46005<br>
                       Tel. 963 95 59 31<br>
