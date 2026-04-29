@@ -19,4 +19,4 @@ jobs:
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
-        run: node ynea_send_avisos_resend.js
+        run: node test-envio.js
