@@ -1,8 +1,8 @@
-name: Ynea avisos email 48h
+name: Ynea confirmacion email al crear cita
 
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:

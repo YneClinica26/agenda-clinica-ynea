@@ -51,7 +51,7 @@ function pacienteDeCita(data, cita) {
 }
 
 function avisoKey(cita) {
-  return `email_48h_${cita.id}`;
+  return `email_confirmacion_creacion_${cita.id}`;
 }
 
 
@@ -87,11 +87,11 @@ function mensajeEmail(data, cita) {
 <tr><td align="center" class="outer-padding" style="padding:24px 0;">
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" class="container" style="width:560px;max-width:560px;background:#ffffff;border:1px solid #ead5de;border-collapse:collapse;">
 <tr><td class="content-pad" style="padding:24px 28px 10px 28px;font-family:Arial,Helvetica,sans-serif;">
-<h1 class="title" style="margin:0;color:#9f244f;font-size:20px;line-height:26px;font-weight:700;">Recordatorio de cita</h1>
+<h1 class="title" style="margin:0;color:#9f244f;font-size:20px;line-height:26px;font-weight:700;">Confirmación de cita</h1>
 </td></tr>
 <tr><td class="content-pad bodytext" style="padding:8px 28px 0 28px;font-family:Arial,Helvetica,sans-serif;color:#111827;font-size:14px;line-height:21px;">
 <p style="margin:0 0 14px 0;">Hola ${nombre},</p>
-<p style="margin:0 0 18px 0;">Le recordamos que tiene la siguiente cita en nuestra clínica:</p>
+<p style="margin:0 0 18px 0;">Le confirmamos que tiene programada la siguiente cita en nuestra clínica:</p>
 </td></tr>
 <tr><td class="content-pad" style="padding:0 28px 20px 28px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fff3f8;border:1px solid #f1c7d8;border-radius:12px;border-collapse:separate;">
@@ -163,15 +163,8 @@ async function sendEmail(to, subject, html) {
 
 async function main() {
   if (!RESEND_API_KEY) throw new Error("Falta RESEND_API_KEY en GitHub Secrets.");
-  const nowMadrid = madridParts();
 
-  if (nowMadrid.hour !== 11) {
-    console.log(`No es hora de envío en Madrid. Hora actual: ${nowMadrid.hour}:${nowMadrid.minute}`);
-    return;
-  }
-
-  const targetDate = addDaysISO(nowMadrid.date, 2);
-  console.log(`Buscando citas para avisar. Hoy Madrid: ${nowMadrid.date}. Citas objetivo: ${targetDate}`);
+  console.log("Buscando citas nuevas pendientes de email de confirmación...");
 
   const rows = await supabaseRequest(`app_state?key=eq.${encodeURIComponent(APP_STATE_KEY)}&select=*`);
   if (!rows.length) throw new Error("No existe fila app_state con key agenda_ynea_definitiva.");
@@ -179,21 +172,42 @@ async function main() {
   const data = rows[0].data || {};
   data.avisosEnviados = data.avisosEnviados || {};
 
-  const citas = (data.citas || []).filter(c => c.fecha === targetDate);
+  const citas = (data.citas || []).filter(c => c && c.id && c.fecha && c.hora);
   let enviados = 0, omitidos = 0, errores = 0;
 
   for (const cita of citas) {
     const key = avisoKey(cita);
     const p = pacienteDeCita(data, cita);
 
-    if (data.avisosEnviados[key]) { omitidos++; continue; }
-    if (!p.email) { console.log(`Sin email para cita ${cita.id}`); omitidos++; continue; }
+    if (data.avisosEnviados[key]) {
+      omitidos++;
+      continue;
+    }
+
+    if (!p.email) {
+      console.log(`Sin email para cita ${cita.id}`);
+      omitidos++;
+      continue;
+    }
 
     try {
-      await sendEmail(p.email, `Recordatorio de cita en Ynea - ${formatoFechaES(cita.fecha)} ${cita.hora}`, mensajeEmail(data, cita));
-      data.avisosEnviados[key] = { fecha: new Date().toISOString(), canal: "email", citaId: cita.id, pacienteId: cita.pacienteId, email: p.email };
+      await sendEmail(
+        p.email,
+        `Confirmación de cita en Ynea - ${formatoFechaES(cita.fecha)} ${cita.hora}`,
+        mensajeEmail(data, cita)
+      );
+
+      data.avisosEnviados[key] = {
+        fecha: new Date().toISOString(),
+        canal: "email",
+        tipo: "confirmacion_creacion",
+        citaId: cita.id,
+        pacienteId: cita.pacienteId,
+        email: p.email
+      };
+
       enviados++;
-      console.log(`Email enviado a ${p.email} para cita ${cita.id}`);
+      console.log(`Confirmación enviada a ${p.email} para cita ${cita.id}`);
     } catch (err) {
       errores++;
       console.error(`Error enviando cita ${cita.id}:`, err.message);
