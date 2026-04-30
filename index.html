@@ -452,6 +452,163 @@ nav, .tabs, .toolbar, .actions, .topbar, .headerActions, .mainActions {
 }
 </style>
 
+
+<style id="ynea-mobile-week-clean-fix">
+/* Ocultar avisos flotantes de sincronización/autoguardado */
+#yneaCloudStatus,
+.yneaCloudStatus,
+#autoSaveStatus,
+.autosaveStatus,
+.autoguardado,
+.autoGuardado,
+[id*="autoSave"],
+[id*="autosave"],
+[id*="Autoguardado"],
+[class*="autosave"],
+[class*="Autoguardado"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Calendario semanal adaptable a móvil */
+@media (max-width: 768px) {
+  /* Las tablas no deben forzar 720px en móvil */
+  table,
+  #weekTable,
+  #monthTable,
+  #yearTable,
+  .calendar table,
+  .calendario table {
+    min-width: 0 !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+  }
+
+  .tableWrap,
+  .table-wrap,
+  .calendarWrap,
+  .calendar-wrap,
+  #calendar,
+  #calendario {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+  }
+
+  th,
+  td {
+    padding: 4px 3px !important;
+    font-size: 10.5px !important;
+    line-height: 1.15 !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+  }
+
+  /* Primera columna/hora más estrecha */
+  th:first-child,
+  td:first-child {
+    width: 42px !important;
+    max-width: 42px !important;
+    font-size: 10px !important;
+  }
+
+  /* Citas dentro del calendario */
+  .appt,
+  .cita,
+  .appointment,
+  .event {
+    font-size: 10px !important;
+    line-height: 1.15 !important;
+    padding: 4px !important;
+    margin: 2px 0 !important;
+    border-radius: 7px !important;
+  }
+
+  .appt strong,
+  .cita strong,
+  .appointment strong,
+  .event strong {
+    font-size: 10.5px !important;
+  }
+
+  .badge {
+    font-size: 9px !important;
+    padding: 2px 5px !important;
+  }
+
+  /* Cabecera superior compacta */
+  header {
+    gap: 8px !important;
+    padding: 10px !important;
+  }
+
+  h1 {
+    font-size: 20px !important;
+    line-height: 1.1 !important;
+  }
+
+  .logo {
+    width: 54px !important;
+    height: 54px !important;
+  }
+
+  main {
+    padding: 8px !important;
+  }
+
+  .card,
+  .panel {
+    padding: 10px !important;
+    border-radius: 14px !important;
+  }
+
+  /* Controles de semana más compactos */
+  .weekbar,
+  .toolbar,
+  .actions {
+    gap: 6px !important;
+  }
+
+  .weekbar label,
+  label {
+    font-size: 12px !important;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 13px !important;
+    padding: 8px !important;
+  }
+}
+
+/* En pantallas muy estrechas, compactar aún más */
+@media (max-width: 430px) {
+  th,
+  td {
+    font-size: 9.5px !important;
+    padding: 3px 2px !important;
+  }
+
+  th:first-child,
+  td:first-child {
+    width: 36px !important;
+    max-width: 36px !important;
+    font-size: 9px !important;
+  }
+
+  .appt,
+  .cita,
+  .appointment,
+  .event {
+    font-size: 9px !important;
+    padding: 3px !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <header>
@@ -3495,7 +3652,7 @@ document.addEventListener("click", function(e){
 </script>
 
 
-<div class="yneaCloudStatus" id="yneaCloudStatus">☁️ <b>Online:</b> iniciando sincronización...</div>
+<div class="yneaCloudStatus" id="yneaCloudStatus" style="display:none!important"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script id="ynea-online-sync">
 (function(){

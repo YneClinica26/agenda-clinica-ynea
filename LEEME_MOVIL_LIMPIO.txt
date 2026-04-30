@@ -1,0 +1,18 @@
+YNEA - MÓVIL LIMPIO
+
+Cambios:
+- Calendario semanal más adaptable al teléfono.
+- Tablas compactas en móvil.
+- Oculta ventanas/avisos flotantes:
+  Online: guardado automático activo
+  Autoguardado: 00:00:00
+
+Sube a GitHub sustituyendo:
+- index.html
+- el resto de archivos del ZIP si GitHub los pide.
+
+Después:
+1. Espera Vercel.
+2. En iPhone elimina la app de pantalla de inicio.
+3. Abre Safari, recarga la web.
+4. Añade de nuevo a pantalla de inicio.
