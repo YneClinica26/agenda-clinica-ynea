@@ -1,17 +1,13 @@
 {
-  "name": "Ynea calendario de citación",
-  "short_name": "Ynea Citas",
-  "description": "Agenda clínica online Ynea",
-  "start_url": "/",
-  "scope": "/",
+  "name": "Ynea citación",
+  "short_name": "Ynea",
+  "description": "Agenda clínica Ynea",
+  "start_url": ".",
+  "scope": ".",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#ffffff",
   "theme_color": "#e94f86",
-  "categories": [
-    "medical",
-    "productivity"
-  ],
   "icons": [
     {
       "src": "icon-192.png",
@@ -24,6 +20,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

@@ -1,0 +1,26 @@
+YNEA - CORRECCIÓN iOS/ANDROID
+
+Cambios incluidos:
+- Icono real de Ynea para iPhone/iPad/Android.
+- apple-touch-icon.
+- manifest actualizado.
+- CSS móvil para que la botonera no tape el calendario ni las tablas.
+- Service worker actualizado.
+
+Sube a GitHub sustituyendo:
+- index.html
+- manifest.json
+- sw.js
+- icon-192.png
+- icon-512.png
+- apple-touch-icon.png
+- logo-ynea.png
+- logo-ynea-180.png
+- logo-ynea-192.png
+- logo-ynea-512.png
+
+Después:
+1. Espera a Vercel.
+2. En iPhone borra el icono anterior de pantalla de inicio.
+3. Abre Safari > https://agenda-clinica-ynea.vercel.app
+4. Compartir > Añadir a pantalla de inicio.

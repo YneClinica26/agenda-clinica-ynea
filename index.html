@@ -388,13 +388,69 @@ button:not(.secondary):not(.danger):not(.tab){
 </style>
 
 
-<meta name="application-name" content="Ynea Citas">
-<meta name="apple-mobile-web-app-title" content="Ynea Citas">
+
+<meta name="application-name" content="Ynea citación">
+<meta name="apple-mobile-web-app-title" content="Ynea citación">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" href="logo-ynea-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="shortcut icon" href="logo-ynea.png">
+
+
+<style id="ynea-ios-android-layout-fix">
+html, body {
+  min-height: 100%;
+  height: auto !important;
+  overflow: auto !important;
+  -webkit-text-size-adjust: 100%;
+}
+body { overscroll-behavior-y: auto; }
+button, .btn, .tab, nav button, .toolbar button, .actions button {
+  width: auto !important;
+  max-width: 100% !important;
+  flex: 0 0 auto;
+}
+nav, .tabs, .toolbar, .actions, .topbar, .headerActions, .mainActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-width: 100%;
+}
+.tableWrap, .table-wrap, .calendarWrap, .calendar-wrap,
+#calendar, #calendario, #weekTable, #monthTable, #yearTable {
+  max-width: 100%;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+.app, .container, main, section, .card, .panel {
+  height: auto !important;
+  max-height: none !important;
+}
+@media (max-width: 768px) {
+  header { position: static !important; }
+  nav, .tabs, .toolbar, .actions, .topbar, .headerActions, .mainActions {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    white-space: nowrap !important;
+    padding-bottom: 6px;
+  }
+  nav button, .tabs button, .tab, .toolbar button, .actions button {
+    font-size: 13px !important;
+    padding: 8px 10px !important;
+    min-height: 34px !important;
+    white-space: nowrap !important;
+  }
+  main { padding: 10px !important; }
+  .card, .panel { padding: 12px !important; }
+  table { min-width: 720px; }
+}
+</style>
 
 </head>
 <body>
