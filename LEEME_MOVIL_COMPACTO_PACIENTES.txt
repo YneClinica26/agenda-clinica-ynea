@@ -1,0 +1,17 @@
+YNEA - MÓVIL COMPACTO + PACIENTES
+
+Cambios:
+- Encabezado móvil mucho más pequeño.
+- Botones y selectores del calendario compactos en dos líneas.
+- Eliminados textos tipo “uso rápido...”.
+- Filtro por nombre en pacientes.
+- Tabla/formulario de pacientes más compacto para que los campos quepan mejor en una línea.
+
+Sube a GitHub sustituyendo:
+- index.html
+- el resto de archivos si GitHub los pide.
+
+Después:
+1. Espera Vercel.
+2. En iPhone/Android cierra y reabre la app.
+3. Si no se ve, elimina el icono y vuelve a añadir la app desde Safari/Chrome.
