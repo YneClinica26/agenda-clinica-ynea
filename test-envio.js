@@ -24,6 +24,28 @@ function formatoFechaES(fecha) {
   return new Date(`${fecha}T00:00:00`).toLocaleDateString("es-ES");
 }
 
+function ymdhmToGoogle(fecha, hora, duracionMinutos) {
+  const [y, m, d] = String(fecha).split("-").map(Number);
+  const [hh, mm] = String(hora || "09:00").split(":").map(Number);
+
+  // Ajuste sencillo para España peninsular. Para la mayoría de citas funcionará correctamente.
+  // Si quieres precisión total con cambios de horario verano/invierno, lo refinamos después.
+  const start = new Date(Date.UTC(y, m - 1, d, hh - 2, mm || 0, 0));
+  const end = new Date(start.getTime() + (Number(duracionMinutos || 30) * 60000));
+
+  const fmt = (dt) => dt.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+  return { start: fmt(start), end: fmt(end) };
+}
+
+function googleCalendarLink(cita) {
+  const { start, end } = ymdhmToGoogle(cita.fecha, cita.hora, cita.duracion || cita.duracion_minutos || 30);
+  const title = encodeURIComponent("Cita en Ynea");
+  const details = encodeURIComponent(`Cita en Ynea\nTipo: ${cita.tipo || ""}\nProfesional: ${cita.profesional || ""}`);
+  const location = encodeURIComponent("Avenida Jacinto Benavente, 26, 46005 Valencia");
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
+}
+
+
 function pacienteDeCita(data, cita) {
   return (data.pacientes || []).find(p => String(p.id) === String(cita.pacienteId)) || {};
 }
@@ -40,6 +62,7 @@ function mensajeEmail(data, cita) {
   const hora = cita.hora || "";
   const profesional = cita.profesional || "";
   const tipo = cita.tipo || "";
+  const calendarioHref = googleCalendarLink(cita);
 
   return `
 <!doctype html>
@@ -64,10 +87,7 @@ function mensajeEmail(data, cita) {
 <tr><td align="center" class="outer-padding" style="padding:24px 0;">
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" class="container" style="width:560px;max-width:560px;background:#ffffff;border:1px solid #ead5de;border-collapse:collapse;">
 <tr><td class="content-pad" style="padding:24px 28px 10px 28px;font-family:Arial,Helvetica,sans-serif;">
-<h1 class="title" style="margin:0;color:#9f244f;font-size:20px;line-height:26px;font-weight:700;">Recordatorio de  cita</h1>
-<p style="margin:6px 0 0 0;color:#6b7280;font-size:13px;">
-Clínica Ynea
-</p>
+<h1 class="title" style="margin:0;color:#9f244f;font-size:20px;line-height:26px;font-weight:700;">Recordatorio de cita</h1>
 </td></tr>
 <tr><td class="content-pad bodytext" style="padding:8px 28px 0 28px;font-family:Arial,Helvetica,sans-serif;color:#111827;font-size:14px;line-height:21px;">
 <p style="margin:0 0 14px 0;">Hola ${nombre},</p>
@@ -87,29 +107,28 @@ Clínica Ynea
 <p style="margin:0 0 10px 0;">Si no puede asistir, por favor comuníquenoslo respondiendo a este email.</p>
 <p style="margin:0;">Gracias.</p>
 </td></tr>
-<tr><td class="content-pad" style="padding:0 28px 24px 28px;">
 
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-         style="background:#fff3f8;border:1px solid #f1c7d8;border-radius:12px;border-collapse:separate;">
-    
-    <tr>
-      <td style="padding:16px;font-family:Arial,Helvetica,sans-serif;color:#374151;">
-
-        <img src="${LOGO_YNEA}" width="120"
-             style="display:block;width:120px;max-width:120px;margin-bottom:12px;">
-
-        <div style="font-size:12px;line-height:18px;">
-          Avda. de Jacinto Benavente, 26<br>
-          Valencia, 46005<br>
-          Tel. 963 95 59 31<br>
-          ynea.es
-        </div>
-
-      </td>
-    </tr>
-
-  </table>
-
+<tr><td class="content-pad" style="padding:0 28px 24px 28px;font-family:Arial,Helvetica,sans-serif;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;">
+<tr>
+<td style="padding:0;">
+<a href="${calendarioHref}" style="display:inline-block;background:#9f244f;color:#ffffff;text-decoration:none;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:700;line-height:18px;">
+Añadir cita a la agenda
+</a>
+</td>
+</tr>
+</table>
+</td></tr>
+<tr><td class="content-pad" style="padding:16px 28px 18px 28px;border-top:1px solid #ead5de;background:#fffafc;font-family:Arial,Helvetica,sans-serif;color:#374151;">
+<img src="${LOGO_YNEA}" width="120" alt="Ynea" class="logo" style="display:block;width:120px;max-width:120px;height:auto;border:0;outline:none;text-decoration:none;margin:0 0 12px 0;">
+<div class="footertext" style="font-size:12px;line-height:18px;color:#374151;">
+Avenida Jacinto Benavente, 26<br>
+Valencia, 46005<br>
+Tel. 963 95 59 31<br>
+ynea.es
+</div>
+</td></tr>
+</table>
 </td></tr>
 </table>
 </body>
@@ -146,7 +165,7 @@ async function main() {
   if (!RESEND_API_KEY) throw new Error("Falta RESEND_API_KEY en GitHub Secrets.");
   const nowMadrid = madridParts();
 
-  if (false) {
+  if (nowMadrid.hour !== 11) {
     console.log(`No es hora de envío en Madrid. Hora actual: ${nowMadrid.hour}:${nowMadrid.minute}`);
     return;
   }
