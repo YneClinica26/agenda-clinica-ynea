@@ -1,4 +1,4 @@
-name: Ynea confirmacion email al crear cita
+name: Ynea email y WhatsApp preparado
 
 on:
   schedule:
@@ -19,4 +19,7 @@ jobs:
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
+          TWILIO_SID: ${{ secrets.TWILIO_SID }}
+          TWILIO_TOKEN: ${{ secrets.TWILIO_TOKEN }}
+          TWILIO_WHATSAPP_FROM: ${{ secrets.TWILIO_WHATSAPP_FROM }}
         run: node test-envio.js
