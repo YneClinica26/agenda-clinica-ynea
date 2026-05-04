@@ -733,6 +733,10 @@ button:not(.secondary):not(.danger):not(.tab):not(.mobileNavBtn):not(.appFab):ho
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<link rel="icon" type="image/png" href="icon.png?v=20260504-2">
+<link rel="apple-touch-icon" href="icon.png?v=20260504-2">
+<meta name="theme-color" content="#ec4899">
 </head>
 <body>
 <header>
@@ -4106,27 +4110,53 @@ button,.tab{touch-action:manipulation;}
 
 
 <script id="ynea-supabase-database-layer">
-/* ===== YNEA SUPABASE PRO - TABLAS CORRECTAS + DIAGNÓSTICO =====
-   Lee SIEMPRE:
-   - profesionales -> selector de profesional
-   - tipos_cita    -> selector de tipo de cita
-   - consultas     -> espacio físico / sala
+/* ===== YNEA SUPABASE PRO - CARGA REAL DE CATÁLOGOS =====
+   Tablas usadas:
+   - profesionales  -> selector Profesional
+   - tipos_cita     -> selector Tipo de cita
+   - consultas      -> espacio físico / sala
 */
 (function(){
   const STORAGE_KEY="agendaClinicaSemanal";
-  const CONFIG_KEY="yneaSupabaseConfig";
+  const CONFIG_KEYS=["yneaSupabaseConfig","ynea_supabase_config","supabaseConfig","supabase_config"];
   const STATE_TABLE="ynea_agenda_state";
   const ROW_ID="default";
   let client=null, saveTimer=null, loading=false, lastJson="";
   const OMIT=new Set(["id","uuid","created_at","updated_at","activo","active","duracion","duracion_minutos","minutos","duration"]);
   function el(id){return document.getElementById(id)}
+  function safeJson(x){try{return JSON.parse(x||"{}")}catch(e){return {}}}
   function currentData(){try{return eval("data")}catch(e){return window.data||{}}}
   function setCurrentData(obj){window.data=obj;try{eval("data=window.data")}catch(e){}}
-  function cfg(){try{return JSON.parse(localStorage.getItem(CONFIG_KEY)||"{}")}catch(e){return {}}}
+  function normalizeCfg(c){
+    c=c||{};
+    const url=(c.url||c.projectUrl||c.project_url||c.SUPABASE_URL||window.SUPABASE_URL||"").trim();
+    const anonKey=(c.anonKey||c.anon||c.key||c.publicKey||c.SUPABASE_KEY||c.SUPABASE_ANON_KEY||window.SUPABASE_KEY||window.SUPABASE_ANON_KEY||"").trim();
+    return {url,anonKey};
+  }
+  function cfg(){
+    for(const k of CONFIG_KEYS){const c=normalizeCfg(safeJson(localStorage.getItem(k))); if(c.url&&c.anonKey)return c;}
+    return normalizeCfg({});
+  }
+  function saveCfg(url,anonKey){
+    const c={url:(url||"").trim(),anonKey:(anonKey||"").trim()};
+    localStorage.setItem("yneaSupabaseConfig",JSON.stringify(c));
+    return c;
+  }
   function hasCfg(){const c=cfg();return !!(c.url&&c.anonKey)}
-  function status(msg,ok){const x=el("yneaDbStatus"); if(x){x.textContent=msg; x.style.color=ok?"#15803d":"#be123c"}}
-  function logDiag(msg){const x=el("yneaDbDiag"); if(x){x.textContent=msg}}
-  function init(){const c=cfg(); if(!c.url||!c.anonKey||!window.supabase)return null; try{client=window.supabase.createClient(c.url,c.anonKey); window.yneaSupabaseClient=client; return client}catch(e){status("Error iniciando Supabase",false);return null}}
+  function status(msg,ok){const x=el("yneaDbStatus"); if(x){x.textContent=msg; x.style.color=ok?"#15803d":"#be123c"} console[ok?"log":"warn"]("Ynea DB:",msg);}
+  function logDiag(msg){const x=el("yneaDbDiag"); if(x){x.textContent=msg} console.log("Ynea diagnóstico:",msg);}
+  function init(){
+    const c=cfg();
+    if(!c.url||!c.anonKey){status("Supabase no conectado: falta URL o anon key",false);return null;}
+    if(!window.supabase||typeof window.supabase.createClient!=="function"){
+      status("No se ha cargado la librería de Supabase",false);return null;
+    }
+    try{
+      client=window.supabase.createClient(c.url,c.anonKey);
+      window.yneaSupabaseClient=client;
+      return client;
+    }catch(e){status("Error iniciando Supabase: "+(e.message||e),false);return null;}
+  }
   function nameFrom(row){
     if(!row||typeof row!=="object")return "";
     const preferred=["nombre","name","titulo","title","tipo","tipo_cita","descripcion","consulta","profesional"];
@@ -4136,10 +4166,14 @@ button,.tab{touch-action:manipulation;}
   }
   function durationFrom(row){return row?.duracion ?? row?.duracion_minutos ?? row?.minutos ?? row?.duration ?? 30}
   function uniq(list){return [...new Set((list||[]).map(x=>String(x||"").trim()).filter(Boolean))]}
-  function render(){try{if(typeof refreshAllSelects==="function")refreshAllSelects()}catch(e){console.warn(e)} try{if(typeof renderAll==="function")renderAll()}catch(e){console.warn(e)}}
+  function render(){
+    try{if(typeof refreshAllSelects==="function")refreshAllSelects()}catch(e){console.warn("refreshAllSelects",e)}
+    try{if(typeof renderAll==="function")renderAll()}catch(e){console.warn("renderAll",e)}
+  }
   async function read(sb,table){
-    try{const r=await sb.from(table).select("*"); if(r.error)throw r.error; return Array.isArray(r.data)?r.data:[]}
-    catch(e){console.error("Supabase: no se pudo leer "+table,e); return {__error:String(e.message||e)}}
+    const r=await sb.from(table).select("*");
+    if(r.error){console.error("Supabase error",table,r.error);return {__error:r.error.message||JSON.stringify(r.error)}}
+    return Array.isArray(r.data)?r.data:[];
   }
   async function applyCatalogs(sb,base){
     const [pr,tr,cr]=await Promise.all([read(sb,"profesionales"),read(sb,"tipos_cita"),read(sb,"consultas")]);
@@ -4148,29 +4182,32 @@ button,.tab{touch-action:manipulation;}
     const profesionales=uniq(profRows.filter(r=>r.activo!==false&&r.active!==false).map(nameFrom));
     const tipos=uniq(tipoRows.filter(r=>r.activo!==false&&r.active!==false).map(nameFrom));
     const consultas=uniq(consultaRows.filter(r=>r.activo!==false&&r.active!==false).map(nameFrom));
-    if(profesionales.length) base.profesionales=profesionales;
+    base.profesionales=profesionales.length?profesionales:(base.profesionales||[]);
     if(tipos.length){base.tipos=tipos; base.duracionesTipo=base.duracionesTipo||{}; tipoRows.forEach(r=>{const n=nameFrom(r); if(n)base.duracionesTipo[n]=String(durationFrom(r))})}
-    if(consultas.length) base.consultas=consultas;
-    logDiag(`Lectura Supabase → profesionales: ${profesionales.length}, tipos_cita: ${tipos.length}, consultas: ${consultas.length}${errors.length?"\nErrores: "+errors.join(" | "):""}`);
-    return base;
+    if(consultas.length)base.consultas=consultas;
+    const msg=`Lectura Supabase → profesionales: ${profesionales.length}, tipos_cita: ${tipos.length}, consultas: ${consultas.length}${errors.length?"
+Errores: "+errors.join(" | "):""}`;
+    logDiag(msg);
+    return {base,msg,counts:{profesionales:profesionales.length,tipos_cita:tipos.length,consultas:consultas.length},errors};
   }
   async function loadCloud(){
-    if(loading)return; const sb=client||init(); if(!sb){status("Supabase no conectado: revisa URL y anon key",false);return}
-    loading=true; status("Cargando Supabase...",true);
+    if(loading)return; const sb=client||init(); if(!sb)return;
+    loading=true; status("Cargando catálogos desde Supabase...",true);
     try{
       let base=currentData()||{};
       try{const r=await sb.from(STATE_TABLE).select("data").eq("id",ROW_ID).maybeSingle(); if(!r.error&&r.data&&r.data.data)base=r.data.data}catch(e){console.warn("Sin estado general",e)}
-      base=await applyCatalogs(sb,base);
-      setCurrentData(base); localStorage.setItem(STORAGE_KEY,JSON.stringify(base)); lastJson=JSON.stringify(base); render();
-      status("Conectado. Catálogos cargados desde profesionales, tipos_cita y consultas.",true);
-    }catch(e){console.error(e); status("Error cargando Supabase. Mira diagnóstico.",false); logDiag(String(e.message||e));}
+      const res=await applyCatalogs(sb,base);
+      setCurrentData(res.base); localStorage.setItem(STORAGE_KEY,JSON.stringify(res.base)); lastJson=JSON.stringify(res.base); render();
+      status(res.errors.length?"Conectado con avisos. Revisa diagnóstico.":"Conectado. Catálogos cargados.",!res.errors.length);
+      return res;
+    }catch(e){console.error(e); status("Error cargando Supabase: "+(e.message||e),false); logDiag(String(e.message||e));}
     finally{loading=false}
   }
   async function insertMissing(sb,table,names,extra){
     const rows=await read(sb,table); if(!Array.isArray(rows))return;
     const existing=new Set(uniq(rows.map(nameFrom)).map(x=>x.toLowerCase()));
     const add=uniq(names).filter(n=>!existing.has(n.toLowerCase())).map(n=>Object.assign({nombre:n,activo:true},extra?extra(n):{}));
-    if(add.length){try{await sb.from(table).insert(add)}catch(e){console.warn("No se pudieron insertar faltantes en "+table,e)}}
+    if(add.length){const r=await sb.from(table).insert(add); if(r.error)console.warn("No se pudieron insertar faltantes en "+table,r.error)}
   }
   async function saveCloud(force){
     if(loading&&!force)return; const sb=client||init(); if(!sb)return; const d=currentData(); if(!d)return;
@@ -4181,15 +4218,17 @@ button,.tab{touch-action:manipulation;}
       await insertMissing(sb,"consultas",d.consultas||[]);
       const r=await sb.from(STATE_TABLE).upsert({id:ROW_ID,data:d,updated_at:new Date().toISOString()}); if(r.error)throw r.error;
       lastJson=json; status("Guardado en Supabase",true);
-    }catch(e){console.error(e); status("No se pudo guardar en Supabase",false)}
+    }catch(e){console.error(e); status("No se pudo guardar en Supabase: "+(e.message||e),false)}
   }
-  window.yneaQueueCloudSave=function(){if(!hasCfg()||loading)return; clearTimeout(saveTimer); saveTimer=setTimeout(()=>saveCloud(false),500)};
-  window.yneaLoadFromCloud=loadCloud; window.yneaSaveToCloudNow=()=>saveCloud(true); window.yneaTestSupabase=async()=>{const sb=client||init(); if(!sb) return {error:"Sin conexión: falta URL/anon key o librería"}; return await sb.from("profesionales").select("*");};
+  window.yneaQueueCloudSave=function(){if(!hasCfg()||loading)return; clearTimeout(saveTimer); saveTimer=setTimeout(()=>saveCloud(false),700)};
+  window.yneaLoadFromCloud=loadCloud;
+  window.yneaSaveToCloudNow=()=>saveCloud(true);
+  window.yneaTestSupabase=async()=>{const sb=client||init(); if(!sb)return {error:"Sin conexión"}; return await applyCatalogs(sb,currentData()||{});};
   function panel(){
     const cv=el("configView"); if(!cv||el("yneaDbPanel"))return; const c=cfg();
     const p=document.createElement("div"); p.id="yneaDbPanel"; p.className="card"; p.innerHTML=`
       <h2>Base de datos Supabase</h2>
-      <p class="small">Esta versión carga <b>profesionales</b>, <b>tipos_cita</b> y <b>consultas</b> directamente de Supabase.</p>
+      <p class="small">Carga <b>profesionales</b>, <b>tipos_cita</b> y <b>consultas</b> directamente de Supabase.</p>
       <label>Project URL</label><input id="yneaSupabaseUrl" value="${(c.url||"").replaceAll('"','&quot;')}" placeholder="https://xxxxx.supabase.co">
       <label>Anon public key</label><input id="yneaSupabaseAnon" value="${(c.anonKey||"").replaceAll('"','&quot;')}" placeholder="eyJhbGciOi...">
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
@@ -4198,14 +4237,14 @@ button,.tab{touch-action:manipulation;}
         <button type="button" id="yneaClearDbBtn" class="danger">Desconectar</button>
       </div>
       <p id="yneaDbStatus" class="small" style="margin-top:10px">${hasCfg()?"Conexión guardada":"Pendiente de configurar"}</p>
-      <pre id="yneaDbDiag" style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px;font-size:12px;color:#334155;max-height:140px;overflow:auto">Pulsa “Conectar y recargar catálogos” para comprobar filas leídas.</pre>`;
+      <pre id="yneaDbDiag" style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px;font-size:12px;color:#334155;max-height:170px;overflow:auto">Pulsa “Conectar y recargar catálogos”.</pre>`;
     cv.prepend(p);
-    el("yneaConnectDbBtn").onclick=async()=>{localStorage.setItem(CONFIG_KEY,JSON.stringify({url:el("yneaSupabaseUrl").value.trim(),anonKey:el("yneaSupabaseAnon").value.trim()}));client=null;init();await loadCloud()};
-    el("yneaUploadDbBtn").onclick=async()=>{localStorage.setItem(CONFIG_KEY,JSON.stringify({url:el("yneaSupabaseUrl").value.trim(),anonKey:el("yneaSupabaseAnon").value.trim()}));client=null;init();await saveCloud(true)};
-    el("yneaClearDbBtn").onclick=()=>{localStorage.removeItem(CONFIG_KEY);client=null;status("Desconectado",false)};
+    el("yneaConnectDbBtn").onclick=async()=>{saveCfg(el("yneaSupabaseUrl").value,el("yneaSupabaseAnon").value);client=null;await loadCloud()};
+    el("yneaUploadDbBtn").onclick=async()=>{saveCfg(el("yneaSupabaseUrl").value,el("yneaSupabaseAnon").value);client=null;await saveCloud(true)};
+    el("yneaClearDbBtn").onclick=()=>{for(const k of CONFIG_KEYS)localStorage.removeItem(k);client=null;status("Desconectado",false)};
   }
-  document.addEventListener("DOMContentLoaded",()=>{panel(); if(hasCfg())setTimeout(loadCloud,900)});
-  window.addEventListener("focus",()=>{if(hasCfg())setTimeout(loadCloud,250)});
+  document.addEventListener("DOMContentLoaded",()=>{panel(); if(hasCfg())setTimeout(loadCloud,1200)});
+  window.addEventListener("focus",()=>{if(hasCfg())setTimeout(loadCloud,350)});
 })();
 </script>
 
