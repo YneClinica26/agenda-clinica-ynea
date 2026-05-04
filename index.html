@@ -5225,3 +5225,183 @@ html.ynea-mobile-pro.ynea-agenda-mobile-open .mobileBottomNav{display:none!impor
 
 </body>
 </html>
+<!-- YNEA FIX GLOBAL CITAS + PACIENTES 2026-05-04 -->
+<style id="ynea-fix-global-citas-pacientes-2026-05-04">
+/* Permite abrir el formulario de cita aunque versiones anteriores hayan ocultado #agendaView con !important */
+#agendaView.ynea-agenda-open{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+.yneaAgendaCloseBar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  background:#fff1f7;
+  border:1px solid #f3c7da;
+  color:#db2777;
+  border-radius:16px;
+  padding:12px 14px;
+  margin-bottom:14px;
+  font-weight:800;
+}
+#editorCitaOverlay.ynea-editor-open,
+#pacienteEditOverlay.ynea-editor-open{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#pacientesTable tbody tr{cursor:pointer!important;}
+#pacientesTable tbody tr:hover{background:#fff1f7!important;}
+</style>
+<script id="ynea-fix-global-citas-pacientes-script-2026-05-04">
+(function(){
+  function el(id){return document.getElementById(id);}
+  function isMobileOS(){
+    var ua=navigator.userAgent||'';
+    return /iPhone|iPad|iPod|Android/i.test(ua) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  }
+  var ALL_VIEWS=['semana','mensual','agenda','pacientes','config','bloqueos','listados','copias','avisos','infoDiaria'];
+
+  function ensureAgendaCloseBar(){
+    var agenda=el('agendaView');
+    if(!agenda || agenda.querySelector('.yneaAgendaCloseBar')) return;
+    var bar=document.createElement('div');
+    bar.className='yneaAgendaCloseBar';
+    bar.innerHTML='<span>Nueva cita</span><button type="button" class="secondary" onclick="cerrarAgendaYneaFix()">Cerrar</button>';
+    agenda.insertBefore(bar, agenda.firstChild);
+  }
+
+  window.abrirAgendaYneaFix=function(fecha,hora,consulta){
+    ensureAgendaCloseBar();
+    if(el('fechaCita') && fecha) el('fechaCita').value=fecha;
+    if(el('horaCita') && hora) el('horaCita').value=hora;
+    if(el('consultaCita') && consulta) el('consultaCita').value=consulta;
+    var prof=el('weekProf') && el('weekProf').value;
+    if(prof && el('profesionalCita')) el('profesionalCita').value=prof;
+    try{ if(typeof refreshAllSelects==='function') refreshAllSelects(); }catch(e){}
+    ALL_VIEWS.forEach(function(v){
+      var node=el(v+'View');
+      if(!node) return;
+      if(v==='agenda'){
+        node.classList.add('ynea-agenda-open');
+        node.hidden=false;
+        node.style.setProperty('display','block','important');
+        node.style.setProperty('visibility','visible','important');
+        node.style.setProperty('opacity','1','important');
+      }else{
+        node.style.setProperty('display','none','important');
+      }
+    });
+    document.querySelectorAll('.tabs .tab,[data-view]').forEach(function(b){b.classList.remove('active');});
+    setTimeout(function(){
+      var f=el('pacienteBusqueda')||el('pacienteCita')||el('fechaCita');
+      if(f && typeof f.focus==='function') f.focus();
+    },80);
+    return false;
+  };
+
+  window.cerrarAgendaYneaFix=function(){
+    var agenda=el('agendaView');
+    if(agenda){
+      agenda.classList.remove('ynea-agenda-open');
+      agenda.style.setProperty('display','none','important');
+    }
+    if(typeof window.setView==='function') window.setView('semana');
+    else {
+      var sem=el('semanaView'); if(sem) sem.style.setProperty('display','block','important');
+    }
+    return false;
+  };
+
+  /* Reemplazo global: funciona en Chrome, iOS y Android. */
+  window.quickNewCita=function(fecha,hora){ return window.abrirAgendaYneaFix(fecha,hora,''); };
+  window.quickNewCitaConsulta=function(fecha,hora,consulta){ return window.abrirAgendaYneaFix(fecha,hora,consulta||''); };
+
+  var oldAdd=window.addCita;
+  window.addCita=function(){
+    var before=(window.data && Array.isArray(data.citas)) ? data.citas.length : 0;
+    var r=oldAdd ? oldAdd.apply(this,arguments) : undefined;
+    var after=(window.data && Array.isArray(data.citas)) ? data.citas.length : before;
+    if(after>before){
+      var agenda=el('agendaView');
+      if(agenda){agenda.classList.remove('ynea-agenda-open'); agenda.style.setProperty('display','none','important');}
+      if(typeof window.setView==='function') window.setView('semana');
+    }
+    return r;
+  };
+
+  /* Forzar apertura visible del editor de cita. */
+  var oldAbrirEditor=window.abrirEditorCita;
+  window.abrirEditorCita=function(idCita){
+    var r=oldAbrirEditor ? oldAbrirEditor.apply(this,arguments) : undefined;
+    var ov=el('editorCitaOverlay');
+    if(ov){
+      ov.classList.add('ynea-editor-open');
+      ov.style.setProperty('display','flex','important');
+      ov.style.setProperty('visibility','visible','important');
+      ov.style.setProperty('opacity','1','important');
+    }
+    return r;
+  };
+  var oldCerrarEditor=window.cerrarEditorCita;
+  window.cerrarEditorCita=function(){
+    var ov=el('editorCitaOverlay');
+    if(ov){ov.classList.remove('ynea-editor-open'); ov.style.setProperty('display','none','important');}
+    return oldCerrarEditor ? oldCerrarEditor.apply(this,arguments) : undefined;
+  };
+
+  function esc(x){return String(x==null?'':x).replace(/[&<>'"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c];});}
+  function jsq(x){return String(x==null?'':x).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,' ');}
+  function renderPacientesEditableFix(){
+    var table=el('pacientesTable');
+    if(!table || !window.data || !Array.isArray(data.pacientes)) return;
+    table.innerHTML='<thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Observaciones</th><th>Acción</th></tr></thead><tbody>'+data.pacientes.map(function(p){
+      return '<tr data-paciente-id="'+esc(p.id)+'" onclick="abrirEditorPaciente(\''+jsq(p.id)+'\')"><td><b>'+esc(p.nombre)+'</b></td><td>'+esc(p.telefono)+'</td><td>'+esc(p.email)+'</td><td>'+esc(p.obs)+'</td><td><button type="button" onclick="event.stopPropagation(); abrirEditorPaciente(\''+jsq(p.id)+'\')">Editar</button></td></tr>';
+    }).join('')+'</tbody>';
+  }
+  window.renderPatients=function(){renderPacientesEditableFix();};
+  window.renderPacientes=window.renderPatients;
+  var oldRenderAll=window.renderAll;
+  window.renderAll=function(){
+    var r;
+    try{ if(oldRenderAll) r=oldRenderAll.apply(this,arguments); }catch(e){ console.warn('Ynea render original:',e); }
+    try{ renderPacientesEditableFix(); }catch(e){}
+    return r;
+  };
+
+  document.addEventListener('click',function(e){
+    var row=e.target.closest && e.target.closest('#pacientesTable tbody tr[data-paciente-id]');
+    if(!row) return;
+    if(e.target.closest && e.target.closest('button,a,input,select,textarea')) return;
+    e.preventDefault();
+    window.abrirEditorPaciente(row.getAttribute('data-paciente-id'));
+  },false);
+
+  var oldAbrirPaciente=window.abrirEditorPaciente;
+  window.abrirEditorPaciente=function(idPaciente){
+    var r=oldAbrirPaciente ? oldAbrirPaciente.apply(this,arguments) : undefined;
+    var ov=el('pacienteEditOverlay');
+    if(ov){
+      ov.classList.add('ynea-editor-open');
+      ov.style.setProperty('display','flex','important');
+      ov.style.setProperty('visibility','visible','important');
+      ov.style.setProperty('opacity','1','important');
+    }
+    return r;
+  };
+  var oldCerrarPaciente=window.cerrarEditorPaciente;
+  window.cerrarEditorPaciente=function(){
+    var ov=el('pacienteEditOverlay');
+    if(ov){ov.classList.remove('ynea-editor-open'); ov.style.setProperty('display','none','important');}
+    return oldCerrarPaciente ? oldCerrarPaciente.apply(this,arguments) : undefined;
+  };
+
+  function boot(){ensureAgendaCloseBar(); renderPacientesEditableFix();}
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  window.addEventListener('load',function(){setTimeout(boot,120);setTimeout(boot,900);});
+})();
+</script>
