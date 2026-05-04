@@ -557,6 +557,100 @@ button:not(.secondary):not(.danger):not(.tab):not(.mobileNavBtn):not(.appFab):ho
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ec4899">
+
+
+<style id="ynea-mobile-week-5-days-fix">
+/* PRO móvil: la vista semanal mantiene los 5 días visibles en iOS/Android */
+@media (max-width: 900px){
+  #semanaView .tableWrap{
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    max-height: none !important;
+    border: 1px solid var(--app-line) !important;
+    border-radius: 18px !important;
+    background: #fff !important;
+  }
+  #semanaView table{
+    display: table !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+  }
+  #semanaView thead{
+    display: table-header-group !important;
+  }
+  #semanaView tbody{
+    display: table-row-group !important;
+  }
+  #semanaView tr{
+    display: table-row !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  #semanaView th,
+  #semanaView td{
+    display: table-cell !important;
+    border-bottom: 1px solid var(--app-line) !important;
+    border-right: 1px solid var(--app-line) !important;
+    padding: 4px 2px !important;
+    font-size: 10px !important;
+    line-height: 1.15 !important;
+    vertical-align: top !important;
+    min-width: 0 !important;
+    word-break: break-word !important;
+  }
+  #semanaView th:first-child,
+  #semanaView td.time{
+    width: 42px !important;
+    max-width: 42px !important;
+    position: static !important;
+    background: #fff !important;
+    color: var(--app-pink-2) !important;
+    font-weight: 800 !important;
+    white-space: normal !important;
+  }
+  #semanaView th:not(:first-child),
+  #semanaView td:not(.time){
+    width: calc((100% - 42px) / 5) !important;
+  }
+  #semanaView .slot{
+    min-height: 52px !important;
+    min-width: 0 !important;
+  }
+  #semanaView .appt{
+    padding: 5px 4px !important;
+    margin: 2px 0 !important;
+    border-radius: 10px !important;
+    font-size: 10px !important;
+    line-height: 1.15 !important;
+  }
+  #semanaView .appt strong{
+    font-size: 10px !important;
+    line-height: 1.15 !important;
+  }
+  #semanaView .badge{
+    display: block !important;
+    padding: 2px 4px !important;
+    font-size: 9px !important;
+    margin-top: 3px !important;
+  }
+}
+@media (max-width: 390px){
+  #semanaView th,
+  #semanaView td{font-size:9px !important;padding:3px 1px !important;}
+  #semanaView th:first-child,
+  #semanaView td.time{width:36px !important;max-width:36px !important;}
+  #semanaView th:not(:first-child),
+  #semanaView td:not(.time){width:calc((100% - 36px) / 5) !important;}
+}
+</style>
+
 </head>
 <body>
 <header>
