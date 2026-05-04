@@ -4628,10 +4628,13 @@ section{visibility:visible!important;opacity:1!important;max-height:none!importa
 /* Solo app móvil/iOS/Android: ocultar Configuración y Copias de seguridad */
 html.ynea-mobile-app .tabs .tab[data-view="config"],
 html.ynea-mobile-app .tabs .tab[data-view="copias"],
+html.ynea-mobile-app .tabs .tab[data-view="infoDiaria"],
 html.ynea-mobile-app [onclick*="setView('config"],
 html.ynea-mobile-app [onclick*='setView("config'],
 html.ynea-mobile-app [onclick*="setView('copias"],
-html.ynea-mobile-app [onclick*='setView("copias']{
+html.ynea-mobile-app [onclick*='setView("copias'],
+html.ynea-mobile-app [onclick*="setView('infoDiaria"],
+html.ynea-mobile-app [onclick*='setView("infoDiaria']{
   display:none!important;
 }
 
@@ -4724,17 +4727,17 @@ html.ynea-mobile-app [onclick*='setView("copias']{
     document.querySelectorAll('.tabs .tab').forEach(function(b){
       var v=b.getAttribute('data-view');
       var t=(b.textContent||'').toLowerCase();
-      if(v==='config'||v==='copias'||t.indexOf('config')>=0||t.indexOf('copia')>=0){
+      if(v==='config'||v==='copias'||v==='infoDiaria'||t.indexOf('config')>=0||t.indexOf('copia')>=0||t.indexOf('información')>=0||t.indexOf('informacion')>=0){
         b.style.setProperty('display','none','important');
       }
     });
-    var current=document.querySelector('#configView[style*="block"],#copiasView[style*="block"]');
+    var current=document.querySelector('#configView[style*="block"],#copiasView[style*="block"],#infoDiariaView[style*="block"]');
     if(current && typeof window.setView==='function') window.setView('semana');
   }
   var previousSetView=window.setView;
   window.setView=function(view){
     mark();
-    if(document.documentElement.classList.contains('ynea-mobile-app') && (view==='config'||view==='copias')){
+    if(document.documentElement.classList.contains('ynea-mobile-app') && (view==='config'||view==='copias'||view==='infoDiaria')){
       view='semana';
     }
     var result;
@@ -4749,7 +4752,7 @@ html.ynea-mobile-app [onclick*='setView("copias']{
     if(!btn) return;
     var v=btn.getAttribute('data-view');
     var t=(btn.textContent||'').toLowerCase();
-    if(v==='config'||v==='copias'||t.indexOf('config')>=0||t.indexOf('copia')>=0){
+    if(v==='config'||v==='copias'||v==='infoDiaria'||t.indexOf('config')>=0||t.indexOf('copia')>=0||t.indexOf('información')>=0||t.indexOf('informacion')>=0){
       e.preventDefault();
       e.stopPropagation();
       if(e.stopImmediatePropagation) e.stopImmediatePropagation();
@@ -4760,6 +4763,250 @@ html.ynea-mobile-app [onclick*='setView("copias']{
   window.addEventListener('load',function(){setTimeout(hideMobileOnlyTabs,50);setTimeout(hideMobileOnlyTabs,500);});
   window.addEventListener('resize',hideMobileOnlyTabs);
   window.addEventListener('orientationchange',function(){setTimeout(hideMobileOnlyTabs,150);});
+})();
+</script>
+
+
+<!-- YNEA OCULTAR INFORMACION DIARIA EN IOS/ANDROID 2026-05-04 -->
+<style id="ynea-mobile-hide-info-diaria-2026-05-04">
+html.ynea-mobile-app .tabs .tab[data-view="infoDiaria"],
+html.ynea-mobile-app [data-view="infoDiaria"],
+html.ynea-mobile-app [onclick*="setView('infoDiaria"],
+html.ynea-mobile-app [onclick*='setView("infoDiaria']{display:none!important;}
+</style>
+<script id="ynea-mobile-hide-info-diaria-controller-2026-05-04">
+(function(){
+  function isMobileOS(){
+    var ua=navigator.userAgent||'';
+    var iPadDesktop=(navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+    return /iPhone|iPad|iPod|Android/i.test(ua) || iPadDesktop;
+  }
+  function apply(){
+    var mobile=isMobileOS();
+    document.documentElement.classList.toggle('ynea-mobile-app', mobile);
+    if(!mobile) return;
+    document.querySelectorAll('.tabs .tab,[data-view]').forEach(function(b){
+      var v=b.getAttribute('data-view');
+      var t=(b.textContent||'').toLowerCase();
+      if(v==='infoDiaria'||t.indexOf('información diaria')>=0||t.indexOf('informacion diaria')>=0){
+        b.style.setProperty('display','none','important');
+      }
+    });
+    var info=document.getElementById('infoDiariaView');
+    if(info && getComputedStyle(info).display!=='none' && typeof window.setView==='function') window.setView('semana');
+  }
+  var oldSetView=window.setView;
+  window.setView=function(view){
+    if(isMobileOS() && view==='infoDiaria') view='semana';
+    var r=typeof oldSetView==='function'?oldSetView.apply(this,[view].concat(Array.prototype.slice.call(arguments,1))):undefined;
+    setTimeout(apply,0);
+    return r;
+  };
+  document.addEventListener('click',function(e){
+    if(!isMobileOS()) return;
+    var btn=e.target.closest && e.target.closest('.tabs .tab,[data-view]');
+    if(!btn) return;
+    var v=btn.getAttribute('data-view');
+    var t=(btn.textContent||'').toLowerCase();
+    if(v==='infoDiaria'||t.indexOf('información diaria')>=0||t.indexOf('informacion diaria')>=0){
+      e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+      if(typeof window.setView==='function') window.setView('semana');
+    }
+  },true);
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',apply); else apply();
+  window.addEventListener('load',function(){setTimeout(apply,50);setTimeout(apply,500);});
+  window.addEventListener('resize',apply);
+  window.addEventListener('orientationchange',function(){setTimeout(apply,150);});
+})();
+</script>
+
+
+<!-- YNEA VERSION PRO MOVIL 2026-05-04 -->
+<style id="ynea-pro-mobile-2026-05-04">
+:root{--ynea-rosa:#ec4899;--ynea-rosa-oscuro:#db2777;--ynea-rosa-suave:#fff1f7;}
+button:not(.secondary):not(.danger), #installPwaBtn{background:var(--ynea-rosa)!important;color:#fff!important;border-color:var(--ynea-rosa)!important;}
+button:not(.secondary):not(.danger):hover, #installPwaBtn:hover{background:var(--ynea-rosa-oscuro)!important;}
+.yneaBrandTitle .brandText{color:var(--ynea-rosa-oscuro)!important;}
+
+html.ynea-mobile-pro .tabs .tab[data-view="config"],
+html.ynea-mobile-pro .tabs .tab[data-view="listados"],
+html.ynea-mobile-pro .tabs .tab[data-view="infoDiaria"],
+html.ynea-mobile-pro .tabs .tab[data-view="copias"],
+html.ynea-mobile-pro .tabs .tab[data-view="avisos"],
+html.ynea-mobile-pro .tabs .tab[data-view="bloqueos"],
+html.ynea-mobile-pro [onclick*="setView('config"],
+html.ynea-mobile-pro [onclick*='setView("config'],
+html.ynea-mobile-pro [onclick*="setView('listados"],
+html.ynea-mobile-pro [onclick*='setView("listados'],
+html.ynea-mobile-pro [onclick*="setView('infoDiaria"],
+html.ynea-mobile-pro [onclick*='setView("infoDiaria'],
+html.ynea-mobile-pro [onclick*="setView('copias"],
+html.ynea-mobile-pro [onclick*='setView("copias'],
+html.ynea-mobile-pro [onclick*="setView('avisos"],
+html.ynea-mobile-pro [onclick*='setView("avisos'],
+html.ynea-mobile-pro [onclick*="setView('bloqueos"],
+html.ynea-mobile-pro [onclick*='setView("bloqueos']{
+  display:none!important;
+}
+html.ynea-mobile-pro #configView,
+html.ynea-mobile-pro #listadosView,
+html.ynea-mobile-pro #infoDiariaView,
+html.ynea-mobile-pro #copiasView,
+html.ynea-mobile-pro #avisosView,
+html.ynea-mobile-pro #bloqueosView{
+  display:none!important;
+}
+html.ynea-mobile-pro .autosaveBar{display:none!important;}
+html.ynea-mobile-pro body{background:#fff8fb!important;padding-bottom:94px!important;}
+html.ynea-mobile-pro header{position:sticky!important;top:0!important;z-index:9000!important;background:rgba(255,255,255,.96)!important;backdrop-filter:blur(14px);box-shadow:0 8px 24px rgba(15,23,42,.08)!important;}
+html.ynea-mobile-pro .container{padding:12px!important;max-width:100%!important;}
+html.ynea-mobile-pro .card{border-radius:22px!important;border-color:#f3cfe0!important;box-shadow:0 10px 28px rgba(15,23,42,.08)!important;}
+html.ynea-mobile-pro input,
+html.ynea-mobile-pro select,
+html.ynea-mobile-pro textarea{border-radius:15px!important;font-size:16px!important;}
+html.ynea-mobile-pro .mobileBottomNav{grid-template-columns:repeat(4,1fr)!important;}
+html.ynea-mobile-pro .mobileBottomNav [data-view="config"],
+html.ynea-mobile-pro .mobileBottomNav [data-view="listados"],
+html.ynea-mobile-pro .mobileBottomNav [data-view="infoDiaria"],
+html.ynea-mobile-pro .mobileBottomNav [data-view="copias"],
+html.ynea-mobile-pro .mobileBottomNav [data-view="avisos"],
+html.ynea-mobile-pro .mobileBottomNav [data-view="bloqueos"]{display:none!important;}
+
+@media(max-width:900px){
+  html.ynea-mobile-pro .tabs{display:none!important;}
+  html.ynea-mobile-pro .mobileBottomNav{
+    position:fixed!important;left:10px!important;right:10px!important;bottom:10px!important;z-index:20000!important;
+    display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:6px!important;padding:8px!important;
+    background:rgba(255,255,255,.97)!important;border:1px solid #f3cfe0!important;border-radius:24px!important;
+    box-shadow:0 18px 42px rgba(15,23,42,.20)!important;backdrop-filter:blur(16px)!important;
+  }
+  html.ynea-mobile-pro .mobileNavBtn{min-height:58px!important;border-radius:18px!important;color:#64748b!important;background:transparent!important;font-size:11px!important;}
+  html.ynea-mobile-pro .mobileNavBtn.active{background:#fff1f7!important;color:#db2777!important;}
+}
+
+@media(max-width:900px) and (orientation:landscape){
+  html.ynea-mobile-pro body{padding-bottom:78px!important;}
+  html.ynea-mobile-pro header{position:static!important;padding:6px 10px!important;}
+  html.ynea-mobile-pro .yneaBrandTitle img{height:34px!important;max-width:88px!important;}
+  html.ynea-mobile-pro .yneaBrandTitle .brandText{font-size:15px!important;}
+  html.ynea-mobile-pro .container{padding:8px!important;}
+  html.ynea-mobile-pro #pacientesView{height:auto!important;min-height:calc(100vh - 86px)!important;overflow:visible!important;}
+  html.ynea-mobile-pro #pacientesView .grid{display:grid!important;grid-template-columns:minmax(240px,.85fr) minmax(360px,1.15fr)!important;gap:10px!important;align-items:start!important;}
+  html.ynea-mobile-pro #pacientesView .card{padding:10px!important;margin-bottom:8px!important;}
+  html.ynea-mobile-pro #pacientesView .card h2{font-size:16px!important;margin-bottom:8px!important;}
+  html.ynea-mobile-pro #pacientesView label{font-size:12px!important;margin:6px 0 3px!important;}
+  html.ynea-mobile-pro #pacientesView input,
+  html.ynea-mobile-pro #pacientesView textarea{padding:8px 10px!important;min-height:34px!important;font-size:14px!important;}
+  html.ynea-mobile-pro #pacientesView textarea{min-height:44px!important;}
+  html.ynea-mobile-pro #pacientesView button{min-height:34px!important;padding:7px 10px!important;font-size:13px!important;}
+  html.ynea-mobile-pro #pacientesView .tableWrap{max-height:calc(100vh - 132px)!important;overflow:auto!important;border-radius:16px!important;}
+  html.ynea-mobile-pro #pacientesView table{min-width:620px!important;}
+  html.ynea-mobile-pro #pacientesView th,
+  html.ynea-mobile-pro #pacientesView td{padding:6px!important;font-size:12px!important;}
+  html.ynea-mobile-pro .mobileBottomNav{left:14px!important;right:14px!important;bottom:8px!important;padding:6px!important;}
+  html.ynea-mobile-pro .mobileNavBtn{min-height:46px!important;font-size:10px!important;}
+}
+</style>
+<script id="ynea-pro-mobile-controller-2026-05-04">
+(function(){
+  var MOBILE_ONLY_BLOCKED={config:1,listados:1,infoDiaria:1,copias:1,avisos:1,bloqueos:1,anual:1,agenda:1};
+  var MOBILE_ALLOWED=['semana','mensual','pacientes'];
+  var LABELS={semana:['📅','Semana'],mensual:['🗓️','Mes'],pacientes:['👥','Pacientes']};
+  function isMobileOS(){
+    var ua=navigator.userAgent||'';
+    var iPadDesktop=(navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+    return /iPhone|iPad|iPod|Android/i.test(ua)||iPadDesktop;
+  }
+  function viewFromText(txt){
+    txt=(txt||'').toLowerCase();
+    if(txt.indexOf('seman')>=0) return 'semana';
+    if(txt.indexOf('mens')>=0||txt.indexOf('mes')>=0) return 'mensual';
+    if(txt.indexOf('pacient')>=0) return 'pacientes';
+    if(txt.indexOf('config')>=0) return 'config';
+    if(txt.indexOf('listad')>=0) return 'listados';
+    if(txt.indexOf('inform')>=0) return 'infoDiaria';
+    if(txt.indexOf('copia')>=0||txt.indexOf('backup')>=0) return 'copias';
+    if(txt.indexOf('aviso')>=0) return 'avisos';
+    if(txt.indexOf('bloque')>=0) return 'bloqueos';
+    if(txt.indexOf('anual')>=0) return 'anual';
+    if(txt.indexOf('agenda')>=0) return 'agenda';
+    return '';
+  }
+  function normalizeButton(btn){
+    if(!btn) return '';
+    var v=btn.getAttribute('data-view')||viewFromText(btn.textContent)||'';
+    var oc=btn.getAttribute('onclick')||'';
+    var m=oc.match(/setView\(['\"]([^'\"]+)/); if(!v&&m) v=m[1];
+    if(v){btn.setAttribute('data-view',v);btn.removeAttribute('onclick');}
+    return v;
+  }
+  function mark(){document.documentElement.classList.toggle('ynea-mobile-pro',isMobileOS());}
+  function hideBlocked(){
+    mark();
+    if(!isMobileOS()) return;
+    document.querySelectorAll('.tabs .tab,[data-view],button').forEach(function(b){
+      var v=normalizeButton(b);
+      if(MOBILE_ONLY_BLOCKED[v]) b.style.setProperty('display','none','important');
+    });
+    Object.keys(MOBILE_ONLY_BLOCKED).forEach(function(v){var el=document.getElementById(v+'View'); if(el) el.style.setProperty('display','none','important');});
+    buildBottomNav();
+  }
+  function showMobile(view){
+    if(!MOBILE_ALLOWED.includes(view)) view='semana';
+    MOBILE_ALLOWED.forEach(function(v){var el=document.getElementById(v+'View'); if(el) el.style.display=(v===view?'block':'none');});
+    Object.keys(MOBILE_ONLY_BLOCKED).forEach(function(v){var el=document.getElementById(v+'View'); if(el) el.style.setProperty('display','none','important');});
+    document.querySelectorAll('.mobileNavBtn,.tabs .tab,[data-view]').forEach(function(b){
+      var bv=normalizeButton(b); b.classList.toggle('active',bv===view);
+    });
+    try{ if(view==='semana'&&typeof window.renderSemana==='function') window.renderSemana(); }catch(e){}
+    try{ if(view==='mensual'&&typeof window.renderMensual==='function') window.renderMensual(); }catch(e){}
+    try{ if(view==='pacientes'&&typeof window.renderPacientes==='function') window.renderPacientes(); }catch(e){}
+  }
+  function buildBottomNav(){
+    var nav=document.querySelector('.mobileBottomNav');
+    if(!nav){nav=document.createElement('div');nav.className='mobileBottomNav';document.body.appendChild(nav);} 
+    nav.innerHTML='';
+    MOBILE_ALLOWED.forEach(function(v){
+      var b=document.createElement('button'); b.type='button'; b.className='mobileNavBtn'; b.setAttribute('data-view',v);
+      b.innerHTML='<span class="ico">'+LABELS[v][0]+'</span><span>'+LABELS[v][1]+'</span>';
+      nav.appendChild(b);
+    });
+  }
+  var previousSetView=window.setView;
+  window.setView=function(view){
+    mark();
+    if(isMobileOS()){
+      showMobile(view);
+      return false;
+    }
+    return typeof previousSetView==='function'?previousSetView.apply(this,arguments):undefined;
+  };
+  document.addEventListener('click',function(e){
+    if(!isMobileOS()) return;
+    var btn=e.target.closest&&e.target.closest('.mobileNavBtn,.tabs .tab,[data-view],button');
+    if(!btn) return;
+    var v=normalizeButton(btn);
+    if(!v) return;
+    if(MOBILE_ONLY_BLOCKED[v]||MOBILE_ALLOWED.includes(v)){
+      e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+      showMobile(MOBILE_ALLOWED.includes(v)?v:'semana');
+    }
+  },true);
+  ['alert','confirm'].forEach(function(name){
+    var old=window[name];
+    window[name]=function(msg){
+      var s=String(msg||'').toLowerCase();
+      if(isMobileOS() && (s.indexOf('copia')>=0 || s.indexOf('backup')>=0 || s.indexOf('seguridad')>=0)){
+        return name==='confirm'?false:undefined;
+      }
+      return old.apply(window,arguments);
+    };
+  });
+  function boot(){hideBlocked(); if(isMobileOS()) showMobile('semana');}
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  window.addEventListener('load',function(){setTimeout(boot,60);setTimeout(boot,600);});
+  window.addEventListener('resize',function(){setTimeout(boot,80);});
+  window.addEventListener('orientationchange',function(){setTimeout(boot,180);});
 })();
 </script>
 
