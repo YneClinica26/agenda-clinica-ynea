@@ -5405,3 +5405,289 @@ html.ynea-mobile-pro.ynea-agenda-mobile-open .mobileBottomNav{display:none!impor
   window.addEventListener('load',function(){setTimeout(boot,120);setTimeout(boot,900);});
 })();
 </script>
+
+
+<!-- YNEA FIX FINAL EVENTOS SEGUROS 2026-05-04 -->
+<style id="ynea-final-safe-events-style-2026-05-04">
+#agendaView.ynea-safe-agenda-open{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+.yneaSafeAgendaBackdrop{
+  position:fixed!important;
+  inset:0!important;
+  z-index:13000!important;
+  background:rgba(15,23,42,.38)!important;
+  padding:16px!important;
+  overflow:auto!important;
+}
+.yneaSafeAgendaBackdrop #agendaView{
+  max-width:760px!important;
+  margin:20px auto!important;
+  border-radius:24px!important;
+  box-shadow:0 24px 90px rgba(15,23,42,.28)!important;
+}
+.yneaSafeTopBar{
+  display:flex!important;
+  justify-content:space-between!important;
+  align-items:center!important;
+  gap:12px!important;
+  background:#fff1f7!important;
+  border:1px solid #f3c7da!important;
+  color:#db2777!important;
+  border-radius:16px!important;
+  padding:12px 14px!important;
+  margin-bottom:14px!important;
+  font-weight:800!important;
+}
+#editorCitaOverlay.ynea-safe-open,
+#pacienteEditOverlay.ynea-safe-open,
+#yneaInstallHelp.ynea-safe-open{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#pacientesTable tbody tr{cursor:pointer!important;}
+#pacientesTable tbody tr:hover{background:#fff1f7!important;}
+#installPwaBtn{display:inline-flex!important;background:#ec4899!important;color:#fff!important;border-color:#ec4899!important;}
+.yneaInstallHelpOverlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:14000;align-items:center;justify-content:center;padding:18px;}
+.yneaInstallHelpModal{background:#fff;width:min(560px,100%);border-radius:24px;border:1px solid #f3c7da;box-shadow:0 24px 90px rgba(15,23,42,.28);padding:22px;}
+.yneaInstallHelpModal h2{margin:0 0 10px;color:#db2777}.yneaInstallHelpModal p{color:#334155;line-height:1.45}.yneaInstallHelpModal ol{padding-left:20px;color:#334155}.yneaInstallHelpModal li{margin:8px 0}.yneaInstallHelpModal .actions{display:flex;justify-content:flex-end;margin-top:16px}
+@media(max-width:900px){
+  .yneaSafeAgendaBackdrop{padding:8px!important;}
+  .yneaSafeAgendaBackdrop #agendaView{margin:8px auto 96px!important;border-radius:22px!important;}
+}
+</style>
+<div class="yneaInstallHelpOverlay" id="yneaInstallHelp">
+  <div class="yneaInstallHelpModal">
+    <h2>Instalar app Ynea</h2>
+    <p id="yneaInstallText">Puedes instalar la agenda desde el menú del navegador.</p>
+    <ol id="yneaInstallSteps"></ol>
+    <div class="actions"><button type="button" onclick="cerrarAyudaInstalarYnea()">Entendido</button></div>
+  </div>
+</div>
+<script id="ynea-final-safe-events-script-2026-05-04">
+(function(){
+  function byId(id){return document.getElementById(id);}
+  function esc(x){return String(x==null?'':x).replace(/[&<>'"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c];});}
+  function jsq(x){return String(x==null?'':x).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,' ');}
+  function isIOS(){return /iPhone|iPad|iPod/i.test(navigator.userAgent||'') || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);}
+  function isAndroid(){return /Android/i.test(navigator.userAgent||'');}
+  function isMobile(){return isIOS() || isAndroid();}
+  var ALL=['semana','mensual','agenda','pacientes','config','bloqueos','listados','copias','avisos','infoDiaria','anual','year'];
+  var backdrop=null;
+
+  function ensureAgendaBar(){
+    var agenda=byId('agendaView'); if(!agenda) return;
+    if(!agenda.querySelector('.yneaSafeTopBar')){
+      var bar=document.createElement('div');
+      bar.className='yneaSafeTopBar';
+      bar.innerHTML='<span>Nueva cita</span><button type="button" class="secondary">Cerrar</button>';
+      bar.querySelector('button').addEventListener('click',function(e){e.preventDefault(); window.cerrarAgendaSeguraYnea();});
+      agenda.insertBefore(bar,agenda.firstChild);
+    }
+  }
+  function moveAgendaToBackdrop(){
+    var agenda=byId('agendaView'); if(!agenda) return;
+    if(!backdrop){
+      backdrop=document.createElement('div');
+      backdrop.className='yneaSafeAgendaBackdrop';
+      backdrop.style.display='none';
+      document.body.appendChild(backdrop);
+      backdrop.addEventListener('click',function(e){ if(e.target===backdrop) window.cerrarAgendaSeguraYnea(); });
+    }
+    if(agenda.parentNode!==backdrop) backdrop.appendChild(agenda);
+  }
+  window.abrirAgendaSeguraYnea=function(fecha,hora,consulta){
+    try{
+      ensureAgendaBar(); moveAgendaToBackdrop();
+      var fechaEl=byId('fechaCita'), horaEl=byId('horaCita'), consultaEl=byId('consultaCita'), profEl=byId('profesionalCita');
+      if(fechaEl && fecha) fechaEl.value=fecha;
+      if(horaEl && hora) horaEl.value=hora;
+      if(consultaEl && consulta) consultaEl.value=consulta;
+      var profFiltro=byId('weekProf');
+      if(profEl && profFiltro && profFiltro.value) profEl.value=profFiltro.value;
+      var agenda=byId('agendaView');
+      if(backdrop) backdrop.style.display='block';
+      if(agenda){
+        agenda.classList.add('ynea-safe-agenda-open');
+        agenda.hidden=false;
+        agenda.style.setProperty('display','block','important');
+        agenda.style.setProperty('visibility','visible','important');
+        agenda.style.setProperty('opacity','1','important');
+      }
+      setTimeout(function(){var f=byId('pacienteBusqueda')||byId('pacienteCita')||fechaEl; if(f&&f.focus) f.focus();},80);
+    }catch(err){console.error('Error abriendo cita segura',err); alert('No se pudo abrir la cita. Recarga la página e inténtalo de nuevo.');}
+    return false;
+  };
+  window.cerrarAgendaSeguraYnea=function(){
+    var agenda=byId('agendaView');
+    if(agenda){agenda.classList.remove('ynea-safe-agenda-open'); agenda.style.setProperty('display','none','important');}
+    if(backdrop) backdrop.style.display='none';
+    try{ if(typeof window.setView==='function') window.setView('semana'); }catch(e){}
+    return false;
+  };
+  window.quickNewCita=function(fecha,hora){return window.abrirAgendaSeguraYnea(fecha,hora,'');};
+  window.quickNewCitaConsulta=function(fecha,hora,consulta){return window.abrirAgendaSeguraYnea(fecha,hora,consulta||'');};
+
+  function citaIdFromNode(node){
+    var n=node;
+    while(n && n!==document){
+      if(n.classList && n.classList.contains('appt')){
+        var oc=n.getAttribute('onclick')||'';
+        var m=oc.match(/abrirEditorCita\(([^)]+)\)/);
+        if(m) return String(m[1]).replace(/["']/g,'').trim();
+      }
+      n=n.parentNode;
+    }
+    return null;
+  }
+  function slotDataFromNode(node){
+    var n=node;
+    while(n && n!==document){
+      if(n.classList && n.classList.contains('slot')){
+        var oc=n.getAttribute('onclick')||'';
+        var m=oc.match(/quickNewCitaConsulta\('([^']*)','([^']*)','([^']*)'\)/) || oc.match(/quickNewCita\('([^']*)','([^']*)'\)/);
+        if(m) return {fecha:m[1]||'',hora:m[2]||'',consulta:m[3]||''};
+      }
+      n=n.parentNode;
+    }
+    return null;
+  }
+  document.addEventListener('click',function(e){
+    var id=citaIdFromNode(e.target);
+    if(id){
+      e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+      try{ if(typeof window.abrirEditorCita==='function') window.abrirEditorCita(id); }catch(err){console.error('Error editor cita',err);}
+      return false;
+    }
+    var dataSlot=slotDataFromNode(e.target);
+    if(dataSlot){
+      e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+      window.abrirAgendaSeguraYnea(dataSlot.fecha,dataSlot.hora,dataSlot.consulta);
+      return false;
+    }
+  },true);
+
+  var oldAbrirEditor=window.abrirEditorCita;
+  window.abrirEditorCita=function(id){
+    try{ if(typeof oldAbrirEditor==='function') oldAbrirEditor.apply(this,arguments); }catch(err){console.error('Editor cita original falló',err);}
+    var ov=byId('editorCitaOverlay');
+    if(ov){ov.classList.add('ynea-safe-open'); ov.style.setProperty('display','flex','important'); ov.style.setProperty('visibility','visible','important'); ov.style.setProperty('opacity','1','important');}
+    return false;
+  };
+  var oldCerrarEditor=window.cerrarEditorCita;
+  window.cerrarEditorCita=function(){
+    var ov=byId('editorCitaOverlay'); if(ov){ov.classList.remove('ynea-safe-open'); ov.style.setProperty('display','none','important');}
+    try{ if(typeof oldCerrarEditor==='function') return oldCerrarEditor.apply(this,arguments); }catch(e){}
+  };
+  var oldAdd=window.addCita;
+  window.addCita=function(){
+    var before=(window.data&&Array.isArray(data.citas))?data.citas.length:0;
+    var r; try{ if(typeof oldAdd==='function') r=oldAdd.apply(this,arguments); }catch(err){console.error('Guardar cita falló',err); alert('No se pudo guardar la cita: '+err.message);}
+    var after=(window.data&&Array.isArray(data.citas))?data.citas.length:before;
+    if(after>before) window.cerrarAgendaSeguraYnea();
+    return r;
+  };
+
+  function renderPacientesSeguro(){
+    var table=byId('pacientesTable'); if(!table || !window.data || !Array.isArray(data.pacientes)) return;
+    table.innerHTML='<thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Observaciones</th><th>Acción</th></tr></thead><tbody>'+data.pacientes.map(function(p){
+      return '<tr data-paciente-id="'+esc(p.id)+'"><td><b>'+esc(p.nombre)+'</b></td><td>'+esc(p.telefono)+'</td><td>'+esc(p.email)+'</td><td>'+esc(p.obs)+'</td><td><button type="button" data-edit-paciente="'+esc(p.id)+'">Editar</button></td></tr>';
+    }).join('')+'</tbody>';
+  }
+  window.abrirEditorPaciente=function(id){
+    try{
+      var p=(window.data&&Array.isArray(data.pacientes))?data.pacientes.find(function(x){return String(x.id)===String(id);}):null;
+      if(!p){alert('No se encontró el paciente.'); return false;}
+      if(byId('editPacienteId')) byId('editPacienteId').value=p.id;
+      if(byId('editPacienteNombre')) byId('editPacienteNombre').value=p.nombre||'';
+      if(byId('editPacienteTelefono')) byId('editPacienteTelefono').value=p.telefono||'';
+      if(byId('editPacienteEmail')) byId('editPacienteEmail').value=p.email||'';
+      if(byId('editPacienteObs')) byId('editPacienteObs').value=p.obs||'';
+      var ov=byId('pacienteEditOverlay');
+      if(ov){ov.classList.add('ynea-safe-open'); ov.style.setProperty('display','flex','important'); ov.style.setProperty('visibility','visible','important'); ov.style.setProperty('opacity','1','important');}
+    }catch(err){console.error('Error editor paciente',err);}
+    return false;
+  };
+  window.cerrarEditorPaciente=function(){var ov=byId('pacienteEditOverlay'); if(ov){ov.classList.remove('ynea-safe-open'); ov.style.setProperty('display','none','important');} return false;};
+  window.guardarPacienteDesdeEditor=function(){
+    var id=byId('editPacienteId')&&byId('editPacienteId').value;
+    var p=(data.pacientes||[]).find(function(x){return String(x.id)===String(id);});
+    if(!p) return;
+    var nombre=(byId('editPacienteNombre')&&byId('editPacienteNombre').value.trim())||'';
+    if(!nombre){alert('Escribe el nombre del paciente.');return;}
+    p.nombre=nombre; p.telefono=(byId('editPacienteTelefono')&&byId('editPacienteTelefono').value)||''; p.email=(byId('editPacienteEmail')&&byId('editPacienteEmail').value)||''; p.obs=(byId('editPacienteObs')&&byId('editPacienteObs').value)||'';
+    try{if(typeof save==='function') save();}catch(e){}
+    window.cerrarEditorPaciente();
+    try{if(typeof refreshAllSelects==='function') refreshAllSelects();}catch(e){}
+    try{if(typeof renderAll==='function') renderAll();}catch(e){}
+    renderPacientesSeguro();
+  };
+  window.eliminarPacienteDesdeEditor=function(){
+    var id=byId('editPacienteId')&&byId('editPacienteId').value;
+    if((data.citas||[]).some(function(c){return String(c.pacienteId)===String(id);})){alert('No se puede eliminar: este paciente tiene citas asociadas. Puedes editar su ficha.');return;}
+    if(!confirm('¿Eliminar este paciente?')) return;
+    data.pacientes=(data.pacientes||[]).filter(function(x){return String(x.id)!==String(id);});
+    try{if(typeof save==='function') save();}catch(e){}
+    window.cerrarEditorPaciente(); renderPacientesSeguro();
+  };
+  document.addEventListener('click',function(e){
+    var btn=e.target.closest && e.target.closest('[data-edit-paciente]');
+    var row=e.target.closest && e.target.closest('#pacientesTable tbody tr[data-paciente-id]');
+    var id=btn ? btn.getAttribute('data-edit-paciente') : (row ? row.getAttribute('data-paciente-id') : null);
+    if(id){e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); window.abrirEditorPaciente(id); return false;}
+  },true);
+
+  var oldRenderAll=window.renderAll;
+  window.renderAll=function(){
+    var r; try{ if(typeof oldRenderAll==='function') r=oldRenderAll.apply(this,arguments); }catch(err){console.error('Render original falló',err);}
+    try{renderPacientesSeguro();}catch(e){}
+    return r;
+  };
+  window.renderPatients=renderPacientesSeguro;
+  window.renderPacientes=renderPacientesSeguro;
+
+  window.cerrarAyudaInstalarYnea=function(){var o=byId('yneaInstallHelp'); if(o){o.classList.remove('ynea-safe-open'); o.style.setProperty('display','none','important');}};
+  function mostrarAyudaInstalar(){
+    var text=byId('yneaInstallText'), steps=byId('yneaInstallSteps'), ov=byId('yneaInstallHelp');
+    if(!ov) return alert('Instala desde el menú del navegador.');
+    if(isIOS()){
+      text.textContent='En iPhone/iPad la instalación se hace desde Safari.';
+      steps.innerHTML='<li>Abre esta página en Safari.</li><li>Toca el botón Compartir.</li><li>Elige “Añadir a pantalla de inicio”.</li><li>Confirma con “Añadir”.</li>';
+    }else if(isAndroid()){
+      text.textContent='En Android la instalación depende de Chrome y puede tardar en activarse.';
+      steps.innerHTML='<li>Abre esta página en Chrome.</li><li>Toca ⋮ arriba a la derecha.</li><li>Elige “Instalar aplicación” o “Añadir a pantalla de inicio”.</li>';
+    }else{
+      text.textContent='En Chrome de ordenador puedes instalarla desde la barra de direcciones o el menú.';
+      steps.innerHTML='<li>Busca el icono de instalación en la barra de direcciones.</li><li>También puedes usar ⋮ > Guardar y compartir > Instalar página como aplicación.</li>';
+    }
+    ov.classList.add('ynea-safe-open'); ov.style.setProperty('display','flex','important');
+  }
+  window.instalarYneaApp=async function(){
+    try{
+      if(window.deferredInstallPrompt){
+        window.deferredInstallPrompt.prompt();
+        await window.deferredInstallPrompt.userChoice;
+        window.deferredInstallPrompt=null;
+        return;
+      }
+    }catch(e){console.warn('Prompt instalar no disponible',e);}
+    mostrarAyudaInstalar();
+  };
+  window.addEventListener('beforeinstallprompt',function(e){
+    try{e.preventDefault(); window.deferredInstallPrompt=e;}catch(err){}
+    var b=byId('installPwaBtn'); if(b) b.style.setProperty('display','inline-flex','important');
+  });
+
+  function boot(){
+    ensureAgendaBar(); moveAgendaToBackdrop(); renderPacientesSeguro();
+    var b=byId('installPwaBtn'); if(b){b.style.setProperty('display','inline-flex','important'); b.onclick=function(e){e.preventDefault(); window.instalarYneaApp();};}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  window.addEventListener('load',function(){setTimeout(boot,100);setTimeout(boot,900);});
+})();
+</script>
