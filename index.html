@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Ynea · calendario de citación online</title>
+<title>Agenda Clínica Semanal</title>
 <style>
 :root{
   --bg:#f4f7fb; --card:#fff; --text:#1f2937; --muted:#64748b; --line:#dbe3ee;
@@ -370,472 +370,193 @@ button:not(.secondary):not(.danger):not(.tab){
 </style>
 
 
-<style id="ynea-online-sync-style">
-.yneaCloudStatus{
-  position:fixed;
-  left:18px;
-  bottom:18px;
-  z-index:10050;
-  background:#fff;
-  border:1px solid #f6cfe0;
-  border-radius:14px;
-  padding:10px 12px;
-  box-shadow:0 8px 28px rgba(15,23,42,.12);
-  font-size:13px;
-  color:#9f244f;
-}
-.yneaCloudStatus b{color:#e94f86}
-</style>
 
-
-
-<style id="ynea-ios-android-layout-fix">
-html, body {
-  min-height: 100%;
-  height: auto !important;
-  overflow: auto !important;
-  -webkit-text-size-adjust: 100%;
-}
-body { overscroll-behavior-y: auto; }
-button, .btn, .tab, nav button, .toolbar button, .actions button {
-  width: auto !important;
-  max-width: 100% !important;
-  flex: 0 0 auto;
-}
-nav, .tabs, .toolbar, .actions, .topbar, .headerActions, .mainActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  max-width: 100%;
-}
-.tableWrap, .table-wrap, .calendarWrap, .calendar-wrap,
-#calendar, #calendario, #weekTable, #monthTable, #yearTable {
-  max-width: 100%;
-  overflow-x: auto !important;
-  -webkit-overflow-scrolling: touch;
-}
-.app, .container, main, section, .card, .panel {
-  height: auto !important;
-  max-height: none !important;
-}
-@media (max-width: 768px) {
-  header { position: static !important; }
-  nav, .tabs, .toolbar, .actions, .topbar, .headerActions, .mainActions {
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    white-space: nowrap !important;
-    padding-bottom: 6px;
-  }
-  nav button, .tabs button, .tab, .toolbar button, .actions button {
-    font-size: 13px !important;
-    padding: 8px 10px !important;
-    min-height: 34px !important;
-    white-space: nowrap !important;
-  }
-  main { padding: 10px !important; }
-  .card, .panel { padding: 12px !important; }
-  table { min-width: 720px; }
-}
-</style>
-
-
-<style id="ynea-mobile-week-clean-fix">
-/* Ocultar avisos flotantes de sincronización/autoguardado */
-#yneaCloudStatus,
-.yneaCloudStatus,
-#autoSaveStatus,
-.autosaveStatus,
-.autoguardado,
-.autoGuardado,
-[id*="autoSave"],
-[id*="autosave"],
-[id*="Autoguardado"],
-[class*="autosave"],
-[class*="Autoguardado"] {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
+<style id="opcion-c-app-movil">
+/* ===== OPCIÓN C: experiencia tipo app móvil ===== */
+:root{
+  --app-pink:#ec4899;
+  --app-pink-2:#db2777;
+  --app-rose:#fff1f7;
+  --app-bg:#fff8fb;
+  --app-card:#ffffff;
+  --app-text:#1f2937;
+  --app-muted:#64748b;
+  --app-line:#f3cfe0;
 }
 
-/* Calendario semanal adaptable a móvil */
-@media (max-width: 768px) {
-  /* Las tablas no deben forzar 720px en móvil */
-  table,
-  #weekTable,
-  #monthTable,
-  #yearTable,
-  .calendar table,
-  .calendario table {
-    min-width: 0 !important;
-    width: 100% !important;
-    table-layout: fixed !important;
-  }
+body{background:var(--app-bg)}
 
-  .tableWrap,
-  .table-wrap,
-  .calendarWrap,
-  .calendar-wrap,
-  #calendar,
-  #calendario {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: auto !important;
-  }
-
-  th,
-  td {
-    padding: 4px 3px !important;
-    font-size: 10.5px !important;
-    line-height: 1.15 !important;
-    word-break: break-word !important;
-    white-space: normal !important;
-  }
-
-  /* Primera columna/hora más estrecha */
-  th:first-child,
-  td:first-child {
-    width: 42px !important;
-    max-width: 42px !important;
-    font-size: 10px !important;
-  }
-
-  /* Citas dentro del calendario */
-  .appt,
-  .cita,
-  .appointment,
-  .event {
-    font-size: 10px !important;
-    line-height: 1.15 !important;
-    padding: 4px !important;
-    margin: 2px 0 !important;
-    border-radius: 7px !important;
-  }
-
-  .appt strong,
-  .cita strong,
-  .appointment strong,
-  .event strong {
-    font-size: 10.5px !important;
-  }
-
-  .badge {
-    font-size: 9px !important;
-    padding: 2px 5px !important;
-  }
-
-  /* Cabecera superior compacta */
-  header {
-    gap: 8px !important;
-    padding: 10px !important;
-  }
-
-  h1 {
-    font-size: 20px !important;
-    line-height: 1.1 !important;
-  }
-
-  .logo {
-    width: 54px !important;
-    height: 54px !important;
-  }
-
-  main {
-    padding: 8px !important;
-  }
-
-  .card,
-  .panel {
-    padding: 10px !important;
-    border-radius: 14px !important;
-  }
-
-  /* Controles de semana más compactos */
-  .weekbar,
-  .toolbar,
-  .actions {
-    gap: 6px !important;
-  }
-
-  .weekbar label,
-  label {
-    font-size: 12px !important;
-  }
-
-  input,
-  select,
-  textarea {
-    font-size: 13px !important;
-    padding: 8px !important;
-  }
+/* Botones uniformes */
+button{
+  min-height:42px;
+  border-radius:14px !important;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  line-height:1.15;
+}
+.card button,
+.weekbar button,
+.configEditor button,
+.nuevoPacienteActions button,
+.editorCitaActions button,
+.citaEnlazadaActions button{
+  min-width:120px;
+}
+button:not(.secondary):not(.danger):not(.tab):not(.mobileNavBtn):not(.appFab){
+  background:var(--app-pink) !important;
+}
+button:not(.secondary):not(.danger):not(.tab):not(.mobileNavBtn):not(.appFab):hover{
+  background:var(--app-pink-2) !important;
 }
 
-/* En pantallas muy estrechas, compactar aún más */
-@media (max-width: 430px) {
-  th,
-  td {
-    font-size: 9.5px !important;
-    padding: 3px 2px !important;
+/* Desktop conserva tabs superiores; móvil usa nav inferior */
+.mobileBottomNav,.appFab{display:none}
+
+@media(max-width:900px){
+  body{padding-bottom:88px;}
+  header{
+    position:sticky;
+    top:0;
+    z-index:80;
+    padding:8px 12px !important;
+    min-height:64px;
+    display:flex !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    gap:10px !important;
+  }
+  header h1{margin:0;min-width:0;}
+  header .tabs{display:none !important;}
+  .yneaBrandTitle{
+    flex-direction:row !important;
+    align-items:center !important;
+    gap:10px !important;
+    padding:0 !important;
+    min-width:0 !important;
+  }
+  .yneaBrandTitle img{height:42px !important;max-width:72px !important;object-fit:contain !important;}
+  .yneaBrandTitle .yneaSeparator,.yneaBrandTitle .separator{display:none !important;}
+  .yneaBrandTitle .brandText{
+    font-size:18px !important;
+    color:var(--app-pink-2) !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    display:block !important;
+    max-width:calc(100vw - 118px);
+  }
+  .yneaBrandTitle .brandSub{display:none !important;}
+
+  .container{padding:12px !important;max-width:100%;}
+  .stats{display:none !important;}
+  .grid,.configGrid,.row,.filters{grid-template-columns:1fr !important;gap:12px !important;}
+  .card{border-radius:20px !important;padding:14px !important;margin-bottom:14px !important;box-shadow:0 8px 26px rgba(15,23,42,.07) !important;}
+  .card h2{font-size:18px;margin-bottom:12px;color:var(--app-pink-2);}
+  label{font-size:13px;margin-top:10px;}
+  input,select,textarea{font-size:16px;border-radius:14px;padding:12px;}
+
+  .weekbar{display:grid !important;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch;}
+  .weekbar > div{min-width:0 !important;}
+  .weekbar button{width:100%;min-width:0;}
+  .weekbar .secondary:nth-child(3){grid-column:1/-1;}
+
+  /* Agenda semanal/mensual/anual convertida en tarjetas usables */
+  .tableWrap{overflow:visible !important;max-height:none !important;border:0 !important;background:transparent !important;}
+  table{min-width:0 !important;width:100% !important;border-collapse:separate !important;border-spacing:0 10px !important;}
+  thead{display:none !important;}
+  tr{display:block !important;background:#fff;border:1px solid var(--app-line);border-radius:18px;margin-bottom:10px;padding:10px;box-shadow:0 4px 14px rgba(15,23,42,.04);}
+  th,td{display:block !important;border:0 !important;padding:6px 2px !important;font-size:14px !important;min-width:0 !important;}
+  .time{position:static !important;background:transparent !important;color:var(--app-pink-2) !important;font-size:14px !important;font-weight:800 !important;margin-bottom:2px;}
+  .slot{min-height:auto !important;min-width:0 !important;}
+  .appt{border-radius:14px !important;padding:10px !important;margin:6px 0 !important;word-break:break-word;overflow:hidden;}
+  .appt strong{font-size:14px;}
+  .badge{white-space:normal;}
+
+  /* Buscador pacientes estable en móvil */
+  .pacienteSearchBox{position:relative;}
+  .pacienteResultados{top:100% !important;margin-top:6px;max-height:230px;z-index:12000;}
+  .pacienteResultadoItem{padding:12px;}
+
+  /* Listados y píldoras sin solapes */
+  .pill{align-items:flex-start;flex-direction:column;}
+  .pill button{width:100%;}
+  .infoGrid{grid-template-columns:1fr 1fr !important;}
+
+  /* Modales más cómodos */
+  .nuevoPacienteOverlay,.editorCitaOverlay,.citaEnlazadaOverlay{padding:10px !important;align-items:flex-end !important;}
+  .nuevoPacienteModal,.editorCitaModal,.citaEnlazadaModal{border-radius:24px 24px 0 0 !important;width:100% !important;max-height:90vh !important;overflow:auto !important;padding:18px !important;}
+  .nuevoPacienteHeader h2,.editorCitaHeader h2,.citaEnlazadaHeader h2{font-size:20px !important;}
+  .editorCitaGrid,.citaEnlazadaGrid{grid-template-columns:1fr !important;}
+  .nuevoPacienteActions,.editorCitaActions,.citaEnlazadaActions{display:grid !important;grid-template-columns:1fr !important;}
+  .nuevoPacienteActions button,.editorCitaActions button,.citaEnlazadaActions button{width:100%;}
+
+  .autosaveBar{left:12px !important;right:12px !important;bottom:92px !important;text-align:center;}
+
+  /* Navegación inferior tipo app */
+  .mobileBottomNav{
+    position:fixed;
+    left:10px;
+    right:10px;
+    bottom:10px;
+    z-index:12000;
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:4px;
+    padding:8px;
+    background:rgba(255,255,255,.96);
+    border:1px solid var(--app-line);
+    border-radius:24px;
+    box-shadow:0 16px 40px rgba(15,23,42,.18);
+    backdrop-filter:blur(14px);
+  }
+  .mobileNavBtn{
+    min-width:0 !important;
+    min-height:54px;
+    padding:6px 2px !important;
+    border-radius:18px !important;
+    background:transparent !important;
+    color:var(--app-muted) !important;
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    font-size:11px;
+    font-weight:700;
+  }
+  .mobileNavBtn .ico{font-size:20px;line-height:1;}
+  .mobileNavBtn.active{background:var(--app-rose) !important;color:var(--app-pink-2) !important;}
+
+  .appFab{
+    display:flex;
+    position:fixed;
+    right:18px;
+    bottom:86px;
+    z-index:11999;
+    width:58px;
+    height:58px;
+    min-width:58px !important;
+    border-radius:999px !important;
+    background:var(--app-pink) !important;
+    color:#fff !important;
+    border:0;
+    font-size:28px;
+    box-shadow:0 14px 34px rgba(236,72,153,.34);
   }
 
-  th:first-child,
-  td:first-child {
-    width: 36px !important;
-    max-width: 36px !important;
-    font-size: 9px !important;
-  }
-
-  .appt,
-  .cita,
-  .appointment,
-  .event {
-    font-size: 9px !important;
-    padding: 3px !important;
-  }
-}
-</style>
-
-
-<style id="ynea-mobile-compact-header-patients">
-.quickHelp,.helpText,.usageText,.descriptionText,.descripcionUso,.usoRapido,[data-help],[data-usage] {
-  display: none !important;
-}
-
-@media (max-width: 768px) {
-  header {
-    padding: 6px 8px !important;
-    gap: 6px !important;
-    align-items: center !important;
-  }
-
-  .brand,.brandWrap,.brandBox {
-    gap: 6px !important;
-    align-items: center !important;
-  }
-
-  .logo,.brandLogo,header img {
-    max-width: 42px !important;
-    max-height: 42px !important;
-    width: auto !important;
-    height: auto !important;
-  }
-
-  h1,.brandTitle {
-    font-size: 16px !important;
-    line-height: 1.05 !important;
-    margin: 0 !important;
-  }
-
-  .subtitle,.brandSub,header p,header .small,header .muted {
-    display: none !important;
-  }
-
-  nav,.tabs,.topbar,.mainActions {
-    width: 100% !important;
-    max-height: 74px !important;
-    display: grid !important;
-    grid-auto-flow: column !important;
-    grid-auto-columns: max-content !important;
-    grid-template-rows: repeat(2, auto) !important;
-    gap: 4px !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    padding: 2px 0 4px 0 !important;
-    margin: 0 !important;
-  }
-
-  nav button,.tabs button,.tab,.topbar button,.mainActions button {
-    font-size: 11px !important;
-    line-height: 1.1 !important;
-    padding: 5px 7px !important;
-    min-height: 26px !important;
-    border-radius: 8px !important;
-    white-space: nowrap !important;
-  }
-
-  .weekbar,.toolbar,.calendarControls,.filters,.filterbar,.controlbar,.actions {
-    display: grid !important;
-    grid-auto-flow: column !important;
-    grid-auto-columns: max-content !important;
-    grid-template-rows: repeat(2, auto) !important;
-    gap: 4px !important;
-    align-items: end !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    padding-bottom: 4px !important;
-    margin-bottom: 6px !important;
-  }
-
-  .weekbar > *,.toolbar > *,.calendarControls > *,.filters > *,.filterbar > *,.controlbar > *,.actions > * {
-    min-width: 0 !important;
-    max-width: 150px !important;
-  }
-
-  .weekbar label,.toolbar label,.calendarControls label,.filters label,label {
-    font-size: 10px !important;
-    margin: 2px 0 1px 0 !important;
-    line-height: 1 !important;
-  }
-
-  .weekbar input,.weekbar select,.toolbar input,.toolbar select,.calendarControls input,.calendarControls select,.filters input,.filters select,input,select {
-    font-size: 11px !important;
-    padding: 5px 6px !important;
-    min-height: 28px !important;
-    border-radius: 8px !important;
-  }
-
-  .weekbar button,.toolbar button,.calendarControls button,.filters button,.controlbar button {
-    font-size: 11px !important;
-    padding: 5px 7px !important;
-    min-height: 28px !important;
-    border-radius: 8px !important;
-  }
-
-  main { padding: 6px !important; }
-
-  .card,.panel {
-    padding: 8px !important;
-    border-radius: 12px !important;
-  }
-
-  h2 {
-    font-size: 16px !important;
-    line-height: 1.15 !important;
-    margin: 0 0 6px 0 !important;
-  }
-
-  p.notice,.notice,.hint,.help,.instructions {
-    display: none !important;
-  }
-
-  #buscarPaciente,#pacienteFiltro,input[placeholder*="Buscar"],input[placeholder*="buscar"] {
-    width: 100% !important;
-    max-width: none !important;
-    margin-bottom: 6px !important;
-  }
-
-  #pacientesTable,table[id*="paciente"],table[id*="Paciente"] {
-    min-width: 0 !important;
-    width: 100% !important;
-    table-layout: fixed !important;
-  }
-
-  #pacientesTable th,#pacientesTable td,table[id*="paciente"] th,table[id*="paciente"] td,table[id*="Paciente"] th,table[id*="Paciente"] td {
-    font-size: 10px !important;
-    padding: 3px 2px !important;
-    vertical-align: middle !important;
-  }
-
-  #pacientesTable input,table[id*="paciente"] input,table[id*="Paciente"] input {
-    font-size: 10.5px !important;
-    padding: 4px !important;
-    min-height: 24px !important;
-    width: 100% !important;
-  }
-
-  #pacientesTable button,table[id*="paciente"] button,table[id*="Paciente"] button {
-    font-size: 10px !important;
-    padding: 4px 5px !important;
-    min-height: 24px !important;
-    border-radius: 6px !important;
-  }
-
-  .paciente-row,.patient-row,.pacienteForm,.patientForm {
-    display: grid !important;
-    grid-template-columns: 1.2fr .8fr 1.2fr auto !important;
-    gap: 4px !important;
-    align-items: end !important;
-  }
+  /* Vista calendario: por defecto semanal en móvil, mensual/anual también quedan como tarjetas */
+  #semanaView,#mensualView,#anualView,#agendaView,#pacientesView,#configView,#bloqueosView,#listadosView,#infoDiariaView,#avisosView,#copiasView{scroll-margin-top:84px;}
 }
 
-@media (max-width: 430px) {
-  h1,.brandTitle { font-size: 14px !important; }
-  .logo,.brandLogo,header img {
-    max-width: 36px !important;
-    max-height: 36px !important;
-  }
-  nav,.tabs,.topbar,.mainActions { max-height: 62px !important; }
-  nav button,.tabs button,.tab {
-    font-size: 10px !important;
-    padding: 4px 6px !important;
-    min-height: 24px !important;
-  }
-  .weekbar > *,.toolbar > *,.calendarControls > *,.filters > *,.filterbar > *,.controlbar > * {
-    max-width: 124px !important;
-  }
+@media(max-width:420px){
+  .weekbar{grid-template-columns:1fr !important;}
+  .infoGrid{grid-template-columns:1fr !important;}
+  .mobileNavBtn{font-size:10px;}
 }
-</style>
-
-
-<!-- YNEA PWA iOS PERFECTA -->
-<meta name="application-name" content="Ynea citación">
-<meta name="apple-mobile-web-app-title" content="Ynea citación">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#e94f86">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="apple-touch-icon" sizes="120x120" href="ynea-icon-120.png">
-<link rel="apple-touch-icon" sizes="152x152" href="ynea-icon-152.png">
-<link rel="apple-touch-icon" sizes="167x167" href="ynea-icon-167.png">
-<link rel="apple-touch-icon" sizes="180x180" href="ynea-icon-180.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-<link rel="shortcut icon" href="logo-ynea.png">
-<link rel="apple-touch-startup-image" href="splash-iphone-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
-<link rel="apple-touch-startup-image" href="splash-iphone-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)">
-<link rel="apple-touch-startup-image" href="splash-iphone-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)">
-<link rel="apple-touch-startup-image" href="splash-iphone-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
-<link rel="apple-touch-startup-image" href="splash-iphone-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)">
-<link rel="apple-touch-startup-image" href="splash-iphone-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
-<link rel="apple-touch-startup-image" href="splash-iphone-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)">
-<link rel="apple-touch-startup-image" href="splash-ipad-1668x2388.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)">
-<link rel="apple-touch-startup-image" href="splash-ipad-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)">
-
-
-<style id="ynea-pwa-polish-ios">
-:root { --ynea-pink:#e94f86; --ynea-pink-dark:#9f244f; --ynea-bg:#fff7fb; }
-html, body { background:#fff7fb; -webkit-tap-highlight-color:transparent; }
-body { animation:yneaFadeIn .28s ease-out both; }
-@keyframes yneaFadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
-button,.btn,.tab,input,select,textarea { transition:transform .14s ease,box-shadow .14s ease,background-color .14s ease; }
-button:active,.btn:active,.tab:active { transform:scale(.985); }
-.card,.panel,section { animation:yneaPanelIn .22s ease-out both; }
-@keyframes yneaPanelIn { from{opacity:.65;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
-#yneaSplash { position:fixed; inset:0; z-index:999999; display:flex; align-items:center; justify-content:center; background:#fff7fb; transition:opacity .35s ease,visibility .35s ease; }
-#yneaSplash.ynea-hide { opacity:0; visibility:hidden; }
-#yneaSplashCard { text-align:center; transform:translateY(-10px); }
-#yneaSplashCard img { width:128px; height:128px; border-radius:30px; box-shadow:0 16px 40px rgba(159,36,79,.16); animation:yneaSplashPop .45s ease-out both; }
-#yneaSplashCard div { margin-top:18px; color:#9f244f; font:600 18px Arial,Helvetica,sans-serif; letter-spacing:.2px; }
-@keyframes yneaSplashPop { from{opacity:0;transform:scale(.94)} to{opacity:1;transform:scale(1)} }
-@media(max-width:768px){ body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)} header{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)} }
 </style>
 
 </head>
 <body>
-
-<div id="yneaSplash" aria-hidden="true">
-  <div id="yneaSplashCard">
-    <img src="apple-touch-icon.png" alt="Ynea">
-    <div>Ynea citación</div>
-  </div>
-</div>
-<script id="ynea-splash-script">
-(function(){
-  function hideSplash(){
-    var el=document.getElementById('yneaSplash');
-    if(!el)return;
-    el.classList.add('ynea-hide');
-    setTimeout(function(){ if(el&&el.parentNode) el.parentNode.removeChild(el); },450);
-  }
-  window.addEventListener('load',function(){setTimeout(hideSplash,450);});
-  setTimeout(hideSplash,2200);
-})();
-</script>
-
 <header>
   
 
@@ -846,7 +567,7 @@ button:active,.btn:active,.tab:active { transform:scale(.985); }
     <span class="yneaSeparator"></span>
     <span>
       <span class="brandText">calendario de citación</span>
-      <span class="brandSub" style="display:none"></span>
+      <span class="brandSub">gestión clínica de agenda</span>
     </span>
   </div>
 </h1>
@@ -857,6 +578,7 @@ button:active,.btn:active,.tab:active { transform:scale(.985); }
   <div class="tabs">
     <button class="tab active" onclick="setView('semana', this)">Calendario semanal</button>
     <button class="tab" onclick="setView('mensual', this)">Vista mensual</button>
+    <button class="tab" onclick="setView('anual', this)">Vista anual</button>
     
     <button class="tab" onclick="setView('pacientes', this)">Pacientes</button>
     <button class="tab" onclick="setView('config', this)">Configuración</button>
@@ -865,7 +587,6 @@ button:active,.btn:active,.tab:active { transform:scale(.985); }
     <button class="tab" onclick="setView('infoDiaria', this)">Información diaria</button>
     <button class="tab" onclick="setView('avisos', this)">Avisos</button>
     <button class="tab" onclick="setView('copias', this)">Copias de seguridad</button>
-    <button id="installPwaBtn" class="tab" style="display:none;background:#9f244f;color:#fff" onclick="instalarYneaApp()">Instalar app</button>
   </div>
 </header>
 
@@ -909,7 +630,7 @@ button:active,.btn:active,.tab:active { transform:scale(.985); }
     </div>
   </section>
 
-  <section id="anualView" style="display:none!important" hidden>
+  <section id="anualView" style="display:none">
     <div class="card">
       <h2>Vista anual por profesional</h2>
       <div class="weekbar">
@@ -1298,7 +1019,7 @@ function refreshAllSelects(){
  actualizarBuscadorPacienteCita();
 }
 function setView(view,btn){
- ["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{
+ ["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{
    const el=$(v+"View");
    if(el) el.style.display=v===view?"block":"none";
  });
@@ -1323,7 +1044,7 @@ function quickNewCita(fecha,hora){
  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
  const tabs=document.querySelectorAll(".tab");
  if(tabs[1]) tabs[1].classList.add("active");
- ["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{const el=$(`${v}View`); if(el) el.style.display=v==="agenda"?"block":"none";});
+ ["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>$(`${v}View`).style.display=v==="agenda"?"block":"none");
  setTimeout(()=>$("pacienteCita").focus(),50);
 }
 
@@ -1538,7 +1259,7 @@ function quickNewCitaConsulta(fecha,hora,consulta){
  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
  const tabs=document.querySelectorAll(".tab");
  if(tabs[1]) tabs[1].classList.add("active");
- ["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{const el=$(`${v}View`); if(el) el.style.display=v==="agenda"?"block":"none";});
+ ["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>$(`${v}View`).style.display=v==="agenda"?"block":"none");
  setTimeout(()=>$("pacienteCita").focus(),50);
 }
 
@@ -2566,17 +2287,13 @@ function guardarNuevoPacienteModal(){
     }catch(e){}
   }, 30000);
 
-  // Aviso de copia diaria al abrir la app.
+  // Aviso de copia diaria desactivado para evitar ventanas emergentes en móvil.
+  // Las copias siguen disponibles manualmente en la versión web.
   setTimeout(function(){
     try{
-      const hoy = fechaHoy();
-      const ultimo = localStorage.getItem(BACKUP_DAY_KEY);
-      if(ultimo !== hoy){
-        const hacer = confirm("Todavía no has hecho copia de seguridad hoy. ¿Quieres descargarla ahora?");
-        if(hacer){
-          exportBackupNow();
-        }
-      }
+      const ua = navigator.userAgent || "";
+      const esMovil = /Android|iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      if(esMovil){ localStorage.setItem(BACKUP_DAY_KEY, fechaHoy()); return; }
     }catch(e){}
   }, 1200);
 })();
@@ -3876,642 +3593,192 @@ document.addEventListener("click", function(e){
 </script>
 
 
-<div class="yneaCloudStatus" id="yneaCloudStatus" style="display:none!important"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script id="ynea-online-sync">
+
+<nav class="mobileBottomNav" aria-label="Navegación principal móvil">
+  <button class="mobileNavBtn active" type="button" data-mobile-view="semana"><span class="ico">📅</span><span>Agenda</span></button>
+  <button class="mobileNavBtn" type="button" data-mobile-view="agenda"><span class="ico">➕</span><span>Cita</span></button>
+  <button class="mobileNavBtn" type="button" data-mobile-view="pacientes"><span class="ico">👤</span><span>Pacientes</span></button>
+  <button class="mobileNavBtn" type="button" data-mobile-view="listados"><span class="ico">📋</span><span>Listas</span></button>
+  <button class="mobileNavBtn" type="button" data-mobile-view="config"><span class="ico">⚙️</span><span>Ajustes</span></button>
+</nav>
+<button class="appFab" type="button" aria-label="Nueva cita" onclick="window.appMobileSetView ? appMobileSetView('agenda') : setView('agenda')">+</button>
+
+
+<script id="opcion-c-app-movil-js">
 (function(){
-  const SUPABASE_URL = "https://vadohvwjoxghubceffpn.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhZG9odndqb3hnaHViY2VmZnBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMzQxMjksImV4cCI6MjA5MjkxMDEyOX0.hrO9FcE32tlw6fL0I6EFu1sLFpBq_k6QBJ-LJIsvk24";
-  const DEFAULT_DATA = {"profesionales": ["Dra Susana Royo", "Consulta Enfermería"], "consultas": ["Consulta 1", "Consulta 2", "Consulta 3", "Sala de tratamientos"], "tipos": ["Primera visita Ginecología", "Primera visita Obstetricia", "Primera visita Reproducción", "Revisión ginecológica", "Control de embarazo", "Control de embarazo gemelar", "Foliculometría", "Infiltración PRP", "Infiltración Hialurónico", "Infiltración Bótox", "Colposcopia", "Hidrosonografía", "Histerosonografía", "Crioterapia", "Visita Urgente", "Consulta de enfermería", "Preparación PRP", "Preparación Hialurónico", "Cardiotocograma", "Tratamiento electromagnetoterápia", "Tratamiento nervio tibial", "Extracción de sangre", "Vacunación"], "duracionesTipo": {"Primera visita Ginecología": "20", "Primera visita Obstetricia": "20", "Primera visita Reproducción": "40", "Revisión ginecológica": "20", "Control de embarazo": "20", "Control de embarazo gemelar": "40", "Foliculometría": "10", "Infiltración PRP": "30", "Infiltración Hialurónico": "30", "Infiltración Bótox": "30", "Colposcopia": "30", "Hidrosonografía": "20", "Histerosonografía": "20", "Crioterapia": "20", "Visita Urgente": "20", "Consulta de enfermería": "20", "Preparación PRP": "30", "Preparación Hialurónico": "20", "Cardiotocograma": "40", "Tratamiento electromagnetoterápia": "30", "Tratamiento nervio tibial": "20", "Extracción de sangre": "20", "Vacunación": "10"}, "caracteristicasTipo": {"Primera visita": {"descripcion": "", "color": "", "activo": true}, "Revisión": {"descripcion": "", "color": "", "activo": true}, "Tratamiento": {"descripcion": "", "color": "", "activo": true}, "Urgencia": {"descripcion": "", "color": "", "activo": true}, "Control": {"descripcion": "", "color": "", "activo": true}, "Primera visita Ginecología": {"descripcion": "", "color": "", "activo": true}, "Primera visita Obstetricia": {"descripcion": "", "color": "", "activo": true}, "Primera visita Reproducción": {"descripcion": "", "color": "", "activo": true}, "Revisión ginecológica": {"descripcion": "", "color": "", "activo": true}, "Control de embarazo": {"descripcion": "", "color": "", "activo": true}, "Control de embarazo gemelar": {"descripcion": "", "color": "", "activo": true}, "Foliculometría": {"descripcion": "", "color": "", "activo": true}, "Infiltración PRP": {"descripcion": "", "color": "", "activo": true}, "Infiltración Hialurónico": {"descripcion": "", "color": "", "activo": true}, "Infiltración Bótox": {"descripcion": "", "color": "", "activo": true}, "Colposcopia": {"descripcion": "", "color": "", "activo": true}, "Hidrosonografía": {"descripcion": "", "color": "", "activo": true}, "Histerosonografía": {"descripcion": "", "color": "", "activo": true}, "Crioterapia": {"descripcion": "", "color": "", "activo": true}, "Visita Urgente": {"descripcion": "", "color": "", "activo": true}, "Consulta de enfermería": {"descripcion": "", "color": "", "activo": true}, "Preparación PRP": {"descripcion": "", "color": "", "activo": true}, "Preparación Hialurónico": {"descripcion": "", "color": "", "activo": true}, "Cardiotocograma": {"descripcion": "", "color": "", "activo": true}, "Tratamiento electromagnetoterápia": {"descripcion": "", "color": "", "activo": true}, "Tratamiento nervio tibial": {"descripcion": "", "color": "", "activo": true}, "Extracción de sangre": {"descripcion": "", "color": "", "activo": true}, "Vacunación": {"descripcion": "", "color": "", "activo": true}}, "tiposPorProfesional": {"Dra Susana Royo": ["Primera visita Ginecología", "Primera visita Obstetricia", "Primera visita Reproducción", "Revisión ginecológica", "Control de embarazo", "Control de embarazo gemelar", "Foliculometría", "Infiltración PRP", "Infiltración Hialurónico", "Infiltración Bótox", "Colposcopia", "Hidrosonografía", "Histerosonografía", "Crioterapia", "Visita Urgente"], "Consulta Enfermería": ["Consulta de enfermería", "Preparación PRP", "Preparación Hialurónico", "Cardiotocograma", "Tratamiento electromagnetoterápia", "Tratamiento nervio tibial", "Extracción de sangre", "Vacunación"]}, "pacientes": [{"id": "p1", "nombre": "María García", "telefono": "600111222", "email": "maria@email.com", "obs": ""}, {"id": "p2", "nombre": "Pedro Ruiz", "telefono": "600333444", "email": "pedro@email.com", "obs": ""}, {"id": "p3", "nombre": "Lucía Torres", "telefono": "600555666", "email": "lucia@email.com", "obs": ""}], "citas": [{"id": 1, "fecha": "2026-04-27", "hora": "09:30", "duracion": "30", "pacienteId": "p1", "profesional": "Dra. Ana López", "consulta": "Consulta 1", "tipo": "Primera visita", "estado": "Confirmada", "obs": "Traer informes"}, {"id": 2, "fecha": "2026-04-27", "hora": "10:15", "duracion": "10", "pacienteId": "p2", "profesional": "Dr. Carlos Martín", "consulta": "Consulta 2", "tipo": "Tratamiento", "estado": "Pendiente", "obs": ""}, {"id": 1777309309594, "fecha": "2026-04-28", "hora": "09:30", "duracion": "30", "pacienteId": "p1", "profesional": "Dra. Ana López", "consulta": "Consulta 1", "tipo": "Primera visita", "estado": "Pendiente", "obs": "", "enlaceId": 1777309348224}, {"id": 1777309348224, "fecha": "2026-04-28", "hora": "12:10", "duracion": "30", "pacienteId": "p1", "profesional": "Dr. Carlos Martín", "consulta": "Consulta 1", "tipo": "Primera visita", "estado": "Pendiente", "obs": "Cita enlazada con cita de Dra. Ana López a las 09:30", "enlaceId": 1777309309594}, {"id": 1777312935322, "fecha": "2026-04-29", "hora": "11:20", "duracion": "30", "pacienteId": "p1", "profesional": "Consulta Enfermería", "consulta": "Consulta 1", "tipo": "Preparación PRP", "estado": "Pendiente", "obs": "Cita previa enlazada antes de Dra Susana Royo a las 11:50", "enlaceId": 1777312922971}, {"id": 1777312922971, "fecha": "2026-04-29", "hora": "11:50", "duracion": "30", "pacienteId": "p1", "profesional": "Dra Susana Royo", "consulta": "Consulta 1", "tipo": "Infiltración PRP", "estado": "Pendiente", "obs": "", "enlaceId": 1777312935322}, {"id": 1777312979850, "fecha": "2026-04-29", "hora": "11:20", "duracion": "30", "pacienteId": "p1", "profesional": "Dra Susana Royo", "consulta": "Consulta 1", "tipo": "Infiltración PRP", "estado": "Pendiente", "obs": "", "enlaceId": 1777312994158}], "bloqueos": [], "avisosEnviados": {}};
-  const STATE_KEY = "agenda_ynea_definitiva";
-  const LOCAL_KEY = "agendaClinicaSemanal";
-
-  let supabaseClient = null;
-  let cloudReady = false;
-  let savingCloud = false;
-  let pendingSave = false;
-
-  function status(msg){
-    const el=document.getElementById("yneaCloudStatus");
-    if(el) el.innerHTML = "☁️ <b>Online:</b> " + msg;
+  const views=["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"];
+  const originalSetView=window.setView;
+  function syncMobileNav(view){
+    document.querySelectorAll('.mobileNavBtn').forEach(btn=>{
+      btn.classList.toggle('active', btn.dataset.mobileView===view);
+    });
   }
-
-  function normalizeData(d){
-    if(!d || typeof d !== "object") d = {};
-    d.profesionales = Array.isArray(d.profesionales) ? d.profesionales : [];
-    d.consultas = Array.isArray(d.consultas) ? d.consultas : [];
-    d.tipos = Array.isArray(d.tipos) ? d.tipos : [];
-    d.pacientes = Array.isArray(d.pacientes) ? d.pacientes : [];
-    d.citas = Array.isArray(d.citas) ? d.citas : [];
-    d.bloqueos = Array.isArray(d.bloqueos) ? d.bloqueos : [];
-    d.duracionesTipo = d.duracionesTipo || {};
-    d.caracteristicasTipo = d.caracteristicasTipo || {};
-    d.tiposPorProfesional = d.tiposPorProfesional || {};
-    d.avisosEnviados = d.avisosEnviados || {};
-    return d;
-  }
-
-  function currentData(){
-    try{ return normalizeData(data); }catch(e){ return normalizeData(JSON.parse(localStorage.getItem(LOCAL_KEY)||"null")); }
-  }
-
-  async function saveCloudNow(){
-    if(!cloudReady || !supabaseClient) return;
-    if(savingCloud){ pendingSave = true; return; }
-
-    savingCloud = true;
-    pendingSave = false;
-    status("guardando cambios...");
-
-    try{
-      const payload = {
-        key: STATE_KEY,
-        data: currentData(),
-        updated_at: new Date().toISOString()
-      };
-
-      const result = await supabaseClient
-        .from("app_state")
-        .upsert(payload, { onConflict: "key" });
-
-      if(result.error) throw result.error;
-      status("guardado automático activo");
-    }catch(e){
-      console.error(e);
-      status("error guardando en nube: " + e.message);
-    }finally{
-      savingCloud = false;
-      if(pendingSave) setTimeout(saveCloudNow, 350);
+  window.appMobileSetView=function(view){
+    if(typeof originalSetView==='function') originalSetView(view, null);
+    else {
+      views.forEach(v=>{ const el=document.getElementById(v+'View'); if(el) el.style.display=v===view?'block':'none'; });
     }
-  }
-
-  function patchSave(){
-    if(typeof save !== "function" || save.__cloudWrapped) return;
-    const originalSave = save;
-    window.save = save = function(){
-      const r = originalSave.apply(this, arguments);
-      try{
-        localStorage.setItem(LOCAL_KEY, JSON.stringify(currentData()));
-      }catch(e){}
-      setTimeout(saveCloudNow, 50);
-      return r;
-    };
-    save.__cloudWrapped = true;
-  }
-
-  async function ensureInitialCloudState(){
-    const result = await supabaseClient
-      .from("app_state")
-      .select("data")
-      .eq("key", STATE_KEY)
-      .maybeSingle();
-
-    if(result.error) throw result.error;
-
-    if(result.data && result.data.data){
-      data = normalizeData(result.data.data);
-      localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
-      status("datos cargados desde Supabase");
-      if(typeof refreshAllSelects==="function") refreshAllSelects();
-      if(typeof inicializarBloqueosAvanzados==="function") inicializarBloqueosAvanzados();
-      if(typeof inicializarAvisos==="function") inicializarAvisos();
-      if(typeof renderAll==="function") renderAll();
-      return;
-    }
-
-    data = normalizeData(DEFAULT_DATA);
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
-
-    const upsert = await supabaseClient
-      .from("app_state")
-      .upsert({
-        key: STATE_KEY,
-        data: data,
-        updated_at: new Date().toISOString()
-      }, { onConflict: "key" });
-
-    if(upsert.error) throw upsert.error;
-
-    status("datos iniciales importados y guardados");
-    if(typeof refreshAllSelects==="function") refreshAllSelects();
-    if(typeof inicializarBloqueosAvanzados==="function") inicializarBloqueosAvanzados();
-    if(typeof inicializarAvisos==="function") inicializarAvisos();
-    if(typeof renderAll==="function") renderAll();
-  }
-
-  async function initCloud(){
-    try{
-      if(!window.supabase || !window.supabase.createClient){
-        status("no se pudo cargar Supabase");
-        return;
-      }
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-      patchSave();
-      await ensureInitialCloudState();
-      cloudReady = true;
-      patchSave();
-
-      try{
-        supabaseClient
-          .channel("agenda-ynea-state")
-          .on("postgres_changes", { event:"*", schema:"public", table:"app_state", filter:"key=eq."+STATE_KEY }, payload => {
-            if(payload && payload.new && payload.new.data && !savingCloud){
-              data = normalizeData(payload.new.data);
-              localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
-              status("sincronizado desde otro dispositivo");
-              if(typeof refreshAllSelects==="function") refreshAllSelects();
-              if(typeof inicializarBloqueosAvanzados==="function") inicializarBloqueosAvanzados();
-              if(typeof inicializarAvisos==="function") inicializarAvisos();
-              if(typeof renderAll==="function") renderAll();
-            }
-          })
-          .subscribe();
-      }catch(e){ console.warn(e); }
-
-      setInterval(function(){
-        if(cloudReady) saveCloudNow();
-      }, 30000);
-
-      status("guardado automático activo");
-    }catch(e){
-      console.error(e);
-      status("error de conexión: " + e.message);
-      alert("Error conectando con Supabase: " + e.message + "\n\nComprueba que ejecutaste SQL_FINAL_APP_STATE.sql.");
-    }
-  }
-
-  window.importBackupFromMain = function(event){
-    const file = event.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = async function(e){
-      try{
-        const imported = normalizeData(JSON.parse(e.target.result));
-        if(!imported || !Array.isArray(imported.pacientes) || !Array.isArray(imported.profesionales) || !Array.isArray(imported.citas)){
-          alert("El archivo no parece una copia válida de la agenda.");
-          return;
-        }
-        if(confirm("¿Cargar esta copia de seguridad? Se sustituirán los datos actuales de esta agenda online.")){
-          data = imported;
-          localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
-          if(typeof refreshAllSelects==="function") refreshAllSelects();
-          if(typeof renderAll==="function") renderAll();
-          await saveCloudNow();
-          alert("Copia cargada y sincronizada correctamente.");
-        }
-      }catch(err){
-        alert("No se pudo cargar la copia. Archivo no válido.");
-      }finally{
-        event.target.value="";
-      }
-    };
-    reader.readAsText(file);
+    syncMobileNav(view);
+    if(window.innerWidth<=900) window.scrollTo({top:0,behavior:'smooth'});
   };
-
-  if(document.readyState==="loading"){
-    document.addEventListener("DOMContentLoaded", initCloud);
-  }else{
-    initCloud();
-  }
-})();
-</script>
-
-
-<script id="pwa-register">
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(err => console.warn("Service worker no registrado:", err));
+  window.setView=function(view,btn){
+    if(typeof originalSetView==='function') originalSetView(view,btn);
+    syncMobileNav(view);
+  };
+  document.addEventListener('click',function(e){
+    const btn=e.target.closest('.mobileNavBtn');
+    if(!btn) return;
+    window.appMobileSetView(btn.dataset.mobileView);
   });
-}
-
-let deferredInstallPrompt = null;
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredInstallPrompt = e;
-  const btn = document.getElementById("installPwaBtn");
-  if (btn) btn.style.display = "inline-block";
-});
-
-async function instalarYneaApp(){
-  if (!deferredInstallPrompt) {
-    alert("Si Chrome no muestra todavía la instalación, refresca la página con Ctrl+R. También puedes usar ⋮ > Guardar y compartir > Instalar página como aplicación.");
-    return;
-  }
-  deferredInstallPrompt.prompt();
-  await deferredInstallPrompt.userChoice;
-  deferredInstallPrompt = null;
-  const btn = document.getElementById("installPwaBtn");
-  if (btn) btn.style.display = "none";
-}
-</script>
-
-
-<script id="ynea-mobile-cleanup-patient-filter">
-(function(){
-  function cleanHelpTexts(){
-    var nodes = Array.from(document.querySelectorAll('p, div, span'));
-    nodes.forEach(function(el){
-      var t = (el.textContent || '').trim().toLowerCase();
-      if (
-        t.startsWith('uso rápido') ||
-        t.startsWith('uso rapido') ||
-        t.includes('uso rápido:') ||
-        t.includes('uso rapido:') ||
-        (t.includes('elige') && t.includes('calendario'))
-      ) {
-        el.style.display = 'none';
-      }
-    });
-  }
-
-  function ensurePatientFilter(){
-    var table = document.getElementById('pacientesTable') ||
-                document.querySelector('table[id*="paciente"], table[id*="Paciente"]');
-    if(!table || document.getElementById('yneaPacienteFiltroMovil')) return;
-
-    var input = document.createElement('input');
-    input.id = 'yneaPacienteFiltroMovil';
-    input.type = 'search';
-    input.placeholder = 'Filtrar pacientes por nombre';
-    input.style.margin = '0 0 8px 0';
-    input.style.width = '100%';
-
-    table.parentNode.insertBefore(input, table);
-
-    input.addEventListener('input', function(){
-      var q = input.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      Array.from(table.querySelectorAll('tbody tr')).forEach(function(tr){
-        var txt = (tr.textContent || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-        tr.style.display = txt.includes(q) ? '' : 'none';
-      });
-    });
-  }
-
-  function run(){
-    cleanHelpTexts();
-    ensurePatientFilter();
-  }
-
-  document.addEventListener('DOMContentLoaded', run);
-  setTimeout(run, 500);
-  setTimeout(run, 1500);
+  document.addEventListener('DOMContentLoaded',function(){
+    syncMobileNav('semana');
+  });
 })();
 </script>
 
 
 
-<!-- YNEA FIX ESTABLE 2026-05-04: móvil limpio + paciente editable + sin bloqueos -->
-<style id="ynea-stable-mobile-final">
-:root{--ynea-pink:#ec4899;--ynea-pink-dark:#db2777;}
-.yneaBrandTitle .brandText{color:var(--ynea-pink-dark)!important;}
-#installPwaBtn{background:var(--ynea-pink)!important;color:#fff!important;border-color:var(--ynea-pink)!important;}
-#anualView,[onclick*="setView('anual"],[onclick*='setView("anual']{display:none!important;}
-#pacientesTable tbody tr{cursor:pointer!important;}
-#pacientesTable tbody tr:hover{background:#fff1f7!important;}
-.yneaPatientEditOverlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:20000;align-items:center;justify-content:center;padding:18px;}
-.yneaPatientEditModal{background:#fff;width:min(620px,100%);max-height:92vh;overflow:auto;border-radius:24px;border:1px solid #f3c7da;box-shadow:0 24px 90px rgba(15,23,42,.28);padding:22px;}
-.yneaPatientEditModal h2{margin:0 0 12px;color:var(--ynea-pink-dark)}
-.yneaPatientEditActions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px;}
-.yneaInstallHelpOverlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:21000;align-items:center;justify-content:center;padding:18px;}
-.yneaInstallHelpModal{background:#fff;width:min(560px,100%);border-radius:24px;border:1px solid #f3c7da;box-shadow:0 24px 90px rgba(15,23,42,.28);padding:22px;}
-.yneaInstallHelpModal h2{margin:0 0 10px;color:var(--ynea-pink-dark)}
+<style id="ynea-final-stable-css">
+/* Parche estable final: vistas visibles en web, móvil simplificado y sin vista anual */
+#anualView,
+.tabs .tab[onclick*="anual"],
+.tabs .tab[data-view="anual"]{display:none!important;}
+#installPwaBtn{background:#ec4899!important;color:#fff!important;}
+.yneaBrandTitle .brandText{color:#ec4899!important;}
+.yneaPacienteEditOverlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:30000;align-items:center;justify-content:center;padding:18px;}
+.yneaPacienteEditModal{background:#fff;width:min(560px,100%);border-radius:24px;border:1px solid #e5e7eb;box-shadow:0 24px 90px rgba(15,23,42,.28);padding:22px;max-height:92vh;overflow:auto;}
+.yneaPacienteEditModal h2{margin:0 0 12px;color:#db2777;}
+.yneaPacienteEditActions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px;}
+#pacientesTable tbody tr{cursor:pointer;}
+#pacientesTable tbody tr:hover{background:#fff7fb;}
 @media(max-width:900px){
-  body{padding-bottom:86px!important;}
-  html.ynea-mobile-app .tabs .tab[data-view="config"],html.ynea-mobile-app .tabs .tab[data-view="bloqueos"],html.ynea-mobile-app .tabs .tab[data-view="listados"],html.ynea-mobile-app .tabs .tab[data-view="infoDiaria"],html.ynea-mobile-app .tabs .tab[data-view="avisos"],html.ynea-mobile-app .tabs .tab[data-view="copias"],html.ynea-mobile-app .tabs .tab[data-view="agenda"],html.ynea-mobile-app #configView,html.ynea-mobile-app #bloqueosView,html.ynea-mobile-app #listadosView,html.ynea-mobile-app #infoDiariaView,html.ynea-mobile-app #avisosView,html.ynea-mobile-app #copiasView{display:none!important;}
-  html.ynea-mobile-app .tabs{display:grid!important;grid-template-columns:repeat(3,1fr);gap:6px;position:fixed;left:10px;right:10px;bottom:10px;z-index:10000;background:rgba(255,255,255,.96);border:1px solid #f3cfe0;border-radius:22px;padding:8px;box-shadow:0 14px 38px rgba(15,23,42,.16)}
-  html.ynea-mobile-app .tabs .tab{min-height:48px!important;font-size:12px!important;padding:6px!important;border-radius:16px!important;display:flex;align-items:center;justify-content:center;}
-  html.ynea-mobile-app .tabs .tab[data-view="semana"]::before{content:"📅 ";} html.ynea-mobile-app .tabs .tab[data-view="mensual"]::before{content:"🗓️ ";} html.ynea-mobile-app .tabs .tab[data-view="pacientes"]::before{content:"👤 ";}
-  html.ynea-mobile-app header{padding:8px 12px!important;}
-  html.ynea-mobile-app .yneaBrandTitle img{height:42px!important;max-width:74px!important;object-fit:contain!important;}
-  html.ynea-mobile-app .yneaBrandTitle .brandText{font-size:18px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:calc(100vw - 112px);}
-  html.ynea-mobile-app .yneaBrandTitle .brandSub,html.ynea-mobile-app .yneaBrandTitle .yneaSeparator{display:none!important;}
-  html.ynea-mobile-app #installPwaBtn{display:none!important;}
-  html.ynea-mobile-app #pacientesView .grid{grid-template-columns:1fr!important;}
-  html.ynea-mobile-app input,html.ynea-mobile-app select,html.ynea-mobile-app textarea{font-size:16px!important;}
-}
-@media(max-width:900px) and (orientation:landscape) and (max-height:620px){
-  html.ynea-mobile-app body{padding-bottom:8px!important;}
-  html.ynea-mobile-app header{position:static!important;padding:6px 10px!important;}
-  html.ynea-mobile-app .tabs{position:static!important;margin:6px 10px!important;display:grid!important;grid-template-columns:repeat(3,1fr)!important;}
-  html.ynea-mobile-app #pacientesView .grid{display:grid!important;grid-template-columns:minmax(240px,.8fr) minmax(360px,1.2fr)!important;gap:10px!important;}
-  html.ynea-mobile-app #pacientesView .card{padding:10px!important;margin-bottom:8px!important;}
-  html.ynea-mobile-app #pacientesView .tableWrap{max-height:calc(100vh - 130px)!important;overflow:auto!important;}
-  html.ynea-mobile-app #pacientesView #pacientesTable{min-width:620px!important;}
+  .tabs .tab[onclick*="config"],.tabs .tab[data-view="config"],
+  .tabs .tab[onclick*="bloqueos"],.tabs .tab[data-view="bloqueos"],
+  .tabs .tab[onclick*="listados"],.tabs .tab[data-view="listados"],
+  .tabs .tab[onclick*="infoDiaria"],.tabs .tab[data-view="infoDiaria"],
+  .tabs .tab[onclick*="avisos"],.tabs .tab[data-view="avisos"],
+  .tabs .tab[onclick*="copias"],.tabs .tab[data-view="copias"]{display:none!important;}
+  #configView,#bloqueosView,#listadosView,#infoDiariaView,#avisosView,#copiasView{display:none!important;}
+  .mobileBottomNav{grid-template-columns:repeat(3,1fr)!important;}
+  .mobileBottomNav .mobileNavBtn[data-mobile-view="agenda"],
+  .mobileBottomNav .mobileNavBtn[data-mobile-view="listados"],
+  .mobileBottomNav .mobileNavBtn[data-mobile-view="config"],
+  .mobileBottomNav .mobileNavBtn[data-mobile-view="copias"],
+  .mobileBottomNav .mobileNavBtn[data-mobile-view="infoDiaria"]{display:none!important;}
+  .yneaPacienteEditModal{border-radius:24px 24px 0 0;width:100%;}
+  .yneaPacienteEditOverlay{align-items:flex-end;padding:10px;}
+  .yneaPacienteEditActions{display:grid;grid-template-columns:1fr;}
+  .yneaPacienteEditActions button{width:100%;}
 }
 </style>
-<div class="yneaPatientEditOverlay" id="yneaPatientEditOverlay">
-  <div class="yneaPatientEditModal">
-    <h2>Editar paciente</h2>
+
+<div id="yneaPacienteEditOverlay" class="yneaPacienteEditOverlay" aria-hidden="true">
+  <div class="yneaPacienteEditModal" role="dialog" aria-modal="true" aria-labelledby="yneaPacienteEditTitle">
+    <h2 id="yneaPacienteEditTitle">Editar paciente</h2>
     <input type="hidden" id="yneaEditPacienteId">
-    <label>Nombre y apellidos</label><input id="yneaEditPacienteNombre">
-    <label>Teléfono</label><input id="yneaEditPacienteTelefono">
-    <label>Email</label><input id="yneaEditPacienteEmail">
+    <label>Nombre</label><input id="yneaEditPacienteNombre" autocomplete="name">
+    <label>Teléfono</label><input id="yneaEditPacienteTelefono" autocomplete="tel">
+    <label>Email</label><input id="yneaEditPacienteEmail" autocomplete="email">
     <label>Observaciones</label><textarea id="yneaEditPacienteObs"></textarea>
-    <div class="yneaPatientEditActions">
-      <button type="button" class="danger" onclick="yneaEliminarPacienteEditado()">Eliminar</button>
-      <button type="button" class="secondary" onclick="yneaCerrarEditorPaciente()">Cancelar</button>
-      <button type="button" onclick="yneaGuardarPacienteEditado()">Guardar cambios</button>
+    <div class="yneaPacienteEditActions">
+      <button type="button" class="danger" onclick="return yneaEliminarPacienteEditado()">Eliminar</button>
+      <button type="button" class="secondary" onclick="return yneaCerrarEditorPaciente()">Cancelar</button>
+      <button type="button" onclick="return yneaGuardarPacienteEditado()">Guardar</button>
     </div>
   </div>
 </div>
-<div class="yneaInstallHelpOverlay" id="yneaInstallHelp">
-  <div class="yneaInstallHelpModal">
-    <h2>Instalar app Ynea</h2>
-    <p id="yneaInstallText">Puedes instalar la agenda desde el menú del navegador.</p>
-    <ol id="yneaInstallSteps"></ol>
-    <div style="display:flex;justify-content:flex-end;margin-top:16px"><button type="button" onclick="cerrarAyudaInstalarYnea()">Entendido</button></div>
-  </div>
-</div>
-<script id="ynea-stable-final-script">
+
+<script id="ynea-final-stable-js">
 (function(){
   'use strict';
-  function $(id){return document.getElementById(id);} 
-  function isMobileOS(){var ua=navigator.userAgent||'';return /Android|iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);} 
-  function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-  function markMobile(){document.documentElement.classList.toggle('ynea-mobile-app',isMobileOS());}
-  function closeAllStray(){
-    document.querySelectorAll('.yneaCleanModalBackdrop,.yneaSafeAgendaBackdrop').forEach(function(el){el.remove();});
-    document.body.style.pointerEvents='auto';document.documentElement.style.pointerEvents='auto';
-    document.querySelectorAll('input,select,textarea,button').forEach(function(el){el.disabled=false;el.style.pointerEvents='auto';});
-  }
-  function setupTabs(){
-    markMobile();
-    var map={semana:'Calendario semanal',mensual:'Vista mensual',pacientes:'Pacientes',config:'Configuración',bloqueos:'Bloqueos',listados:'Listados',infoDiaria:'Información diaria',avisos:'Avisos',copias:'Copias de seguridad'};
-    document.querySelectorAll('.tabs .tab').forEach(function(b){
-      var txt=(b.textContent||'').toLowerCase(), oc=b.getAttribute('onclick')||'', v='';
-      Object.keys(map).forEach(function(k){ if(!v && (oc.indexOf("'"+k+"'")>=0 || txt.indexOf(map[k].toLowerCase().split(' ')[0])>=0)) v=k; });
-      if(txt.indexOf('anual')>=0 || oc.indexOf('anual')>=0){b.remove();return;}
-      if(!v && b.id==='installPwaBtn') return;
-      if(v){b.setAttribute('data-view',v); b.onclick=function(e){e.preventDefault();return window.setView(v,b);};}
+  var views=['semana','mensual','agenda','pacientes','config','bloqueos','listados','copias','avisos','infoDiaria'];
+  var mobileHidden={config:1,bloqueos:1,listados:1,copias:1,avisos:1,infoDiaria:1};
+  function $(id){return document.getElementById(id);}
+  function isMobile(){var ua=navigator.userAgent||''; return /Android|iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)||window.innerWidth<=900;}
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function normalizeTabs(){
+    document.querySelectorAll('.tabs .tab').forEach(function(btn){
+      var txt=(btn.textContent||'').toLowerCase(); var oc=btn.getAttribute('onclick')||''; var v=btn.getAttribute('data-view')||'';
+      if(!v){
+        if(oc.indexOf('semana')>-1||txt.indexOf('semanal')>-1) v='semana';
+        else if(oc.indexOf('mensual')>-1||txt.indexOf('mensual')>-1) v='mensual';
+        else if(oc.indexOf('pacientes')>-1||txt.indexOf('pacientes')>-1) v='pacientes';
+        else if(oc.indexOf('config')>-1||txt.indexOf('config')>-1) v='config';
+        else if(oc.indexOf('bloqueos')>-1||txt.indexOf('bloqueos')>-1) v='bloqueos';
+        else if(oc.indexOf('listados')>-1||txt.indexOf('listados')>-1) v='listados';
+        else if(oc.indexOf('infoDiaria')>-1||txt.indexOf('información diaria')>-1||txt.indexOf('informacion diaria')>-1) v='infoDiaria';
+        else if(oc.indexOf('avisos')>-1||txt.indexOf('avisos')>-1) v='avisos';
+        else if(oc.indexOf('copias')>-1||txt.indexOf('copia')>-1) v='copias';
+        else if(oc.indexOf('agenda')>-1) v='agenda';
+      }
+      if(v){btn.setAttribute('data-view',v);}
+      if(v==='anual'||txt.indexOf('anual')>-1||oc.indexOf('anual')>-1){btn.style.setProperty('display','none','important');}
+      else if(isMobile() && mobileHidden[v]){btn.style.setProperty('display','none','important');}
+      else if(v){btn.style.removeProperty('display');}
     });
-    if(isMobileOS()){
-      document.querySelectorAll('.tabs .tab').forEach(function(b){var v=b.getAttribute('data-view'); if(!({semana:1,mensual:1,pacientes:1})[v] && b.id!=='installPwaBtn') b.style.setProperty('display','none','important');});
-    }
   }
-  var originalSetView=window.setView;
-  window.setView=function(view,btn){
+  function syncMobileNav(view){
+    document.querySelectorAll('.mobileNavBtn').forEach(function(btn){btn.classList.toggle('active',btn.dataset.mobileView===view);});
+  }
+  function showView(view,btn){
     if(view==='anual') view='semana';
-    if(isMobileOS() && !({semana:1,mensual:1,pacientes:1,agenda:1})[view]) view='semana';
-    var views=['semana','mensual','agenda','pacientes','config','bloqueos','listados','copias','avisos','infoDiaria'];
-    views.forEach(function(v){var el=$(v+'View'); if(el) el.style.display=(v===view?'block':'none');});
-    var anual=$('anualView'); if(anual) anual.style.setProperty('display','none','important');
-    document.querySelectorAll('.tabs .tab').forEach(function(b){b.classList.toggle('active',b===btn || b.getAttribute('data-view')===view);});
-    try{ if(typeof renderAll==='function') renderAll(); }catch(e){console.error('renderAll',e);} closeAllStray(); setupTabs(); return false;
-  };
-  var oldQuick=window.quickNewCita;
-  window.quickNewCita=function(fecha,hora){
-    if($('fechaCita')) $('fechaCita').value=fecha||$('fechaCita').value;
-    if($('horaCita')) $('horaCita').value=hora||$('horaCita').value;
-    var p=$('weekProf'); if(p&&p.value&&$('profesionalCita')) $('profesionalCita').value=p.value;
-    window.setView('agenda'); setTimeout(function(){var f=$('pacienteBusqueda')||$('pacienteCita')||$('fechaCita'); if(f) f.focus();},80); return false;
-  };
-  window.quickNewCitaConsulta=function(fecha,hora,consulta){if($('consultaCita')&&consulta) $('consultaCita').value=consulta; return window.quickNewCita(fecha,hora);};
-  var oldAdd=window.addCita;
-  window.addCita=function(){
-    try{ var r=oldAdd&&oldAdd.apply(this,arguments); }catch(e){console.error(e); alert('No se pudo guardar la cita: '+e.message); return false;}
-    closeAllStray(); window.setView('semana'); return r;
-  };
-  function renderPatientsEditable(){
-    try{data;}catch(e){return;} if(!Array.isArray(data.pacientes)||!$('pacientesTable')) return;
-    $('pacientesTable').innerHTML='<thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Observaciones</th><th>Acción</th></tr></thead><tbody>'+data.pacientes.map(function(p){return '<tr data-paciente-id="'+esc(p.id)+'"><td><b>'+esc(p.nombre)+'</b></td><td>'+esc(p.telefono||'')+'</td><td>'+esc(p.email||'')+'</td><td>'+esc(p.obs||'')+'</td><td><button type="button" data-edit-paciente="'+esc(p.id)+'">Editar</button></td></tr>';}).join('')+'</tbody>';
+    if(isMobile() && mobileHidden[view]) view='semana';
+    normalizeTabs();
+    views.forEach(function(v){var el=$(v+'View'); if(!el)return; if(isMobile()&&mobileHidden[v]) el.style.setProperty('display','none','important'); else el.style.setProperty('display',v===view?'block':'none','important');});
+    var annual=$('anualView'); if(annual) annual.style.setProperty('display','none','important');
+    document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active', b===btn || b.getAttribute('data-view')===view);});
+    syncMobileNav(view);
+    try{ if(typeof renderAll==='function') renderAll(); }catch(e){console.error('renderAll',e);}
+    return false;
   }
-  var oldRenderPatients=window.renderPatients;
-  window.renderPatients=function(){try{renderPatientsEditable();}catch(e){ if(oldRenderPatients) oldRenderPatients(); }};
-  var oldRenderAll=window.renderAll;
-  window.renderAll=function(){var r;try{r=oldRenderAll&&oldRenderAll.apply(this,arguments);}catch(e){console.error('renderAll original',e);}try{renderPatientsEditable();}catch(e){}closeAllStray();setupTabs();return r;};
+  window.setView=showView;
+  window.appMobileSetView=function(view){ return showView(view,null); };
+  document.addEventListener('click',function(e){
+    var tab=e.target.closest&&e.target.closest('.tabs .tab[data-view]');
+    if(tab){e.preventDefault();e.stopPropagation();return showView(tab.getAttribute('data-view'),tab);}
+    var mb=e.target.closest&&e.target.closest('.mobileNavBtn');
+    if(mb){e.preventDefault();e.stopPropagation();return showView(mb.dataset.mobileView,null);}
+  },true);
+  var oldQuick=window.quickNewCita;
+  window.quickNewCita=function(fecha,hora){try{if($('fechaCita'))$('fechaCita').value=fecha||$('fechaCita').value;if($('horaCita'))$('horaCita').value=hora||$('horaCita').value;if($('weekProf')&&$('weekProf').value&&$('profesionalCita'))$('profesionalCita').value=$('weekProf').value;}catch(e){} showView('agenda'); setTimeout(function(){var f=$('pacienteBusqueda')||$('pacienteCita')||$('fechaCita'); if(f)f.focus();},80); return false;};
+  window.quickNewCitaConsulta=function(fecha,hora,consulta){try{if($('consultaCita')&&consulta)$('consultaCita').value=consulta;}catch(e){} return window.quickNewCita(fecha,hora);};
+  function renderPatientsEditable(){
+    var tbl=$('pacientesTable'); if(!tbl||typeof data==='undefined') return;
+    tbl.innerHTML='<thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Observaciones</th><th>Acción</th></tr></thead><tbody>'+(data.pacientes||[]).map(function(p){return '<tr data-paciente-id="'+esc(p.id)+'"><td><b>'+esc(p.nombre)+'</b></td><td>'+esc(p.telefono||'')+'</td><td>'+esc(p.email||'')+'</td><td>'+esc(p.obs||'')+'</td><td><button type="button" data-edit-paciente="'+esc(p.id)+'">Editar</button></td></tr>';}).join('')+'</tbody>';
+  }
+  window.renderPatients=renderPatientsEditable;
   window.yneaAbrirEditorPaciente=function(id){
-    var p=(data.pacientes||[]).find(function(x){return String(x.id)===String(id);}); if(!p) return false;
+    if(typeof data==='undefined') return false; var p=(data.pacientes||[]).find(function(x){return String(x.id)===String(id);}); if(!p)return false;
     $('yneaEditPacienteId').value=p.id; $('yneaEditPacienteNombre').value=p.nombre||''; $('yneaEditPacienteTelefono').value=p.telefono||''; $('yneaEditPacienteEmail').value=p.email||''; $('yneaEditPacienteObs').value=p.obs||'';
-    var ov=$('yneaPatientEditOverlay'); if(ov) ov.style.display='flex'; setTimeout(function(){var f=$('yneaEditPacienteNombre');if(f)f.focus();},50); return false;
+    $('yneaPacienteEditOverlay').style.display='flex'; setTimeout(function(){var f=$('yneaEditPacienteNombre');if(f)f.focus();},50); return false;
   };
-  window.yneaCerrarEditorPaciente=function(){var ov=$('yneaPatientEditOverlay'); if(ov) ov.style.display='none'; closeAllStray(); return false;};
+  window.yneaCerrarEditorPaciente=function(){var o=$('yneaPacienteEditOverlay');if(o)o.style.display='none';return false;};
   window.yneaGuardarPacienteEditado=function(){
-    var id=$('yneaEditPacienteId').value, p=(data.pacientes||[]).find(function(x){return String(x.id)===String(id);}); if(!p)return false;
+    var id=$('yneaEditPacienteId').value; var p=(data.pacientes||[]).find(function(x){return String(x.id)===String(id);}); if(!p)return false;
     var nombre=$('yneaEditPacienteNombre').value.trim(); if(!nombre){alert('El nombre es obligatorio.');return false;}
-    p.nombre=nombre; p.telefono=$('yneaEditPacienteTelefono').value; p.email=$('yneaEditPacienteEmail').value; p.obs=$('yneaEditPacienteObs').value;
-    try{save();refreshAllSelects();renderAll();}catch(e){console.error(e)} window.yneaCerrarEditorPaciente(); return false;
+    p.nombre=nombre;p.telefono=$('yneaEditPacienteTelefono').value;p.email=$('yneaEditPacienteEmail').value;p.obs=$('yneaEditPacienteObs').value;
+    try{save();refreshAllSelects();renderAll();}catch(e){console.error(e);} renderPatientsEditable(); window.yneaCerrarEditorPaciente(); return false;
   };
   window.yneaEliminarPacienteEditado=function(){
     var id=$('yneaEditPacienteId').value; if((data.citas||[]).some(function(c){return String(c.pacienteId)===String(id);})){alert('No se puede eliminar: tiene citas asociadas.');return false;}
     if(!confirm('¿Eliminar este paciente?'))return false; data.pacientes=(data.pacientes||[]).filter(function(p){return String(p.id)!==String(id);}); try{save();refreshAllSelects();renderAll();}catch(e){} window.yneaCerrarEditorPaciente(); return false;
   };
-  document.addEventListener('click',function(e){
-    var btn=e.target.closest&&e.target.closest('[data-edit-paciente]'); var row=e.target.closest&&e.target.closest('#pacientesTable tbody tr[data-paciente-id]');
-    var id=btn?btn.getAttribute('data-edit-paciente'):(row?row.getAttribute('data-paciente-id'):null); if(id){e.preventDefault();e.stopPropagation();return window.yneaAbrirEditorPaciente(id);}
-  },false);
-  function installSteps(){var ua=navigator.userAgent||'',ios=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),android=/Android/i.test(ua); if(ios)return ['Abre la agenda en Safari.','Pulsa Compartir.','Elige “Añadir a pantalla de inicio”.','Pulsa Añadir.']; if(android)return ['Abre la agenda en Chrome.','Pulsa el menú ⋮.','Elige “Instalar app” o “Añadir a pantalla de inicio”.']; return ['En Chrome o Edge, usa el icono de instalación de la barra de direcciones.','Si no aparece, abre el menú del navegador y elige Instalar app.'];}
-  window.instalarYneaApp=function(){var p=window.deferredInstallPrompt;if(p&&p.prompt){p.prompt();try{p.userChoice.finally(function(){window.deferredInstallPrompt=null;});}catch(e){}return false;} var ol=$('yneaInstallSteps'),ov=$('yneaInstallHelp');if(ol)ol.innerHTML=installSteps().map(function(s){return '<li>'+esc(s)+'</li>';}).join(''); if(ov) ov.style.display='flex'; return false;};
-  window.cerrarAyudaInstalarYnea=function(){var ov=$('yneaInstallHelp'); if(ov) ov.style.display='none'; return false;};
-  window.addEventListener('beforeinstallprompt',function(e){try{e.preventDefault();window.deferredInstallPrompt=e;var b=$('installPwaBtn');if(b&&!isMobileOS()) b.style.display='inline-flex';}catch(err){}});
-  function boot(){setupTabs();renderPatientsEditable();closeAllStray(); if(isMobileOS()&& !document.querySelector('.tabs .tab.active[data-view]')) window.setView('semana');}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot(); window.addEventListener('load',function(){setTimeout(boot,100);setTimeout(boot,700);});
-})();
-</script>
-
-
-<script id="ynea-recovery-stable-v1">
-(function(){
-  'use strict';
-  var MOBILE_ALLOWED = {semana:1, mensual:1, pacientes:1, agenda:1};
-  var ALL_VIEWS = ['semana','mensual','agenda','pacientes','config','bloqueos','listados','copias','avisos','infoDiaria'];
-  var MOBILE_HIDDEN = {config:1,bloqueos:1,listados:1,copias:1,avisos:1,infoDiaria:1};
-  function byId(id){ return document.getElementById(id); }
-  function isMobileOS(){
-    var ua = navigator.userAgent || '';
-    return /Android|iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  }
-  function escapeHtml(v){
-    return String(v == null ? '' : v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
-  }
-  function normalizeTab(btn){
-    if(!btn || btn.id === 'installPwaBtn') return;
-    var txt = (btn.textContent || '').toLowerCase();
-    var oc = btn.getAttribute('onclick') || '';
-    var view = btn.getAttribute('data-view') || '';
-    if(!view){
-      if(oc.indexOf('semana') >= 0 || txt.indexOf('semanal') >= 0) view='semana';
-      else if(oc.indexOf('mensual') >= 0 || txt.indexOf('mensual') >= 0 || txt.indexOf('mes') >= 0) view='mensual';
-      else if(oc.indexOf('pacientes') >= 0 || txt.indexOf('pacientes') >= 0) view='pacientes';
-      else if(oc.indexOf('config') >= 0 || txt.indexOf('config') >= 0) view='config';
-      else if(oc.indexOf('bloqueos') >= 0 || txt.indexOf('bloqueos') >= 0) view='bloqueos';
-      else if(oc.indexOf('listados') >= 0 || txt.indexOf('listados') >= 0) view='listados';
-      else if(oc.indexOf('infoDiaria') >= 0 || txt.indexOf('información diaria') >= 0 || txt.indexOf('informacion diaria') >= 0) view='infoDiaria';
-      else if(oc.indexOf('avisos') >= 0 || txt.indexOf('avisos') >= 0) view='avisos';
-      else if(oc.indexOf('copias') >= 0 || txt.indexOf('copia') >= 0) view='copias';
-      else if(oc.indexOf('agenda') >= 0) view='agenda';
-    }
-    if(txt.indexOf('anual') >= 0 || oc.indexOf('anual') >= 0){ btn.style.display='none'; return; }
-    if(view){
-      btn.setAttribute('data-view', view);
-      btn.removeAttribute('onclick');
-    }
-  }
-  function setupTabs(){
-    document.documentElement.classList.toggle('ynea-mobile-app', isMobileOS());
-    document.querySelectorAll('.tabs .tab').forEach(function(btn){
-      normalizeTab(btn);
-      var v = btn.getAttribute('data-view');
-      if(isMobileOS() && v && !MOBILE_ALLOWED[v] && btn.id !== 'installPwaBtn'){
-        btn.style.setProperty('display','none','important');
-      } else if(v && btn.id !== 'installPwaBtn') {
-        btn.style.removeProperty('display');
-      }
-    });
-    var annual = byId('anualView');
-    if(annual) annual.style.setProperty('display','none','important');
-  }
-  function safeRender(view){
-    try{
-      if(view === 'semana' && typeof renderWeek === 'function') renderWeek();
-      else if(view === 'mensual' && typeof renderMonthView === 'function') renderMonthView();
-      else if(view === 'pacientes' && typeof renderPatients === 'function') renderPatients();
-      else if(view === 'config' && typeof renderConfig === 'function') renderConfig();
-      else if(view === 'listados' && typeof renderLists === 'function') renderLists();
-      else if(view === 'infoDiaria' && typeof renderInfoDiaria === 'function') renderInfoDiaria();
-      else if(view === 'avisos' && typeof renderAvisos === 'function') renderAvisos();
-      else if(view === 'bloqueos' && typeof renderBloqueos === 'function') renderBloqueos();
-    }catch(e){ console.error('Ynea render vista', view, e); }
-  }
-  function forceView(view, btn){
-    setupTabs();
-    if(view === 'anual') view = 'semana';
-    if(isMobileOS() && !MOBILE_ALLOWED[view]) view = 'semana';
-    if(!view) view = 'semana';
-    ALL_VIEWS.forEach(function(v){
-      var el = byId(v+'View');
-      if(!el) return;
-      if(isMobileOS() && MOBILE_HIDDEN[v]) el.style.setProperty('display','none','important');
-      else el.style.setProperty('display', v === view ? 'block' : 'none', 'important');
-    });
-    var annual = byId('anualView'); if(annual) annual.style.setProperty('display','none','important');
-    document.querySelectorAll('.tabs .tab').forEach(function(b){
-      var active = (b === btn) || (b.getAttribute('data-view') === view);
-      b.classList.toggle('active', !!active);
-    });
-    safeRender(view);
-    window.__yneaCurrentView = view;
-    return false;
-  }
-  window.setView = forceView;
-  window.yneaForceView = forceView;
-  document.addEventListener('click', function(e){
-    var tab = e.target.closest && e.target.closest('.tabs .tab[data-view]');
-    if(tab){ e.preventDefault(); e.stopPropagation(); return forceView(tab.getAttribute('data-view'), tab); }
-  }, true);
-  window.quickNewCita = function(fecha,hora){
-    if(byId('fechaCita')) byId('fechaCita').value = fecha || byId('fechaCita').value;
-    if(byId('horaCita')) byId('horaCita').value = hora || byId('horaCita').value;
-    if(byId('weekProf') && byId('weekProf').value && byId('profesionalCita')) byId('profesionalCita').value = byId('weekProf').value;
-    forceView('agenda');
-    setTimeout(function(){ var f = byId('pacienteBusqueda') || byId('pacienteCita') || byId('fechaCita'); if(f) f.focus(); }, 50);
-    return false;
-  };
-  window.quickNewCitaConsulta = function(fecha,hora,consulta){
-    if(byId('consultaCita') && consulta) byId('consultaCita').value = consulta;
-    return window.quickNewCita(fecha,hora);
-  };
-  // Reemplazo seguro de la tabla de pacientes para permitir editar al clicar.
-  function renderPatientsEditable(){
-    try{
-      if(typeof data === 'undefined' || !data.pacientes || !byId('pacientesTable')) return;
-      byId('pacientesTable').innerHTML = '<thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Observaciones</th><th>Acción</th></tr></thead><tbody>' +
-        data.pacientes.map(function(p){
-          return '<tr data-paciente-id="'+escapeHtml(p.id)+'" style="cursor:pointer"><td><b>'+escapeHtml(p.nombre)+'</b></td><td>'+escapeHtml(p.telefono||'')+'</td><td>'+escapeHtml(p.email||'')+'</td><td>'+escapeHtml(p.obs||'')+'</td><td><button type="button" data-edit-paciente="'+escapeHtml(p.id)+'">Editar</button></td></tr>';
-        }).join('') + '</tbody>';
-    }catch(e){ console.error('Ynea pacientes', e); }
-  }
-  var originalRenderPatients = window.renderPatients;
-  window.renderPatients = function(){ renderPatientsEditable(); };
-  function ensurePatientEditor(){
-    if(byId('yneaPatientEditOverlay')) return;
-    var div = document.createElement('div');
-    div.id = 'yneaPatientEditOverlay';
-    div.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:20000;align-items:center;justify-content:center;padding:16px;';
-    div.innerHTML = '<div style="background:#fff;width:min(560px,100%);border-radius:24px;padding:22px;box-shadow:0 24px 80px rgba(15,23,42,.25);max-height:92vh;overflow:auto">'+
-      '<h2 style="margin:0 0 12px;color:#db2777">Editar paciente</h2>'+
-      '<input id="yneaEditPacienteId" type="hidden">'+
-      '<label>Nombre</label><input id="yneaEditPacienteNombre">'+
-      '<label>Teléfono</label><input id="yneaEditPacienteTelefono">'+
-      '<label>Email</label><input id="yneaEditPacienteEmail">'+
-      '<label>Observaciones</label><textarea id="yneaEditPacienteObs"></textarea>'+
-      '<div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px"><button type="button" class="danger" id="yneaBtnEliminarPaciente">Eliminar</button><button type="button" class="secondary" id="yneaBtnCancelarPaciente">Cancelar</button><button type="button" id="yneaBtnGuardarPaciente">Guardar cambios</button></div>'+
-      '</div>';
-    document.body.appendChild(div);
-    byId('yneaBtnCancelarPaciente').addEventListener('click', window.yneaCerrarEditorPaciente);
-    byId('yneaBtnGuardarPaciente').addEventListener('click', window.yneaGuardarPacienteEditado);
-    byId('yneaBtnEliminarPaciente').addEventListener('click', window.yneaEliminarPacienteEditado);
-  }
-  window.yneaAbrirEditorPaciente = function(id){
-    ensurePatientEditor();
-    var p = (typeof data !== 'undefined' && data.pacientes || []).find(function(x){ return String(x.id) === String(id); });
-    if(!p) return false;
-    byId('yneaEditPacienteId').value = p.id;
-    byId('yneaEditPacienteNombre').value = p.nombre || '';
-    byId('yneaEditPacienteTelefono').value = p.telefono || '';
-    byId('yneaEditPacienteEmail').value = p.email || '';
-    byId('yneaEditPacienteObs').value = p.obs || '';
-    byId('yneaPatientEditOverlay').style.display = 'flex';
-    setTimeout(function(){ byId('yneaEditPacienteNombre').focus(); }, 40);
-    return false;
-  };
-  window.yneaCerrarEditorPaciente = function(){ var ov = byId('yneaPatientEditOverlay'); if(ov) ov.style.display='none'; return false; };
-  window.yneaGuardarPacienteEditado = function(){
-    var id = byId('yneaEditPacienteId').value;
-    var p = (typeof data !== 'undefined' && data.pacientes || []).find(function(x){ return String(x.id) === String(id); });
-    if(!p) return false;
-    var nombre = byId('yneaEditPacienteNombre').value.trim();
-    if(!nombre){ alert('El nombre es obligatorio.'); return false; }
-    p.nombre = nombre; p.telefono = byId('yneaEditPacienteTelefono').value; p.email = byId('yneaEditPacienteEmail').value; p.obs = byId('yneaEditPacienteObs').value;
-    try{ if(typeof save === 'function') save(); if(typeof refreshAllSelects === 'function') refreshAllSelects(); }catch(e){}
-    renderPatientsEditable(); window.yneaCerrarEditorPaciente(); return false;
-  };
-  window.yneaEliminarPacienteEditado = function(){
-    var id = byId('yneaEditPacienteId').value;
-    if(typeof data !== 'undefined' && (data.citas||[]).some(function(c){ return String(c.pacienteId) === String(id); })){ alert('No se puede eliminar: tiene citas asociadas.'); return false; }
-    if(!confirm('¿Eliminar este paciente?')) return false;
-    data.pacientes = (data.pacientes||[]).filter(function(p){ return String(p.id) !== String(id); });
-    try{ if(typeof save === 'function') save(); if(typeof refreshAllSelects === 'function') refreshAllSelects(); }catch(e){}
-    renderPatientsEditable(); window.yneaCerrarEditorPaciente(); return false;
-  };
-  document.addEventListener('click', function(e){
-    var btn = e.target.closest && e.target.closest('[data-edit-paciente]');
-    var row = e.target.closest && e.target.closest('#pacientesTable tbody tr[data-paciente-id]');
-    var id = btn ? btn.getAttribute('data-edit-paciente') : (row ? row.getAttribute('data-paciente-id') : '');
-    if(id){ e.preventDefault(); e.stopPropagation(); return window.yneaAbrirEditorPaciente(id); }
-  }, true);
-  // Botón instalar app: funciona aunque el navegador no permita prompt automático.
-  window.instalarYneaApp = function(){
-    if(window.deferredInstallPrompt && window.deferredInstallPrompt.prompt){
-      window.deferredInstallPrompt.prompt();
-      return false;
-    }
-    var existing = byId('yneaInstallHelp');
-    if(!existing){
-      var ov = document.createElement('div'); ov.id='yneaInstallHelp'; ov.style.cssText='display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:21000;align-items:center;justify-content:center;padding:18px;';
-      ov.innerHTML='<div style="background:#fff;border-radius:24px;padding:22px;width:min(520px,100%);box-shadow:0 24px 80px rgba(15,23,42,.25)"><h2 style="margin:0 0 10px;color:#db2777">Instalar app</h2><ol id="yneaInstallSteps"></ol><button type="button" onclick="cerrarAyudaInstalarYnea()">Entendido</button></div>';
-      document.body.appendChild(ov); existing=ov;
-    }
-    var ios = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-    var android = /Android/i.test(navigator.userAgent);
-    var steps = ios ? ['Abre esta agenda en Safari.','Pulsa Compartir.','Elige “Añadir a pantalla de inicio”.','Pulsa Añadir.'] : android ? ['Abre esta agenda en Chrome.','Pulsa el menú ⋮.','Elige “Instalar app” o “Añadir a pantalla de inicio”.'] : ['En Chrome o Edge usa el icono de instalación de la barra de direcciones.','También puedes abrir el menú del navegador y elegir “Instalar app”.'];
-    byId('yneaInstallSteps').innerHTML = steps.map(function(s){ return '<li>'+escapeHtml(s)+'</li>'; }).join('');
-    existing.style.display='flex'; return false;
-  };
-  window.cerrarAyudaInstalarYnea = function(){ var ov=byId('yneaInstallHelp'); if(ov) ov.style.display='none'; return false; };
-  window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); window.deferredInstallPrompt=e; var b=byId('installPwaBtn'); if(b) b.style.display='inline-flex'; });
+  document.addEventListener('click',function(e){var btn=e.target.closest&&e.target.closest('[data-edit-paciente]');var row=e.target.closest&&e.target.closest('#pacientesTable tbody tr[data-paciente-id]');var id=btn?btn.getAttribute('data-edit-paciente'):(row?row.getAttribute('data-paciente-id'):null);if(id){e.preventDefault();e.stopPropagation();return window.yneaAbrirEditorPaciente(id);}},false);
   function boot(){
-    setupTabs();
-    ensurePatientEditor();
-    renderPatientsEditable();
-    // Si no hay ninguna vista visible, recupera la semanal.
-    var visible = ALL_VIEWS.some(function(v){ var el=byId(v+'View'); return el && getComputedStyle(el).display !== 'none'; });
-    if(!visible) forceView('semana');
-    else if(window.__yneaCurrentView) forceView(window.__yneaCurrentView);
-    else forceView('semana');
+    normalizeTabs();
+    if(isMobile()){
+      document.querySelectorAll('.mobileNavBtn[data-mobile-view="agenda"],.mobileNavBtn[data-mobile-view="listados"],.mobileNavBtn[data-mobile-view="config"]').forEach(function(b){b.style.display='none';});
+      if(!document.querySelector('.mobileNavBtn[data-mobile-view="mensual"]')){
+        var nav=document.querySelector('.mobileBottomNav'); if(nav){var b=document.createElement('button');b.className='mobileNavBtn';b.type='button';b.dataset.mobileView='mensual';b.innerHTML='<span class="ico">🗓️</span><span>Mes</span>';var pac=nav.querySelector('[data-mobile-view="pacientes"]');nav.insertBefore(b,pac||null);}
+      }
+      try{localStorage.setItem('agendaClinicaUltimoBackupDiario',new Date().toISOString().slice(0,10));}catch(e){}
+    }
+    try{renderPatientsEditable();}catch(e){}
+    var visible=views.find(function(v){var el=$(v+'View');return el && getComputedStyle(el).display!=='none';});
+    if(!visible || visible==='anual' || (isMobile()&&mobileHidden[visible])) showView('semana');
   }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
-  window.addEventListener('load', function(){ setTimeout(boot,80); setTimeout(boot,500); });
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  window.addEventListener('load',function(){setTimeout(boot,100);setTimeout(function(){ if(!document.querySelector('section[style*="block"]')) showView('semana'); },600);});
 })();
 </script>
 
