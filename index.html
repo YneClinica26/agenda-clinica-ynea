@@ -389,18 +389,6 @@ button:not(.secondary):not(.danger):not(.tab){
 
 
 
-<meta name="application-name" content="Ynea citación">
-<meta name="apple-mobile-web-app-title" content="Ynea citación">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="mobile-web-app-capable" content="yes">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<link rel="apple-touch-icon" href="logo-ynea-180.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-<link rel="shortcut icon" href="logo-ynea.png">
-
-
 <style id="ynea-ios-android-layout-fix">
 html, body {
   min-height: 100%;
@@ -780,8 +768,74 @@ nav, .tabs, .toolbar, .actions, .topbar, .headerActions, .mainActions {
 }
 </style>
 
+
+<!-- YNEA PWA iOS PERFECTA -->
+<meta name="application-name" content="Ynea citación">
+<meta name="apple-mobile-web-app-title" content="Ynea citación">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#e94f86">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="120x120" href="ynea-icon-120.png">
+<link rel="apple-touch-icon" sizes="152x152" href="ynea-icon-152.png">
+<link rel="apple-touch-icon" sizes="167x167" href="ynea-icon-167.png">
+<link rel="apple-touch-icon" sizes="180x180" href="ynea-icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="shortcut icon" href="logo-ynea.png">
+<link rel="apple-touch-startup-image" href="splash-iphone-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="splash-iphone-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="splash-iphone-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="splash-iphone-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="splash-iphone-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="splash-iphone-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="splash-iphone-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="splash-ipad-1668x2388.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="splash-ipad-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)">
+
+
+<style id="ynea-pwa-polish-ios">
+:root { --ynea-pink:#e94f86; --ynea-pink-dark:#9f244f; --ynea-bg:#fff7fb; }
+html, body { background:#fff7fb; -webkit-tap-highlight-color:transparent; }
+body { animation:yneaFadeIn .28s ease-out both; }
+@keyframes yneaFadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+button,.btn,.tab,input,select,textarea { transition:transform .14s ease,box-shadow .14s ease,background-color .14s ease; }
+button:active,.btn:active,.tab:active { transform:scale(.985); }
+.card,.panel,section { animation:yneaPanelIn .22s ease-out both; }
+@keyframes yneaPanelIn { from{opacity:.65;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+#yneaSplash { position:fixed; inset:0; z-index:999999; display:flex; align-items:center; justify-content:center; background:#fff7fb; transition:opacity .35s ease,visibility .35s ease; }
+#yneaSplash.ynea-hide { opacity:0; visibility:hidden; }
+#yneaSplashCard { text-align:center; transform:translateY(-10px); }
+#yneaSplashCard img { width:128px; height:128px; border-radius:30px; box-shadow:0 16px 40px rgba(159,36,79,.16); animation:yneaSplashPop .45s ease-out both; }
+#yneaSplashCard div { margin-top:18px; color:#9f244f; font:600 18px Arial,Helvetica,sans-serif; letter-spacing:.2px; }
+@keyframes yneaSplashPop { from{opacity:0;transform:scale(.94)} to{opacity:1;transform:scale(1)} }
+@media(max-width:768px){ body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)} header{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)} }
+</style>
+
 </head>
 <body>
+
+<div id="yneaSplash" aria-hidden="true">
+  <div id="yneaSplashCard">
+    <img src="apple-touch-icon.png" alt="Ynea">
+    <div>Ynea citación</div>
+  </div>
+</div>
+<script id="ynea-splash-script">
+(function(){
+  function hideSplash(){
+    var el=document.getElementById('yneaSplash');
+    if(!el)return;
+    el.classList.add('ynea-hide');
+    setTimeout(function(){ if(el&&el.parentNode) el.parentNode.removeChild(el); },450);
+  }
+  window.addEventListener('load',function(){setTimeout(hideSplash,450);});
+  setTimeout(hideSplash,2200);
+})();
+</script>
+
 <header>
   
 

@@ -1,0 +1,23 @@
+YNEA - VERSIÓN iPHONE PERFECTA
+
+Incluye:
+- modo app iOS pantalla completa
+- iconos iOS optimizados con logo real Ynea
+- splash screen/pantalla de carga
+- animaciones suaves
+- manifest actualizado
+- service worker actualizado
+
+Sube a GitHub todos los archivos del ZIP sustituyendo los existentes.
+
+Después en iPhone:
+1. Borra el icono anterior de Ynea de la pantalla de inicio.
+2. Espera a que Vercel actualice.
+3. Abre Safari.
+4. Entra en https://agenda-clinica-ynea.vercel.app
+5. Pulsa Compartir.
+6. Añadir a pantalla de inicio.
+
+Si sigue saliendo el icono antiguo:
+- Ajustes > Safari > Avanzado > Datos de sitios web > busca vercel > eliminar
+- Vuelve a añadir la app.
