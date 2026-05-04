@@ -555,7 +555,13 @@ button:not(.secondary):not(.danger):not(.tab):not(.mobileNavBtn):not(.appFab):ho
 }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style id="fix-ynea-visibilidad-pacientes">
+#anualView{display:none !important;}
+#pacientesTable tbody tr{cursor:pointer;}
+#pacientesTable tbody tr:hover{background:#fff1f7;}
+.autosaveBar{display:none !important;}
+</style>
 </head>
 <body>
 <header>
@@ -579,9 +585,7 @@ button:not(.secondary):not(.danger):not(.tab):not(.mobileNavBtn):not(.appFab):ho
   <div class="tabs">
     <button class="tab active" onclick="setView('semana', this)">Calendario semanal</button>
     <button class="tab" onclick="setView('mensual', this)">Vista mensual</button>
-    <button class="tab" onclick="setView('anual', this)">Vista anual</button>
-    
-    <button class="tab" onclick="setView('pacientes', this)">Pacientes</button>
+<button class="tab" onclick="setView('pacientes', this)">Pacientes</button>
     <button class="tab" onclick="setView('config', this)">Configuración</button>
     <button class="tab" onclick="setView('bloqueos', this)">Bloqueos</button>
     <button class="tab" onclick="setView('listados', this)">Listados</button>
@@ -715,22 +719,6 @@ button:not(.secondary):not(.danger):not(.tab):not(.mobileNavBtn):not(.appFab):ho
 
   <section id="configView" style="display:none">
     
-      <div class="card" id="supabaseConfigCard">
-        <h2>Base de datos Supabase</h2>
-        <p class="small">Conecta la app con Supabase y carga los catálogos ya creados: profesionales, tipos de cita y consultas/salas.</p>
-        <label>Project URL</label>
-        <input id="supabaseUrlInput" placeholder="https://xxxx.supabase.co">
-        <label>anon public key</label>
-        <textarea id="supabaseKeyInput" placeholder="eyJhbGciOi..." style="min-height:90px"></textarea>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-          <button onclick="guardarConexionSupabaseYnea()">Guardar conexión</button>
-          <button class="secondary" onclick="cargarCatalogosSupabaseYnea()">Cargar catálogos desde Supabase</button>
-          <button class="secondary" onclick="probarSupabaseYnea()">Probar conexión</button>
-        </div>
-        <p class="small" id="supabaseYneaStatus" style="margin-top:10px">Sin comprobar.</p>
-      </div>
-
-
 
       <div class="card">
         <h2>Tipos por profesional</h2>
@@ -1033,12 +1021,10 @@ function refreshAllSelects(){
  fillSelect("weekConsulta",data.consultas,'<option value="">Todas</option>');
  fillSelect("filtroProf",data.profesionales,'<option value="">Todos</option>');
  fillSelect("filtroTipo",data.tipos,'<option value="">Todos</option>');
- // También actualizar el selector de profesionales de Bloqueos tras cargar catálogos desde Supabase
- if($("bloqProfesionalNuevo")) fillSelect("bloqProfesionalNuevo",data.profesionales);
- actualizarBuscadorPacienteCita();
+ if(typeof actualizarBuscadorPacienteCita === "function") actualizarBuscadorPacienteCita();
 }
 function setView(view,btn){
- ["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{
+ ["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{
    const el=$(v+"View");
    if(el) el.style.display=v===view?"block":"none";
  });
@@ -1063,7 +1049,7 @@ function quickNewCita(fecha,hora){
  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
  const tabs=document.querySelectorAll(".tab");
  if(tabs[1]) tabs[1].classList.add("active");
- ["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>$(`${v}View`).style.display=v==="agenda"?"block":"none");
+ ["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{ const el=$(`${v}View`); if(el) el.style.display=v==="agenda"?"block":"none"; };
  setTimeout(()=>$("pacienteCita").focus(),50);
 }
 
@@ -1278,12 +1264,37 @@ function quickNewCitaConsulta(fecha,hora,consulta){
  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
  const tabs=document.querySelectorAll(".tab");
  if(tabs[1]) tabs[1].classList.add("active");
- ["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>$(`${v}View`).style.display=v==="agenda"?"block":"none");
+ ["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{ const el=$(`${v}View`); if(el) el.style.display=v==="agenda"?"block":"none"; };
  setTimeout(()=>$("pacienteCita").focus(),50);
 }
 
 function renderPatients(){
- $("pacientesTable").innerHTML="<thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Observaciones</th></tr></thead><tbody>"+data.pacientes.map(p=>`<tr><td><b>${p.nombre}</b></td><td>${p.telefono||""}</td><td>${p.email||""}</td><td>${p.obs||""}</td></tr>`).join("")+"</tbody>";
+ const table=$("pacientesTable");
+ if(!table) return;
+ table.innerHTML="<thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Observaciones</th></tr></thead><tbody>"+
+   (data.pacientes||[]).map(p=>`<tr onclick="editarPaciente('${_safeJs(p.id)}')" title="Clic para editar paciente"><td><b>${_safeAttr(p.nombre)}</b></td><td>${_safeAttr(p.telefono||"")}</td><td>${_safeAttr(p.email||"")}</td><td>${_safeAttr(p.obs||"")}</td></tr>`).join("")+
+   "</tbody>";
+}
+
+function editarPaciente(id){
+ const p=(data.pacientes||[]).find(x=>String(x.id)===String(id));
+ if(!p) return;
+ const nombre=prompt("Nombre del paciente", p.nombre||"");
+ if(nombre===null) return;
+ if(!String(nombre).trim()){ alert("El nombre no puede quedar vacío."); return; }
+ const telefono=prompt("Teléfono", p.telefono||"");
+ if(telefono===null) return;
+ const email=prompt("Email", p.email||"");
+ if(email===null) return;
+ const obs=prompt("Observaciones", p.obs||"");
+ if(obs===null) return;
+ p.nombre=String(nombre).trim();
+ p.telefono=String(telefono||"");
+ p.email=String(email||"");
+ p.obs=String(obs||"");
+ save();
+ refreshAllSelects();
+ renderAll();
 }
 
 
@@ -1580,17 +1591,20 @@ function renderYearView(){
 }
 
 function renderAll(){
- $("statCitas").textContent=data.citas.length;
- $("statPacientes").textContent=data.pacientes.length;
- $("statProfs").textContent=data.profesionales.length;
- $("statConsultas").textContent=data.consultas.length;
- renderWeek();
- renderMonthView();
- renderYearView();
- renderPatients();
- renderConfig();
- if(typeof renderMapTipos==="function") renderMapTipos();
- renderBloqueos(); renderLists(); renderAvisos();
+ if($("statCitas")) $("statCitas").textContent=(data.citas||[]).length;
+ if($("statPacientes")) $("statPacientes").textContent=(data.pacientes||[]).length;
+ if($("statProfs")) $("statProfs").textContent=(data.profesionales||[]).length;
+ if($("statConsultas")) $("statConsultas").textContent=(data.consultas||[]).length;
+ if(typeof renderWeek === "function") renderWeek();
+ if(typeof renderMonthView === "function") renderMonthView();
+ // Vista anual desactivada por solicitud.
+ if(typeof renderPatients === "function") renderPatients();
+ if(typeof renderConfig === "function") renderConfig();
+ if(typeof renderMapTipos === "function") renderMapTipos();
+ if(typeof renderBloqueos === "function") renderBloqueos();
+ if(typeof renderLists === "function") renderLists();
+ if(typeof renderAvisos === "function") renderAvisos();
+ if(typeof renderInfoDiaria === "function") renderInfoDiaria();
 }
 
 function setupMonthlyAnnualControls(){
@@ -3629,7 +3643,7 @@ document.addEventListener("click", function(e){
 
 <script id="opcion-c-app-movil-js">
 (function(){
-  const views=["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"];
+  const views=["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"];
   const originalSetView=window.setView;
   function syncMobileNav(view){
     document.querySelectorAll('.mobileNavBtn').forEach(btn=>{
@@ -3660,122 +3674,21 @@ document.addEventListener("click", function(e){
 </script>
 
 
-<script id="ynea-supabase-catalogos-real-js">
+<script id="fix-final-ynea-estable">
 (function(){
-  const STORAGE_URL = "yneaSupabaseUrl";
-  const STORAGE_KEY = "yneaSupabaseAnonKey";
-
-  function byId(id){ return document.getElementById(id); }
-  function status(msg, isError){
-    const el = byId("supabaseYneaStatus");
-    if(el){
-      el.textContent = msg;
-      el.style.color = isError ? "#991b1b" : "#166534";
-    }
-    console[isError ? "error" : "log"]("Ynea Supabase:", msg);
-  }
-  function getCreds(){
-    const url = (byId("supabaseUrlInput")?.value || localStorage.getItem(STORAGE_URL) || "").trim();
-    const key = (byId("supabaseKeyInput")?.value || localStorage.getItem(STORAGE_KEY) || "").trim();
-    return {url,key};
-  }
-  function client(){
-    const {url,key}=getCreds();
-    if(!url || !key) throw new Error("Faltan Project URL o anon public key.");
-    if(!window.supabase || typeof window.supabase.createClient !== "function") throw new Error("No se ha cargado la librería de Supabase.");
-    return window.supabase.createClient(url,key);
-  }
-  function pickName(row){
-    return String(row?.nombre ?? row?.name ?? row?.titulo ?? row?.title ?? row?.descripcion ?? row?.label ?? "").trim();
-  }
-  function uniqueClean(arr){
-    return [...new Set((arr||[]).map(x=>String(x||"").trim()).filter(Boolean))];
-  }
-  function pickDuration(row){
-    const v = row?.duracion ?? row?.duracion_minutos ?? row?.duration ?? row?.minutos ?? row?.tiempo;
-    const s = String(v ?? "10").trim();
-    return s || "10";
-  }
-  function normalizeActive(row){
-    if(row?.activo === false || row?.active === false) return false;
-    return true;
-  }
-
-  window.guardarConexionSupabaseYnea = function(){
-    const {url,key}=getCreds();
-    if(!url || !key){ alert("Pega Project URL y anon public key."); return; }
-    localStorage.setItem(STORAGE_URL,url);
-    localStorage.setItem(STORAGE_KEY,key);
-    status("Conexión guardada. Ahora pulsa ‘Cargar catálogos desde Supabase’.");
-  };
-
-  window.probarSupabaseYnea = async function(){
+  function safeShowInitial(){
     try{
-      const sb=client();
-      const [p,t,c] = await Promise.all([
-        sb.from("profesionales").select("*").limit(5),
-        sb.from("tipos_cita").select("*").limit(5),
-        sb.from("consultas").select("*").limit(5)
-      ]);
-      if(p.error) throw new Error("profesionales: "+p.error.message);
-      if(t.error) throw new Error("tipos_cita: "+t.error.message);
-      if(c.error) throw new Error("consultas: "+c.error.message);
-      status(`Conexión OK. Leídos: profesionales ${p.data.length}, tipos_cita ${t.data.length}, consultas ${c.data.length}.`);
-      console.log("Profesionales Supabase", p.data);
-      console.log("Tipos cita Supabase", t.data);
-      console.log("Consultas Supabase", c.data);
-    }catch(e){ status(e.message || String(e), true); alert("Error Supabase: "+(e.message || e)); }
-  };
-
-  window.cargarCatalogosSupabaseYnea = async function(){
-    try{
-      const sb=client();
-      status("Cargando catálogos desde Supabase...");
-      const [pRes,tRes,cRes] = await Promise.all([
-        sb.from("profesionales").select("*"),
-        sb.from("tipos_cita").select("*"),
-        sb.from("consultas").select("*")
-      ]);
-      if(pRes.error) throw new Error("profesionales: "+pRes.error.message);
-      if(tRes.error) throw new Error("tipos_cita: "+tRes.error.message);
-      if(cRes.error) throw new Error("consultas: "+cRes.error.message);
-
-      const profesionales = uniqueClean((pRes.data||[]).filter(normalizeActive).map(pickName));
-      const tipos = uniqueClean((tRes.data||[]).filter(normalizeActive).map(pickName));
-      const consultas = uniqueClean((cRes.data||[]).filter(normalizeActive).map(pickName));
-
-      if(profesionales.length) data.profesionales = profesionales;
-      if(tipos.length) data.tipos = tipos;
-      if(consultas.length) data.consultas = consultas;
-
-      data.duracionesTipo = data.duracionesTipo || {};
-      (tRes.data||[]).forEach(row=>{
-        const nombre=pickName(row);
-        if(nombre) data.duracionesTipo[nombre]=pickDuration(row);
-      });
-      data.caracteristicasTipo = data.caracteristicasTipo || {};
-      data.tipos.forEach(t=>{ if(!data.caracteristicasTipo[t]) data.caracteristicasTipo[t]={descripcion:"",color:"",activo:true}; });
-      data.tiposPorProfesional = data.tiposPorProfesional || {};
-
-      if(typeof save === "function") save();
-      if(typeof refreshAllSelects === "function") refreshAllSelects();
+      const views=["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"];
+      views.forEach(v=>{ const el=document.getElementById(v+"View"); if(el && !el.style.display) el.style.display = v==="semana" ? "block" : "none"; });
+      const anual=document.getElementById("anualView"); if(anual) anual.style.display="none";
+      document.querySelectorAll('button').forEach(b=>{ if((b.textContent||"").trim().toLowerCase()==="vista anual") b.remove(); });
+      if(typeof actualizarBuscadorPacienteCita === "function") actualizarBuscadorPacienteCita();
       if(typeof renderAll === "function") renderAll();
-      if(typeof renderConfig === "function") renderConfig();
-
-      status(`Catálogos cargados: ${profesionales.length} profesionales, ${tipos.length} tipos de cita, ${consultas.length} consultas.`);
-      alert("Catálogos cargados desde Supabase.");
-    }catch(e){ status(e.message || String(e), true); alert("Error cargando catálogos: "+(e.message || e)); }
-  };
-
-  document.addEventListener("DOMContentLoaded", function(){
-    const url=localStorage.getItem(STORAGE_URL)||"";
-    const key=localStorage.getItem(STORAGE_KEY)||"";
-    if(byId("supabaseUrlInput")) byId("supabaseUrlInput").value=url;
-    if(byId("supabaseKeyInput")) byId("supabaseKeyInput").value=key;
-    if(url && key) status("Conexión guardada. Puedes probar o cargar catálogos.");
-  });
+    }catch(e){ console.warn("Fix final Ynea:", e); }
+  }
+  document.addEventListener("DOMContentLoaded", safeShowInitial);
+  setTimeout(safeShowInitial, 300);
 })();
 </script>
-
 </body>
 </html>
