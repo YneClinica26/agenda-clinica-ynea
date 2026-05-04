@@ -557,186 +557,6 @@ button:not(.secondary):not(.danger):not(.tab):not(.mobileNavBtn):not(.appFab):ho
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ec4899">
-
-
-<style id="ynea-mobile-week-5-days-fix">
-/* PRO móvil: la vista semanal mantiene los 5 días visibles en iOS/Android */
-@media (max-width: 900px){
-  #semanaView .tableWrap{
-    overflow-x: hidden !important;
-    overflow-y: visible !important;
-    max-height: none !important;
-    border: 1px solid var(--app-line) !important;
-    border-radius: 18px !important;
-    background: #fff !important;
-  }
-  #semanaView table{
-    display: table !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    table-layout: fixed !important;
-    border-collapse: collapse !important;
-    border-spacing: 0 !important;
-  }
-  #semanaView thead{
-    display: table-header-group !important;
-  }
-  #semanaView tbody{
-    display: table-row-group !important;
-  }
-  #semanaView tr{
-    display: table-row !important;
-    background: transparent !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-  }
-  #semanaView th,
-  #semanaView td{
-    display: table-cell !important;
-    border-bottom: 1px solid var(--app-line) !important;
-    border-right: 1px solid var(--app-line) !important;
-    padding: 4px 2px !important;
-    font-size: 10px !important;
-    line-height: 1.15 !important;
-    vertical-align: top !important;
-    min-width: 0 !important;
-    word-break: break-word !important;
-  }
-  #semanaView th:first-child,
-  #semanaView td.time{
-    width: 42px !important;
-    max-width: 42px !important;
-    position: static !important;
-    background: #fff !important;
-    color: var(--app-pink-2) !important;
-    font-weight: 800 !important;
-    white-space: normal !important;
-  }
-  #semanaView th:not(:first-child),
-  #semanaView td:not(.time){
-    width: calc((100% - 42px) / 5) !important;
-  }
-  #semanaView .slot{
-    min-height: 52px !important;
-    min-width: 0 !important;
-  }
-  #semanaView .appt{
-    padding: 5px 4px !important;
-    margin: 2px 0 !important;
-    border-radius: 10px !important;
-    font-size: 10px !important;
-    line-height: 1.15 !important;
-  }
-  #semanaView .appt strong{
-    font-size: 10px !important;
-    line-height: 1.15 !important;
-  }
-  #semanaView .badge{
-    display: block !important;
-    padding: 2px 4px !important;
-    font-size: 9px !important;
-    margin-top: 3px !important;
-  }
-}
-@media (max-width: 390px){
-  #semanaView th,
-  #semanaView td{font-size:9px !important;padding:3px 1px !important;}
-  #semanaView th:first-child,
-  #semanaView td.time{width:36px !important;max-width:36px !important;}
-  #semanaView th:not(:first-child),
-  #semanaView td:not(.time){width:calc((100% - 36px) / 5) !important;}
-}
-</style>
-
-
-
-<style id="ynea-pro-mobile-compact-final">
-/* Ajustes solicitados: sin ventana de autoguardado, controles móviles compactos y botón instalar sin solapes */
-.autosaveBar{display:none!important;visibility:hidden!important;pointer-events:none!important;}
-@media (max-width:900px){
-  header{
-    position:sticky!important;
-    top:0!important;
-    padding:6px 92px 6px 10px!important;
-    min-height:54px!important;
-    overflow:visible!important;
-  }
-  .yneaBrandTitle{gap:7px!important;width:100%!important;min-width:0!important;}
-  .yneaBrandTitle img{height:36px!important;max-width:58px!important;}
-  .yneaBrandTitle .brandText{
-    font-size:16px!important;
-    line-height:1.05!important;
-    max-width:calc(100vw - 178px)!important;
-    color:var(--app-pink-2,#db2777)!important;
-  }
-  #installAppBtn{
-    position:absolute!important;
-    right:8px!important;
-    top:9px!important;
-    margin:0!important;
-    min-height:30px!important;
-    height:30px!important;
-    max-width:78px!important;
-    padding:4px 7px!important;
-    font-size:10px!important;
-    line-height:1!important;
-    border-radius:10px!important;
-    white-space:normal!important;
-    z-index:99!important;
-  }
-  #semanaView .card,#mensualView .card{padding:10px!important;}
-  #semanaView .card h2,#mensualView .card h2{font-size:15px!important;margin-bottom:6px!important;}
-  #semanaView .small,#mensualView .small{font-size:10px!important;line-height:1.2!important;margin:4px 0!important;}
-  #semanaView .weekbar,#mensualView .weekbar{
-    display:grid!important;
-    grid-template-columns:repeat(3,minmax(0,1fr))!important;
-    gap:4px!important;
-    align-items:end!important;
-    margin-bottom:6px!important;
-  }
-  #semanaView .weekbar > div,#mensualView .weekbar > div{min-width:0!important;width:100%!important;}
-  #semanaView .weekbar label,#mensualView .weekbar label{
-    display:block!important;
-    margin:0 0 2px!important;
-    font-size:9px!important;
-    line-height:1!important;
-    font-weight:700!important;
-  }
-  #semanaView .weekbar input,#semanaView .weekbar select,
-  #mensualView .weekbar input,#mensualView .weekbar select{
-    min-height:30px!important;
-    height:30px!important;
-    padding:3px 5px!important;
-    font-size:11px!important;
-    border-radius:9px!important;
-  }
-  #semanaView .weekbar button,#mensualView .weekbar button{
-    min-width:0!important;
-    width:100%!important;
-    min-height:30px!important;
-    height:30px!important;
-    padding:3px 4px!important;
-    font-size:10px!important;
-    line-height:1.05!important;
-    border-radius:9px!important;
-  }
-}
-@media (max-width:380px){
-  #semanaView .weekbar,#mensualView .weekbar{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
-  header{padding-right:84px!important;}
-  .yneaBrandTitle .brandText{font-size:15px!important;max-width:calc(100vw - 162px)!important;}
-  #installAppBtn{max-width:70px!important;font-size:9px!important;padding:3px 5px!important;}
-}
-</style>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<link rel="icon" type="image/png" href="icon.png?v=20260504-2">
-<link rel="apple-touch-icon" href="icon.png?v=20260504-2">
-<meta name="theme-color" content="#ec4899">
 </head>
 <body>
 <header>
@@ -1168,10 +988,7 @@ if(!data.bloqueos){data.bloqueos=[];}
 let weekStart = monday(new Date());
 
 function $(id){return document.getElementById(id)}
-function save(){
-  localStorage.setItem("agendaClinicaSemanal",JSON.stringify(data));
-  if(typeof window.yneaQueueCloudSave === "function") window.yneaQueueCloudSave();
-}
+function save(){localStorage.setItem("agendaClinicaSemanal",JSON.stringify(data))}
 function paciente(id){return data.pacientes.find(p=>p.id===id)||{}}
 function iso(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
 function monday(d){const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x}
@@ -1201,7 +1018,7 @@ function refreshAllSelects(){
  fillSelect("weekConsulta",data.consultas,'<option value="">Todas</option>');
  fillSelect("filtroProf",data.profesionales,'<option value="">Todos</option>');
  fillSelect("filtroTipo",data.tipos,'<option value="">Todos</option>');
- if(typeof actualizarBuscadorPacienteCita==="function") actualizarBuscadorPacienteCita();
+ actualizarBuscadorPacienteCita();
 }
 function setView(view,btn){
  ["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{
@@ -2407,6 +2224,10 @@ function guardarNuevoPacienteModal(){
 }
 </script>
 
+
+<div class="autosaveBar">
+  <span id="autosaveStatus">Autoguardado activo</span>
+  </div>
 
 
 <script id="autosave-backup-script">
@@ -4104,147 +3925,6 @@ button,.tab{touch-action:manipulation;}
     setTimeout(unlockUI,250);
   });
   setTimeout(function(){try{removeAnnualAndMobileDisallowed(); setupInstall(); yneaSetView('semana'); enhancePatients();}catch(e){console.error(e);}},300);
-})();
-</script>
-
-
-
-<script id="ynea-supabase-database-layer">
-/* ===== YNEA SUPABASE PRO - CARGA REAL DE CATÁLOGOS =====
-   Tablas usadas:
-   - profesionales  -> selector Profesional
-   - tipos_cita     -> selector Tipo de cita
-   - consultas      -> espacio físico / sala
-*/
-(function(){
-  const STORAGE_KEY="agendaClinicaSemanal";
-  const CONFIG_KEYS=["yneaSupabaseConfig","ynea_supabase_config","supabaseConfig","supabase_config"];
-  const STATE_TABLE="ynea_agenda_state";
-  const ROW_ID="default";
-  let client=null, saveTimer=null, loading=false, lastJson="";
-  const OMIT=new Set(["id","uuid","created_at","updated_at","activo","active","duracion","duracion_minutos","minutos","duration"]);
-  function el(id){return document.getElementById(id)}
-  function safeJson(x){try{return JSON.parse(x||"{}")}catch(e){return {}}}
-  function currentData(){try{return eval("data")}catch(e){return window.data||{}}}
-  function setCurrentData(obj){window.data=obj;try{eval("data=window.data")}catch(e){}}
-  function normalizeCfg(c){
-    c=c||{};
-    const url=(c.url||c.projectUrl||c.project_url||c.SUPABASE_URL||window.SUPABASE_URL||"").trim();
-    const anonKey=(c.anonKey||c.anon||c.key||c.publicKey||c.SUPABASE_KEY||c.SUPABASE_ANON_KEY||window.SUPABASE_KEY||window.SUPABASE_ANON_KEY||"").trim();
-    return {url,anonKey};
-  }
-  function cfg(){
-    for(const k of CONFIG_KEYS){const c=normalizeCfg(safeJson(localStorage.getItem(k))); if(c.url&&c.anonKey)return c;}
-    return normalizeCfg({});
-  }
-  function saveCfg(url,anonKey){
-    const c={url:(url||"").trim(),anonKey:(anonKey||"").trim()};
-    localStorage.setItem("yneaSupabaseConfig",JSON.stringify(c));
-    return c;
-  }
-  function hasCfg(){const c=cfg();return !!(c.url&&c.anonKey)}
-  function status(msg,ok){const x=el("yneaDbStatus"); if(x){x.textContent=msg; x.style.color=ok?"#15803d":"#be123c"} console[ok?"log":"warn"]("Ynea DB:",msg);}
-  function logDiag(msg){const x=el("yneaDbDiag"); if(x){x.textContent=msg} console.log("Ynea diagnóstico:",msg);}
-  function init(){
-    const c=cfg();
-    if(!c.url||!c.anonKey){status("Supabase no conectado: falta URL o anon key",false);return null;}
-    if(!window.supabase||typeof window.supabase.createClient!=="function"){
-      status("No se ha cargado la librería de Supabase",false);return null;
-    }
-    try{
-      client=window.supabase.createClient(c.url,c.anonKey);
-      window.yneaSupabaseClient=client;
-      return client;
-    }catch(e){status("Error iniciando Supabase: "+(e.message||e),false);return null;}
-  }
-  function nameFrom(row){
-    if(!row||typeof row!=="object")return "";
-    const preferred=["nombre","name","titulo","title","tipo","tipo_cita","descripcion","consulta","profesional"];
-    for(const k of preferred){if(row[k]!==undefined&&row[k]!==null&&String(row[k]).trim())return String(row[k]).trim()}
-    for(const [k,v] of Object.entries(row)){if(!OMIT.has(k)&&typeof v==="string"&&v.trim())return v.trim()}
-    return "";
-  }
-  function durationFrom(row){return row?.duracion ?? row?.duracion_minutos ?? row?.minutos ?? row?.duration ?? 30}
-  function uniq(list){return [...new Set((list||[]).map(x=>String(x||"").trim()).filter(Boolean))]}
-  function render(){
-    try{if(typeof refreshAllSelects==="function")refreshAllSelects()}catch(e){console.warn("refreshAllSelects",e)}
-    try{if(typeof renderAll==="function")renderAll()}catch(e){console.warn("renderAll",e)}
-  }
-  async function read(sb,table){
-    const r=await sb.from(table).select("*");
-    if(r.error){console.error("Supabase error",table,r.error);return {__error:r.error.message||JSON.stringify(r.error)}}
-    return Array.isArray(r.data)?r.data:[];
-  }
-  async function applyCatalogs(sb,base){
-    const [pr,tr,cr]=await Promise.all([read(sb,"profesionales"),read(sb,"tipos_cita"),read(sb,"consultas")]);
-    const errors=[]; if(pr.__error)errors.push("profesionales: "+pr.__error); if(tr.__error)errors.push("tipos_cita: "+tr.__error); if(cr.__error)errors.push("consultas: "+cr.__error);
-    const profRows=Array.isArray(pr)?pr:[], tipoRows=Array.isArray(tr)?tr:[], consultaRows=Array.isArray(cr)?cr:[];
-    const profesionales=uniq(profRows.filter(r=>r.activo!==false&&r.active!==false).map(nameFrom));
-    const tipos=uniq(tipoRows.filter(r=>r.activo!==false&&r.active!==false).map(nameFrom));
-    const consultas=uniq(consultaRows.filter(r=>r.activo!==false&&r.active!==false).map(nameFrom));
-    base.profesionales=profesionales.length?profesionales:(base.profesionales||[]);
-    if(tipos.length){base.tipos=tipos; base.duracionesTipo=base.duracionesTipo||{}; tipoRows.forEach(r=>{const n=nameFrom(r); if(n)base.duracionesTipo[n]=String(durationFrom(r))})}
-    if(consultas.length)base.consultas=consultas;
-    const msg=`Lectura Supabase → profesionales: ${profesionales.length}, tipos_cita: ${tipos.length}, consultas: ${consultas.length}${errors.length?"
-Errores: "+errors.join(" | "):""}`;
-    logDiag(msg);
-    return {base,msg,counts:{profesionales:profesionales.length,tipos_cita:tipos.length,consultas:consultas.length},errors};
-  }
-  async function loadCloud(){
-    if(loading)return; const sb=client||init(); if(!sb)return;
-    loading=true; status("Cargando catálogos desde Supabase...",true);
-    try{
-      let base=currentData()||{};
-      try{const r=await sb.from(STATE_TABLE).select("data").eq("id",ROW_ID).maybeSingle(); if(!r.error&&r.data&&r.data.data)base=r.data.data}catch(e){console.warn("Sin estado general",e)}
-      const res=await applyCatalogs(sb,base);
-      setCurrentData(res.base); localStorage.setItem(STORAGE_KEY,JSON.stringify(res.base)); lastJson=JSON.stringify(res.base); render();
-      status(res.errors.length?"Conectado con avisos. Revisa diagnóstico.":"Conectado. Catálogos cargados.",!res.errors.length);
-      return res;
-    }catch(e){console.error(e); status("Error cargando Supabase: "+(e.message||e),false); logDiag(String(e.message||e));}
-    finally{loading=false}
-  }
-  async function insertMissing(sb,table,names,extra){
-    const rows=await read(sb,table); if(!Array.isArray(rows))return;
-    const existing=new Set(uniq(rows.map(nameFrom)).map(x=>x.toLowerCase()));
-    const add=uniq(names).filter(n=>!existing.has(n.toLowerCase())).map(n=>Object.assign({nombre:n,activo:true},extra?extra(n):{}));
-    if(add.length){const r=await sb.from(table).insert(add); if(r.error)console.warn("No se pudieron insertar faltantes en "+table,r.error)}
-  }
-  async function saveCloud(force){
-    if(loading&&!force)return; const sb=client||init(); if(!sb)return; const d=currentData(); if(!d)return;
-    const json=JSON.stringify(d); if(!force&&json===lastJson)return;
-    try{
-      await insertMissing(sb,"profesionales",d.profesionales||[]);
-      await insertMissing(sb,"tipos_cita",d.tipos||[],n=>({duracion:Number((d.duracionesTipo||{})[n]||30)}));
-      await insertMissing(sb,"consultas",d.consultas||[]);
-      const r=await sb.from(STATE_TABLE).upsert({id:ROW_ID,data:d,updated_at:new Date().toISOString()}); if(r.error)throw r.error;
-      lastJson=json; status("Guardado en Supabase",true);
-    }catch(e){console.error(e); status("No se pudo guardar en Supabase: "+(e.message||e),false)}
-  }
-  window.yneaQueueCloudSave=function(){if(!hasCfg()||loading)return; clearTimeout(saveTimer); saveTimer=setTimeout(()=>saveCloud(false),700)};
-  window.yneaLoadFromCloud=loadCloud;
-  window.yneaSaveToCloudNow=()=>saveCloud(true);
-  window.yneaTestSupabase=async()=>{const sb=client||init(); if(!sb)return {error:"Sin conexión"}; return await applyCatalogs(sb,currentData()||{});};
-  function panel(){
-    const cv=el("configView"); if(!cv||el("yneaDbPanel"))return; const c=cfg();
-    const p=document.createElement("div"); p.id="yneaDbPanel"; p.className="card"; p.innerHTML=`
-      <h2>Base de datos Supabase</h2>
-      <p class="small">Carga <b>profesionales</b>, <b>tipos_cita</b> y <b>consultas</b> directamente de Supabase.</p>
-      <label>Project URL</label><input id="yneaSupabaseUrl" value="${(c.url||"").replaceAll('"','&quot;')}" placeholder="https://xxxxx.supabase.co">
-      <label>Anon public key</label><input id="yneaSupabaseAnon" value="${(c.anonKey||"").replaceAll('"','&quot;')}" placeholder="eyJhbGciOi...">
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-        <button type="button" id="yneaConnectDbBtn">Conectar y recargar catálogos</button>
-        <button type="button" id="yneaUploadDbBtn" class="secondary">Guardar estado actual</button>
-        <button type="button" id="yneaClearDbBtn" class="danger">Desconectar</button>
-      </div>
-      <p id="yneaDbStatus" class="small" style="margin-top:10px">${hasCfg()?"Conexión guardada":"Pendiente de configurar"}</p>
-      <pre id="yneaDbDiag" style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px;font-size:12px;color:#334155;max-height:170px;overflow:auto">Pulsa “Conectar y recargar catálogos”.</pre>`;
-    cv.prepend(p);
-    el("yneaConnectDbBtn").onclick=async()=>{saveCfg(el("yneaSupabaseUrl").value,el("yneaSupabaseAnon").value);client=null;await loadCloud()};
-    el("yneaUploadDbBtn").onclick=async()=>{saveCfg(el("yneaSupabaseUrl").value,el("yneaSupabaseAnon").value);client=null;await saveCloud(true)};
-    el("yneaClearDbBtn").onclick=()=>{for(const k of CONFIG_KEYS)localStorage.removeItem(k);client=null;status("Desconectado",false)};
-  }
-  document.addEventListener("DOMContentLoaded",()=>{panel(); if(hasCfg())setTimeout(loadCloud,1200)});
-  window.addEventListener("focus",()=>{if(hasCfg())setTimeout(loadCloud,350)});
 })();
 </script>
 
