@@ -555,13 +555,6 @@ button:not(.secondary):not(.danger):not(.tab):not(.mobileNavBtn):not(.appFab):ho
 }
 </style>
 
-
-<style id="fix-ynea-visibilidad-pacientes">
-#anualView{display:none !important;}
-#pacientesTable tbody tr{cursor:pointer;}
-#pacientesTable tbody tr:hover{background:#fff1f7;}
-.autosaveBar{display:none !important;}
-</style>
 </head>
 <body>
 <header>
@@ -585,7 +578,9 @@ button:not(.secondary):not(.danger):not(.tab):not(.mobileNavBtn):not(.appFab):ho
   <div class="tabs">
     <button class="tab active" onclick="setView('semana', this)">Calendario semanal</button>
     <button class="tab" onclick="setView('mensual', this)">Vista mensual</button>
-<button class="tab" onclick="setView('pacientes', this)">Pacientes</button>
+    <button class="tab" onclick="setView('anual', this)">Vista anual</button>
+    
+    <button class="tab" onclick="setView('pacientes', this)">Pacientes</button>
     <button class="tab" onclick="setView('config', this)">Configuración</button>
     <button class="tab" onclick="setView('bloqueos', this)">Bloqueos</button>
     <button class="tab" onclick="setView('listados', this)">Listados</button>
@@ -1021,10 +1016,10 @@ function refreshAllSelects(){
  fillSelect("weekConsulta",data.consultas,'<option value="">Todas</option>');
  fillSelect("filtroProf",data.profesionales,'<option value="">Todos</option>');
  fillSelect("filtroTipo",data.tipos,'<option value="">Todos</option>');
- if(typeof actualizarBuscadorPacienteCita === "function") actualizarBuscadorPacienteCita();
+ actualizarBuscadorPacienteCita();
 }
 function setView(view,btn){
- ["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{
+ ["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{
    const el=$(v+"View");
    if(el) el.style.display=v===view?"block":"none";
  });
@@ -1049,7 +1044,7 @@ function quickNewCita(fecha,hora){
  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
  const tabs=document.querySelectorAll(".tab");
  if(tabs[1]) tabs[1].classList.add("active");
- ["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{ const el=$(`${v}View`); if(el) el.style.display=v==="agenda"?"block":"none"; };
+ ["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>$(`${v}View`).style.display=v==="agenda"?"block":"none");
  setTimeout(()=>$("pacienteCita").focus(),50);
 }
 
@@ -1264,37 +1259,12 @@ function quickNewCitaConsulta(fecha,hora,consulta){
  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
  const tabs=document.querySelectorAll(".tab");
  if(tabs[1]) tabs[1].classList.add("active");
- ["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{ const el=$(`${v}View`); if(el) el.style.display=v==="agenda"?"block":"none"; };
+ ["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>$(`${v}View`).style.display=v==="agenda"?"block":"none");
  setTimeout(()=>$("pacienteCita").focus(),50);
 }
 
 function renderPatients(){
- const table=$("pacientesTable");
- if(!table) return;
- table.innerHTML="<thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Observaciones</th></tr></thead><tbody>"+
-   (data.pacientes||[]).map(p=>`<tr onclick="editarPaciente('${_safeJs(p.id)}')" title="Clic para editar paciente"><td><b>${_safeAttr(p.nombre)}</b></td><td>${_safeAttr(p.telefono||"")}</td><td>${_safeAttr(p.email||"")}</td><td>${_safeAttr(p.obs||"")}</td></tr>`).join("")+
-   "</tbody>";
-}
-
-function editarPaciente(id){
- const p=(data.pacientes||[]).find(x=>String(x.id)===String(id));
- if(!p) return;
- const nombre=prompt("Nombre del paciente", p.nombre||"");
- if(nombre===null) return;
- if(!String(nombre).trim()){ alert("El nombre no puede quedar vacío."); return; }
- const telefono=prompt("Teléfono", p.telefono||"");
- if(telefono===null) return;
- const email=prompt("Email", p.email||"");
- if(email===null) return;
- const obs=prompt("Observaciones", p.obs||"");
- if(obs===null) return;
- p.nombre=String(nombre).trim();
- p.telefono=String(telefono||"");
- p.email=String(email||"");
- p.obs=String(obs||"");
- save();
- refreshAllSelects();
- renderAll();
+ $("pacientesTable").innerHTML="<thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Observaciones</th></tr></thead><tbody>"+data.pacientes.map(p=>`<tr><td><b>${p.nombre}</b></td><td>${p.telefono||""}</td><td>${p.email||""}</td><td>${p.obs||""}</td></tr>`).join("")+"</tbody>";
 }
 
 
@@ -1591,20 +1561,17 @@ function renderYearView(){
 }
 
 function renderAll(){
- if($("statCitas")) $("statCitas").textContent=(data.citas||[]).length;
- if($("statPacientes")) $("statPacientes").textContent=(data.pacientes||[]).length;
- if($("statProfs")) $("statProfs").textContent=(data.profesionales||[]).length;
- if($("statConsultas")) $("statConsultas").textContent=(data.consultas||[]).length;
- if(typeof renderWeek === "function") renderWeek();
- if(typeof renderMonthView === "function") renderMonthView();
- // Vista anual desactivada por solicitud.
- if(typeof renderPatients === "function") renderPatients();
- if(typeof renderConfig === "function") renderConfig();
- if(typeof renderMapTipos === "function") renderMapTipos();
- if(typeof renderBloqueos === "function") renderBloqueos();
- if(typeof renderLists === "function") renderLists();
- if(typeof renderAvisos === "function") renderAvisos();
- if(typeof renderInfoDiaria === "function") renderInfoDiaria();
+ $("statCitas").textContent=data.citas.length;
+ $("statPacientes").textContent=data.pacientes.length;
+ $("statProfs").textContent=data.profesionales.length;
+ $("statConsultas").textContent=data.consultas.length;
+ renderWeek();
+ renderMonthView();
+ renderYearView();
+ renderPatients();
+ renderConfig();
+ if(typeof renderMapTipos==="function") renderMapTipos();
+ renderBloqueos(); renderLists(); renderAvisos();
 }
 
 function setupMonthlyAnnualControls(){
@@ -3643,7 +3610,7 @@ document.addEventListener("click", function(e){
 
 <script id="opcion-c-app-movil-js">
 (function(){
-  const views=["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"];
+  const views=["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"];
   const originalSetView=window.setView;
   function syncMobileNav(view){
     document.querySelectorAll('.mobileNavBtn').forEach(btn=>{
@@ -3674,21 +3641,119 @@ document.addEventListener("click", function(e){
 </script>
 
 
-<script id="fix-final-ynea-estable">
+
+<style id="ynea-restauracion-minima-css">
+/* Restauración mínima segura: no toca la lógica principal */
+.autosaveBar{display:none !important;}
+#anualView{display:none !important;}
+@media(max-width:900px){
+  .weekbar{display:flex !important; flex-wrap:wrap !important; gap:6px !important; align-items:end !important;}
+  .weekbar > div{min-width:120px !important; flex:1 1 120px !important;}
+  .weekbar button{min-width:0 !important; width:auto !important; min-height:34px !important; padding:7px 8px !important; font-size:12px !important;}
+  .weekbar label{font-size:11px !important; margin:3px 0 !important;}
+  .weekbar input,.weekbar select{padding:7px !important; font-size:13px !important; border-radius:10px !important;}
+  .tableWrap{overflow:auto !important; -webkit-overflow-scrolling:touch !important;}
+  #weekTable,#monthTable{min-width:780px !important; width:max-content !important;}
+}
+</style>
+
+<script id="ynea-restauracion-minima-js">
 (function(){
-  function safeShowInitial(){
-    try{
-      const views=["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"];
-      views.forEach(v=>{ const el=document.getElementById(v+"View"); if(el && !el.style.display) el.style.display = v==="semana" ? "block" : "none"; });
-      const anual=document.getElementById("anualView"); if(anual) anual.style.display="none";
-      document.querySelectorAll('button').forEach(b=>{ if((b.textContent||"").trim().toLowerCase()==="vista anual") b.remove(); });
-      if(typeof actualizarBuscadorPacienteCita === "function") actualizarBuscadorPacienteCita();
-      if(typeof renderAll === "function") renderAll();
-    }catch(e){ console.warn("Fix final Ynea:", e); }
+  const YNEA_VIEWS=["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"];
+
+  function byId(id){return document.getElementById(id);}
+
+  function quitarVistaAnual(){
+    document.querySelectorAll('button').forEach(function(btn){
+      if((btn.textContent||'').toLowerCase().includes('vista anual')) btn.remove();
+    });
+    const anual=byId('anualView');
+    if(anual) anual.style.display='none';
+    document.querySelectorAll('.mobileNavBtn').forEach(function(btn){
+      if(btn.dataset && btn.dataset.mobileView==='anual') btn.remove();
+    });
   }
-  document.addEventListener("DOMContentLoaded", safeShowInitial);
-  setTimeout(safeShowInitial, 300);
+
+  function renderSeguro(){
+    try{ if(typeof window.renderAll==='function') window.renderAll(); }
+    catch(e){ console.error('Ynea: renderAll falló, la vista queda visible para diagnóstico:', e); }
+  }
+
+  window.setView=function(view,btn){
+    if(view==='anual') view='semana';
+    YNEA_VIEWS.forEach(function(v){
+      const el=byId(v+'View');
+      if(el) el.style.display=(v===view?'block':'none');
+    });
+    const anual=byId('anualView');
+    if(anual) anual.style.display='none';
+    document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('active');});
+    if(btn) btn.classList.add('active');
+    else {
+      document.querySelectorAll('.tab').forEach(function(b){
+        const txt=(b.textContent||'').toLowerCase();
+        const match=(view==='semana' && txt.includes('semanal')) ||
+                    (view==='mensual' && txt.includes('mensual')) ||
+                    (view==='pacientes' && txt.includes('pacientes')) ||
+                    (view==='config' && txt.includes('config')) ||
+                    (view==='bloqueos' && txt.includes('bloqueos')) ||
+                    (view==='listados' && txt.includes('listados')) ||
+                    (view==='copias' && txt.includes('copias')) ||
+                    (view==='avisos' && txt.includes('avisos')) ||
+                    (view==='infoDiaria' && txt.includes('información diaria'));
+        if(match) b.classList.add('active');
+      });
+    }
+    renderSeguro();
+  };
+
+  window.editarPacienteYnea=function(id){
+    const p=(window.data && Array.isArray(data.pacientes)) ? data.pacientes.find(function(x){return String(x.id)===String(id);}) : null;
+    if(!p) return;
+    const nombre=prompt('Nombre del paciente', p.nombre||'');
+    if(nombre===null) return;
+    const telefono=prompt('Teléfono', p.telefono||'');
+    if(telefono===null) return;
+    const email=prompt('Email', p.email||'');
+    if(email===null) return;
+    const obs=prompt('Observaciones', p.obs||'');
+    if(obs===null) return;
+    p.nombre=nombre.trim();
+    p.telefono=telefono.trim();
+    p.email=email.trim();
+    p.obs=obs.trim();
+    try{ if(typeof window.save==='function') window.save(); }catch(e){}
+    try{ if(typeof window.refreshAllSelects==='function') window.refreshAllSelects(); }catch(e){}
+    renderSeguro();
+  };
+
+  window.renderPatients=function(){
+    const table=byId('pacientesTable');
+    if(!table || !window.data) return;
+    const filas=(data.pacientes||[]).map(function(p){
+      return '<tr style="cursor:pointer" onclick="editarPacienteYnea(\''+String(p.id).replaceAll('\\','\\\\').replaceAll("'","\\'")+'\')">' +
+        '<td><b>'+String(p.nombre||'')+'</b></td>' +
+        '<td>'+String(p.telefono||'')+'</td>' +
+        '<td>'+String(p.email||'')+'</td>' +
+        '<td>'+String(p.obs||'')+'</td>' +
+      '</tr>';
+    }).join('');
+    table.innerHTML='<thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Observaciones</th></tr></thead><tbody>'+filas+'</tbody>';
+  };
+
+  function iniciar(){
+    quitarVistaAnual();
+    try{
+      if(typeof window.refreshAllSelects==='function') window.refreshAllSelects();
+      if(typeof window.renderPatients==='function') window.renderPatients();
+    }catch(e){console.error(e);}
+    window.setView('semana');
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', iniciar);
+  else iniciar();
 })();
 </script>
+
 </body>
 </html>
