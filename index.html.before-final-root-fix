@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#f4f7fb; --card:#fff; --text:#1f2937; --muted:#64748b; --line:#dbe3ee;
-  --primary:#9f244f; --primary2:#7f1d3f; --ok:#4ade80; --warn:#86efac; --bad:#fda4af; --soft:#e0f2fe;
+  --primary:#ec4899; --primary2:#db2777; --ok:#4ade80; --warn:#86efac; --bad:#fda4af; --soft:#e0f2fe;
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
@@ -1325,11 +1325,9 @@ button:active,.btn:active,.tab:active { transform:scale(.985); }
   </section>
 
 <script>
-function yneaSafeGetItem(k){try{return window.localStorage?localStorage.getItem(k):null}catch(e){console.warn("Ynea: almacenamiento local no disponible",e);return null}}
-function yneaSafeSetItem(k,v){try{if(window.localStorage)localStorage.setItem(k,v)}catch(e){console.warn("Ynea: no se pudo guardar localmente",e)}}
 const horas=[]; for(let m=9*60+30;m<=20*60+30;m+=10){horas.push(String(Math.floor(m/60)).padStart(2,'0')+":"+String(m%60).padStart(2,'0'))}
 const today=new Date().toISOString().slice(0,10);
-let data=JSON.parse(yneaSafeGetItem("agendaClinicaSemanal")||"null") || {
+let data=JSON.parse(localStorage.getItem("agendaClinicaSemanal")||"null") || {
   profesionales:["Dra. Ana López","Dr. Carlos Martín","Laura Sánchez","Dr. Miguel Pérez"],
   consultas:["Consulta 1","Consulta 2","Consulta 3","Sala de tratamientos"],
   tipos:["Primera visita","Revisión","Tratamiento","Urgencia","Control"],
@@ -1360,7 +1358,7 @@ if(!data.bloqueos){data.bloqueos=[];}
 let weekStart = monday(new Date());
 
 function $(id){return document.getElementById(id)}
-function save(){yneaSafeSetItem("agendaClinicaSemanal",JSON.stringify(data))}
+function save(){localStorage.setItem("agendaClinicaSemanal",JSON.stringify(data))}
 function paciente(id){return data.pacientes.find(p=>p.id===id)||{}}
 function iso(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
 function monday(d){const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x}
@@ -2449,12 +2447,12 @@ function inicializarBloqueosAvanzados(){
   toggleBloqHorarioCampos();
 }
 
-try{init();}catch(e){console.warn("Ynea: inicio principal recuperado",e);}
+init();
 if(typeof inicializarAvisos==='function') inicializarAvisos();
-try{inicializarBloqueosAvanzados();}catch(e){console.warn("Ynea: bloqueos no inicializados",e);}
-try{renderAll();}catch(e){console.warn("Ynea: render inicial recuperado",e);}
-try{setupMonthlyAnnualControls();}catch(e){console.warn("Ynea: controles mensuales recuperados",e);}
-try{renderAll();}catch(e){console.warn("Ynea: render final recuperado",e);}
+inicializarBloqueosAvanzados();
+renderAll();
+setupMonthlyAnnualControls();
+renderAll();
 </script>
 
 
@@ -4305,44 +4303,6 @@ main,section,.card,.tableWrap{ overflow:visible !important; max-height:none !imp
   }
   window.addEventListener("DOMContentLoaded", function(){ setTimeout(showDefaultView, 50); });
   window.addEventListener("load", function(){ setTimeout(showDefaultView, 250); });
-})();
-</script>
-
-
-<style id="ynea-root-final-fix-2026">
-:root{--primary:#9f244f !important;--primary2:#7f1d3f !important;--ynea-rosa:#9f244f !important;}
-.yneaBrandTitle{display:flex!important;align-items:center!important;gap:12px!important;flex-direction:row!important;}
-.yneaBrandTitle img{height:58px!important;max-height:58px!important;width:auto!important;max-width:150px!important;object-fit:contain!important;}
-.yneaBrandTitle .brandText{color:#9f244f!important;font-size:24px!important;line-height:1.1!important;font-weight:700!important;}
-.yneaBrandTitle .brandSub{display:none!important;}
-.tabs .tab,#installPwaBtn{background:#fce7f3!important;color:#9f244f!important;border:1px solid #f3c7da!important;}
-.tabs .tab.active,#installPwaBtn:hover{background:#9f244f!important;color:#fff!important;border-color:#9f244f!important;}
-button:not(.secondary):not(.danger):not(.tab){background:#9f244f!important;color:#fff!important;}
-button:not(.secondary):not(.danger):not(.tab):hover{background:#7f1d3f!important;}
-#anualView,#yearTable,[onclick*="anual"],[onclick*="year"]{display:none!important;}
-@media(max-width:600px){.yneaBrandTitle{gap:8px!important;}.yneaBrandTitle img{height:46px!important;max-height:46px!important;max-width:118px!important;}.yneaBrandTitle .brandText{font-size:16px!important;color:#9f244f!important;}.tabs{display:flex!important;flex-wrap:nowrap!important;overflow-x:auto!important;max-height:none!important;}.tabs .tab{font-size:11px!important;padding:7px 8px!important;}}
-</style>
-<script id="ynea-navigation-root-final-fix-2026">
-(function(){
-  var views=["semana","mensual","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"];
-  function byId(id){return document.getElementById(id)}
-  function paint(view,btn){
-    views.concat(["agenda","anual"]).forEach(function(v){var el=byId(v+"View"); if(el) el.style.display=(v===view?"block":"none");});
-    document.querySelectorAll(".tabs .tab").forEach(function(b){b.classList.remove("active")});
-    if(btn) btn.classList.add("active");
-    try{ if(typeof window.renderAll==="function") window.renderAll(); }catch(e){console.warn("Ynea: vista mostrada sin refresco completo",e);}
-  }
-  window.setView=function(view,btn){ paint(view,btn); };
-  function boot(){
-    document.querySelectorAll(".tabs .tab").forEach(function(b){
-      var t=(b.textContent||"").toLowerCase();
-      if(t.indexOf("agregar")>=0 || t.indexOf("nueva cita")>=0 || t.indexOf("anual")>=0){ b.remove(); }
-    });
-    var active=document.querySelector(".tabs .tab.active") || Array.from(document.querySelectorAll(".tabs .tab")).find(function(b){return (b.textContent||"").toLowerCase().indexOf("semanal")>=0});
-    paint("semana",active);
-  }
-  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot); else boot();
-  window.addEventListener("load",function(){setTimeout(boot,100)});
 })();
 </script>
 
