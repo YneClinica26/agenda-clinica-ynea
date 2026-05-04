@@ -4104,5 +4104,198 @@ button[onclick*="setView('anual'"], button[onclick*='setView("anual"']{display:n
 })();
 </script>
 
+
+
+<style id="ynea-roles-compact-cleanup">
+/* Limpieza solicitada */
+.notice{display:none !important;}
+.autosaveBar,.appFab{display:none !important;}
+button[onclick*="setView('anual'"],#anualView{display:none !important;}
+.ynea-login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#fff7fb,#f8fafc);z-index:999999;display:flex;align-items:center;justify-content:center;padding:18px;}
+.ynea-login-card{width:min(420px,100%);background:#fff;border:1px solid #f3cfe0;border-radius:24px;box-shadow:0 24px 80px rgba(15,23,42,.18);padding:24px;}
+.ynea-login-card h2{margin:0 0 8px;color:#db2777;font-size:24px;}
+.ynea-login-card p{margin:0 0 16px;color:#64748b;}
+.ynea-login-card input{margin-bottom:10px;}
+.ynea-login-error{display:none;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:12px;padding:10px;margin:8px 0;}
+.ynea-user-admin-grid{display:grid;grid-template-columns:1fr 130px 170px auto;gap:8px;align-items:end;}
+.ynea-user-row{display:grid;grid-template-columns:1fr 120px 150px auto;gap:8px;align-items:center;border:1px solid #e5e7eb;border-radius:12px;padding:8px;margin-top:8px;background:#fff;}
+.ynea-role-chip{display:inline-block;border-radius:999px;background:#fce7f3;color:#9f244f;padding:4px 8px;font-size:12px;font-weight:700;}
+@media(max-width:900px){
+  .ynea-user-admin-grid,.ynea-user-row{grid-template-columns:1fr;}
+  .tab[onclick*="setView('config'"], .tab[onclick*="setView('listados'"], .tab[onclick*="setView('infoDiaria'"], .tab[onclick*="setView('avisos'"], .tab[onclick*="setView('copias'"], .tab[onclick*="setView('bloqueos'"]{display:none !important;}
+}
+</style>
+
+<script id="ynea-roles-acceso-final">
+(function(){
+  const ROLE_LABELS={usuario:'Usuario móvil',recepcion:'Recepción',admin:'Administrador'};
+  const ROLE_ALLOWED={
+    usuario:['semana','mensual','pacientes','agenda'],
+    recepcion:['semana','mensual','pacientes','agenda','bloqueos'],
+    admin:['semana','mensual','pacientes','agenda','config','bloqueos','listados','infoDiaria','avisos','copias']
+  };
+  function byId(id){return document.getElementById(id)}
+  function safeData(){try{return data}catch(e){return null}}
+  function persist(){try{save()}catch(e){try{localStorage.setItem('agendaClinicaSemanal',JSON.stringify(data))}catch(_){}}}
+  function esc(v){return String(v??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));}
+  function ensureUsers(){
+    const d=safeData(); if(!d) return [];
+    if(!Array.isArray(d.usuarios) || !d.usuarios.length){
+      d.usuarios=[{id:'u_admin',nombre:'admin',codigo:'1234',rol:'admin'}];
+      persist();
+    }
+    return d.usuarios;
+  }
+  function currentUser(){
+    ensureUsers();
+    const raw=sessionStorage.getItem('yneaCurrentUser');
+    if(!raw) return null;
+    try{return JSON.parse(raw)}catch(e){return null}
+  }
+  function currentRole(){return (currentUser()||{}).rol||null;}
+  function allowedViews(){return ROLE_ALLOWED[currentRole()]||[];}
+  function isAllowed(view){return allowedViews().includes(view);}
+  function firstAllowed(){return allowedViews()[0]||'semana';}
+  function hideAnnual(){
+    document.querySelectorAll('button').forEach(b=>{if((b.getAttribute('onclick')||'').includes("setView('anual'")) b.style.display='none';});
+    const anual=byId('anualView'); if(anual) anual.style.display='none';
+  }
+  function applyRoleVisibility(){
+    hideAnnual();
+    const role=currentRole();
+    const allowed=allowedViews();
+    document.querySelectorAll('.tabs .tab').forEach(btn=>{
+      const oc=btn.getAttribute('onclick')||'';
+      const m=oc.match(/setView\('([^']+)'/);
+      if(!m) return;
+      const view=m[1];
+      btn.style.display=(view==='anual'||!allowed.includes(view))?'none':'';
+    });
+    document.querySelectorAll('.mobileBottomNav .mobileNavBtn').forEach((btn,i)=>{
+      const mobileViews=['semana','mensual','pacientes'];
+      const view=mobileViews[i];
+      if(view){btn.dataset.mobileView=view; btn.style.display='flex';}
+      else btn.style.display='none';
+    });
+    const panel=byId('yneaUsuariosPanel');
+    if(panel) panel.style.display=role==='admin'?'block':'none';
+  }
+  function showOnly(view){
+    const allowed=isAllowed(view)?view:firstAllowed();
+    ['semana','mensual','anual','agenda','pacientes','config','bloqueos','listados','copias','avisos','infoDiaria'].forEach(v=>{
+      const el=byId(v+'View'); if(el) el.style.display=(v===allowed)?'block':'none';
+    });
+    document.querySelectorAll('.tab').forEach(b=>{
+      const oc=b.getAttribute('onclick')||'';
+      const m=oc.match(/setView\('([^']+)'/);
+      b.classList.toggle('active', !!m && m[1]===allowed);
+    });
+    document.querySelectorAll('.mobileNavBtn').forEach(b=>b.classList.toggle('active',b.dataset.mobileView===allowed));
+    applyRoleVisibility();
+    return allowed;
+  }
+  const previousSetView=window.setView;
+  window.setView=function(view,btn){
+    const target=showOnly(view);
+    try{ if(typeof renderAll==='function') renderAll(); }catch(e){console.warn('renderAll:',e)}
+    return target;
+  };
+  function makeLogin(){
+    if(byId('yneaLoginOverlay')) return;
+    const div=document.createElement('div');
+    div.id='yneaLoginOverlay'; div.className='ynea-login-overlay';
+    div.innerHTML=`<div class="ynea-login-card"><h2>Acceso Ynea</h2><p>Introduce tu usuario y código de acceso.</p><label>Usuario</label><input id="yneaLoginUser" autocomplete="username" placeholder="Usuario"><label>Código</label><input id="yneaLoginCode" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Código"><div id="yneaLoginError" class="ynea-login-error">Usuario o código incorrecto.</div><button style="width:100%;margin-top:8px" id="yneaLoginBtn">Entrar</button><p class="small" style="margin-top:12px">Primer acceso: usuario <b>admin</b>, código <b>1234</b>. Cámbialo después en Configuración.</p></div>`;
+    document.body.appendChild(div);
+    const enter=()=>{
+      const usuarios=ensureUsers();
+      const u=(byId('yneaLoginUser').value||'').trim();
+      const c=(byId('yneaLoginCode').value||'').trim();
+      const found=usuarios.find(x=>String(x.nombre)===u && String(x.codigo)===c);
+      if(!found){byId('yneaLoginError').style.display='block'; return;}
+      sessionStorage.setItem('yneaCurrentUser',JSON.stringify({id:found.id,nombre:found.nombre,rol:found.rol}));
+      div.remove(); applyRoleVisibility(); showOnly(firstAllowed()); renderUsuariosPanel();
+      try{renderAll()}catch(e){}
+    };
+    byId('yneaLoginBtn').onclick=enter;
+    ['yneaLoginUser','yneaLoginCode'].forEach(id=>byId(id).addEventListener('keydown',e=>{if(e.key==='Enter') enter();}));
+    setTimeout(()=>byId('yneaLoginUser')?.focus(),50);
+  }
+  function requireLogin(){
+    ensureUsers();
+    if(!currentUser()) makeLogin(); else {applyRoleVisibility(); showOnly(firstAllowed());}
+  }
+  window.yneaLogout=function(){sessionStorage.removeItem('yneaCurrentUser'); location.reload();};
+  function ensureUsuariosPanel(){
+    const config=byId('configView'); if(!config || byId('yneaUsuariosPanel')) return;
+    const card=document.createElement('div');
+    card.className='card'; card.id='yneaUsuariosPanel';
+    card.innerHTML=`<h2>Usuarios y códigos de acceso</h2><p class="small">Crea usuarios con tres niveles: <b>Usuario móvil</b> (Semana, Mes y Pacientes), <b>Recepción</b> (también Bloqueos) y <b>Administrador</b> (todo).</p><div class="ynea-user-admin-grid"><div><label>Usuario</label><input id="newUserName" placeholder="Ej. recepcion"></div><div><label>Código</label><input id="newUserCode" placeholder="Ej. 2580"></div><div><label>Tipo</label><select id="newUserRole"><option value="usuario">Usuario móvil</option><option value="recepcion">Recepción</option><option value="admin">Administrador</option></select></div><button type="button" onclick="yneaAddUser()">Añadir</button></div><div id="yneaUsersList"></div><div style="margin-top:12px"><button type="button" class="secondary" onclick="yneaLogout()">Cerrar sesión</button></div>`;
+    config.insertBefore(card, config.firstChild);
+  }
+  window.yneaAddUser=function(){
+    const d=safeData(); if(!d) return;
+    ensureUsers();
+    const nombre=(byId('newUserName')?.value||'').trim();
+    const codigo=(byId('newUserCode')?.value||'').trim();
+    const rol=byId('newUserRole')?.value||'usuario';
+    if(!nombre) return alert('Escribe el nombre de usuario.');
+    if(!codigo) return alert('Escribe un código de acceso.');
+    if(d.usuarios.some(u=>u.nombre===nombre)) return alert('Ya existe ese usuario.');
+    d.usuarios.push({id:'u_'+Date.now(),nombre,codigo,rol}); persist();
+    ['newUserName','newUserCode'].forEach(id=>{if(byId(id)) byId(id).value='';});
+    renderUsuariosPanel();
+  };
+  window.yneaDeleteUser=function(id){
+    const d=safeData(); if(!d) return; ensureUsers();
+    if(d.usuarios.length<=1) return alert('Debe quedar al menos un usuario administrador.');
+    const user=d.usuarios.find(u=>u.id===id);
+    if(!user) return;
+    if(!confirm('¿Eliminar usuario '+user.nombre+'?')) return;
+    d.usuarios=d.usuarios.filter(u=>u.id!==id);
+    if(!d.usuarios.some(u=>u.rol==='admin')) d.usuarios[0].rol='admin';
+    persist(); renderUsuariosPanel();
+  };
+  window.yneaUpdateUser=function(id,field,value){
+    const d=safeData(); if(!d) return; ensureUsers();
+    const u=d.usuarios.find(x=>x.id===id); if(!u) return;
+    u[field]=value;
+    if(!d.usuarios.some(x=>x.rol==='admin')){u.rol='admin'; alert('Debe existir al menos un administrador.');}
+    persist(); renderUsuariosPanel();
+  };
+  function renderUsuariosPanel(){
+    ensureUsuariosPanel();
+    const list=byId('yneaUsersList'); if(!list) return;
+    const usuarios=ensureUsers();
+    list.innerHTML=usuarios.map(u=>`<div class="ynea-user-row"><input value="${esc(u.nombre)}" onchange="yneaUpdateUser('${esc(u.id)}','nombre',this.value.trim())"><input value="${esc(u.codigo)}" onchange="yneaUpdateUser('${esc(u.id)}','codigo',this.value.trim())"><select onchange="yneaUpdateUser('${esc(u.id)}','rol',this.value)"><option value="usuario" ${u.rol==='usuario'?'selected':''}>Usuario móvil</option><option value="recepcion" ${u.rol==='recepcion'?'selected':''}>Recepción</option><option value="admin" ${u.rol==='admin'?'selected':''}>Administrador</option></select><button class="danger" type="button" onclick="yneaDeleteUser('${esc(u.id)}')">Eliminar</button></div>`).join('');
+    applyRoleVisibility();
+  }
+  function refillBloqueos(){
+    const d=safeData(); if(!d) return;
+    const el=byId('bloqProfesionalNuevo'); if(!el) return;
+    const old=el.value;
+    el.innerHTML=(d.profesionales||[]).map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
+    if([...el.options].some(o=>o.value===old)) el.value=old;
+  }
+  const oldRefresh=window.refreshAllSelects;
+  window.refreshAllSelects=function(){
+    try{ if(typeof oldRefresh==='function') oldRefresh(); }catch(e){console.warn(e)}
+    refillBloqueos(); applyRoleVisibility();
+  };
+  const oldRenderAll=window.renderAll;
+  window.renderAll=function(){
+    try{ if(typeof oldRenderAll==='function') oldRenderAll(); }catch(e){console.warn('renderAll previo:',e)}
+    refillBloqueos(); hideAnnual(); applyRoleVisibility();
+  };
+  function boot(){
+    ensureUsers(); ensureUsuariosPanel(); renderUsuariosPanel();
+    document.querySelectorAll('.notice,.autosaveBar,.appFab').forEach(el=>el.style.display='none');
+    requireLogin();
+    try{refreshAllSelects()}catch(e){}
+    try{renderAll()}catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>
+
 </body>
 </html>
