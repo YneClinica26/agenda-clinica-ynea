@@ -953,7 +953,7 @@ button:active,.btn:active,.tab:active { transform:scale(.985); }
     <span class="yneaSeparator"></span>
     <span>
       <span class="brandText">calendario de citación</span>
-      <span class="brandSub">gestión clínica de agenda · VERSIÓN ONLINE DEFINITIVA</span>
+      <span class="brandSub"></span>
     </span>
   </div>
 </h1>
@@ -964,8 +964,6 @@ button:active,.btn:active,.tab:active { transform:scale(.985); }
   <div class="tabs">
     <button class="tab active" onclick="setView('semana', this)">Calendario semanal</button>
     <button class="tab" onclick="setView('mensual', this)">Vista mensual</button>
-    <button class="tab" onclick="setView('anual', this)">Vista anual</button>
-    <button class="tab" onclick="setView('agenda', this)">Nueva cita</button>
     
     <button class="tab" onclick="setView('pacientes', this)">Pacientes</button>
     <button class="tab" onclick="setView('config', this)">Configuración</button>
@@ -1018,20 +1016,6 @@ button:active,.btn:active,.tab:active { transform:scale(.985); }
     </div>
   </section>
 
-  <section id="anualView" style="display:none">
-    <div class="card">
-      <h2>Vista anual por profesional</h2>
-      <div class="weekbar">
-        <button class="secondary" onclick="moveYear(-1)">← Año anterior</button>
-        <div><label>Año</label><input type="number" id="yearPicker" min="2020" max="2100" onchange="renderAll()"></div>
-        <button class="secondary" onclick="goThisYear()">Año actual</button>
-        <button class="secondary" onclick="moveYear(1)">Año siguiente →</button>
-        <div><label>Profesional</label><select id="yearProf" onchange="renderAll()"><option value="">Todos</option></select></div>
-      </div>
-      <p class="small" id="yearTitle"></p>
-      <div class="tableWrap"><table id="yearTable"></table></div>
-    </div>
-  </section>
 
   <section id="agendaView" style="display:none">
     <div class="grid">
@@ -1407,7 +1391,7 @@ function refreshAllSelects(){
  actualizarBuscadorPacienteCita();
 }
 function setView(view,btn){
- ["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{
+ ["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{
    const el=$(v+"View");
    if(el) el.style.display=v===view?"block":"none";
  });
@@ -1432,7 +1416,7 @@ function quickNewCita(fecha,hora){
  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
  const tabs=document.querySelectorAll(".tab");
  tabs.forEach(b=>{ if((b.textContent||"").toLowerCase().includes("nueva cita")) b.classList.add("active"); });
- ["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{ const el=$(v+"View"); if(el) el.style.display=v==="agenda"?"block":"none"; });
+ ["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{ const el=$(v+"View"); if(el) el.style.display=v==="agenda"?"block":"none"; });
  setTimeout(()=>$("pacienteCita").focus(),50);
 }
 
@@ -1647,7 +1631,7 @@ function quickNewCitaConsulta(fecha,hora,consulta){
  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
  const tabs=document.querySelectorAll(".tab");
  tabs.forEach(b=>{ if((b.textContent||"").toLowerCase().includes("nueva cita")) b.classList.add("active"); });
- ["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{ const el=$(v+"View"); if(el) el.style.display=v==="agenda"?"block":"none"; });
+ ["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{ const el=$(v+"View"); if(el) el.style.display=v==="agenda"?"block":"none"; });
  setTimeout(()=>$("pacienteCita").focus(),50);
 }
 
@@ -4274,6 +4258,51 @@ async function instalarYneaApp(){
   document.addEventListener('DOMContentLoaded', run);
   setTimeout(run, 500);
   setTimeout(run, 1500);
+})();
+</script>
+
+
+<style id="ynea-final-visibility-fix">
+:root{ --ynea-rosa:#9f244f; }
+header{ overflow:visible !important; height:auto !important; max-height:none !important; }
+header h1{ margin:0 0 10px 0 !important; }
+.yneaBrandTitle{ display:flex !important; align-items:center !important; gap:12px !important; line-height:1.05 !important; }
+.yneaBrandTitle img{ width:auto !important; height:58px !important; max-height:58px !important; max-width:150px !important; object-fit:contain !important; flex:0 0 auto !important; }
+.yneaBrandTitle .brandText{ color:var(--ynea-rosa) !important; font-size:24px !important; font-weight:700 !important; letter-spacing:-.02em !important; display:block !important; white-space:normal !important; }
+.yneaBrandTitle .brandSub{ display:none !important; }
+.yneaBrandTitle .yneaSeparator,.yneaBrandTitle .separator{ height:42px !important; background:rgba(159,36,79,.25) !important; }
+.tabs{ display:flex !important; flex-wrap:wrap !important; gap:8px !important; align-items:center !important; overflow:visible !important; max-height:none !important; height:auto !important; white-space:normal !important; }
+.tabs .tab{ display:inline-flex !important; align-items:center !important; justify-content:center !important; visibility:visible !important; opacity:1 !important; flex:0 0 auto !important; white-space:nowrap !important; }
+#anualView{ display:none !important; }
+main,section,.card,.tableWrap{ overflow:visible !important; max-height:none !important; }
+.tableWrap{ overflow-x:auto !important; -webkit-overflow-scrolling:touch !important; }
+#weekTable,#monthTable{ min-width:760px !important; width:100% !important; border-collapse:separate !important; }
+#yearTable{ display:none !important; }
+@media (max-width: 600px){
+  header{ padding:10px 10px !important; position:static !important; }
+  .yneaBrandTitle{ gap:8px !important; }
+  .yneaBrandTitle img{ height:44px !important; max-height:44px !important; max-width:118px !important; }
+  .yneaBrandTitle .brandText{ font-size:16px !important; }
+  .yneaBrandTitle .yneaSeparator,.yneaBrandTitle .separator{ height:30px !important; }
+  .tabs{ flex-wrap:nowrap !important; overflow-x:auto !important; overflow-y:hidden !important; padding-bottom:6px !important; }
+  .tabs .tab{ font-size:11px !important; padding:7px 8px !important; min-height:30px !important; }
+  main{ padding:8px !important; }
+}
+</style>
+<script id="ynea-final-render-fix">
+(function(){
+  function showDefaultView(){
+    try{
+      var views=["semana","mensual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"];
+      views.forEach(function(v){ var el=document.getElementById(v+"View"); if(el) el.style.display=(v==="semana"?"block":"none"); });
+      var tabs=document.querySelectorAll(".tabs .tab");
+      tabs.forEach(function(b){ b.classList.remove("active"); });
+      for(var i=0;i<tabs.length;i++){ if((tabs[i].textContent||"").toLowerCase().indexOf("semanal")>=0){ tabs[i].classList.add("active"); break; } }
+      if(typeof renderAll==="function") renderAll();
+    }catch(e){ console.warn("Ynea inicio seguro", e); }
+  }
+  window.addEventListener("DOMContentLoaded", function(){ setTimeout(showDefaultView, 50); });
+  window.addEventListener("load", function(){ setTimeout(showDefaultView, 250); });
 })();
 </script>
 
