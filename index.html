@@ -4512,5 +4512,86 @@ section{visibility:visible!important;opacity:1!important;max-height:none!importa
 })();
 </script>
 
+
+
+<!-- YNEA FIX REAL CLICK PANTALLAS 2026-05-04: controlador único de navegación -->
+<style id="ynea-click-screen-final-style">
+:root{--primary:#ec4899!important;--primary2:#db2777!important;--ynea-rosa:#ec4899!important;}
+.yneaBrandTitle .brandText{color:#ec4899!important;}
+#installPwaBtn{background:#ec4899!important;color:#fff!important;border-color:#ec4899!important;}
+.tabs .tab.active{background:#ec4899!important;color:#fff!important;border-color:#ec4899!important;}
+#anualView,#yearTable{display:none!important;}
+</style>
+<script id="ynea-click-screen-final-controller">
+(function(){
+  var VIEWS=['semana','mensual','pacientes','config','bloqueos','listados','infoDiaria','avisos','copias'];
+  var LABELS={semana:'Calendario semanal',mensual:'Vista mensual',pacientes:'Pacientes',config:'Configuración',bloqueos:'Bloqueos',listados:'Listados',infoDiaria:'Información diaria',avisos:'Avisos',copias:'Copias de seguridad'};
+  function id(x){return document.getElementById(x)}
+  function viewFromButton(btn){
+    if(!btn) return '';
+    var dv=btn.getAttribute('data-view'); if(dv) return dv;
+    var oc=btn.getAttribute('onclick')||''; var m=oc.match(/setView\(['"]([^'"]+)/); if(m) return m[1];
+    var t=(btn.textContent||'').toLowerCase();
+    if(t.indexOf('semanal')>=0) return 'semana';
+    if(t.indexOf('mensual')>=0) return 'mensual';
+    if(t.indexOf('paciente')>=0) return 'pacientes';
+    if(t.indexOf('config')>=0) return 'config';
+    if(t.indexOf('bloqueo')>=0) return 'bloqueos';
+    if(t.indexOf('listado')>=0) return 'listados';
+    if(t.indexOf('información')>=0 || t.indexOf('informacion')>=0) return 'infoDiaria';
+    if(t.indexOf('aviso')>=0) return 'avisos';
+    if(t.indexOf('copia')>=0) return 'copias';
+    return '';
+  }
+  function prepareTabs(){
+    var header=document.querySelector('header'); if(!header) return;
+    var tabs=header.querySelector('.tabs');
+    if(!tabs){tabs=document.createElement('div');tabs.className='tabs';header.appendChild(tabs);}
+    Array.from(tabs.querySelectorAll('button,.tab')).forEach(function(b){
+      var t=(b.textContent||'').toLowerCase(); var oc=(b.getAttribute('onclick')||'').toLowerCase();
+      if(t.indexOf('nueva')>=0||t.indexOf('agregar')>=0||t.indexOf('anual')>=0||oc.indexOf('agenda')>=0||oc.indexOf('anual')>=0||oc.indexOf('year')>=0){b.remove();}
+    });
+    VIEWS.forEach(function(v){
+      if(!id(v+'View')) return;
+      var b=tabs.querySelector('[data-view="'+v+'"]') || Array.from(tabs.querySelectorAll('button,.tab')).find(function(x){return viewFromButton(x)===v;});
+      if(!b){ b=document.createElement('button'); b.type='button'; b.className='tab'; b.textContent=LABELS[v]; tabs.appendChild(b); }
+      b.classList.add('tab'); b.setAttribute('data-view',v); b.removeAttribute('onclick');
+    });
+  }
+  function show(view){
+    if(VIEWS.indexOf(view)<0) view='semana';
+    VIEWS.concat(['agenda','anual','year']).forEach(function(v){
+      var el=id(v+'View');
+      if(el){
+        el.hidden=false;
+        el.classList.toggle('ynea-active-screen',v===view);
+        el.style.setProperty('display', v===view ? 'block' : 'none', 'important');
+        el.style.setProperty('visibility','visible','important');
+        el.style.setProperty('opacity','1','important');
+      }
+    });
+    Array.from(document.querySelectorAll('.tabs .tab,[data-view]')).forEach(function(b){
+      var active=b.getAttribute('data-view')===view;
+      b.classList.toggle('active',active);
+      if(active){ b.style.setProperty('background','#ec4899','important'); b.style.setProperty('color','#fff','important'); }
+    });
+    try{ if(typeof window.renderAll==='function') window.renderAll(); }catch(e){ console.warn('Ynea render:',e); }
+  }
+  window.setView=function(view){ prepareTabs(); show(view); return false; };
+  document.addEventListener('click',function(e){
+    var btn=e.target.closest && e.target.closest('.tabs .tab,[data-view]');
+    if(!btn) return;
+    var view=viewFromButton(btn);
+    if(!view || VIEWS.indexOf(view)<0) return;
+    e.preventDefault(); e.stopPropagation();
+    if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+    window.setView(view);
+  },true);
+  function boot(){ prepareTabs(); show('semana'); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  window.addEventListener('load',function(){setTimeout(boot,30);});
+})();
+</script>
+
 </body>
 </html>
