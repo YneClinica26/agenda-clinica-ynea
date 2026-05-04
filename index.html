@@ -1033,6 +1033,8 @@ function refreshAllSelects(){
  fillSelect("weekConsulta",data.consultas,'<option value="">Todas</option>');
  fillSelect("filtroProf",data.profesionales,'<option value="">Todos</option>');
  fillSelect("filtroTipo",data.tipos,'<option value="">Todos</option>');
+ // También actualizar el selector de profesionales de Bloqueos tras cargar catálogos desde Supabase
+ if($("bloqProfesionalNuevo")) fillSelect("bloqProfesionalNuevo",data.profesionales);
  actualizarBuscadorPacienteCita();
 }
 function setView(view,btn){
