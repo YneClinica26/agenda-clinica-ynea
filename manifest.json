@@ -1,1 +1,16 @@
-{"name":"Agenda Clínica Ynea","short_name":"Ynea Agenda","start_url":"./index.html","display":"standalone","background_color":"#fff8fb","theme_color":"#ec4899","icons":[]}
+{
+  "name": "Agenda Clínica Ynea",
+  "short_name": "Ynea",
+  "start_url": "./index.html?v=supabase-catalogos-real-20260504",
+  "display": "standalone",
+  "background_color": "#fff8fb",
+  "theme_color": "#ec4899",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

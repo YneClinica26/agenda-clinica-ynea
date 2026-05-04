@@ -555,8 +555,9 @@ button:not(.secondary):not(.danger):not(.tab):not(.mobileNavBtn):not(.appFab):ho
 }
 </style>
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#ec4899">
+
+<!-- Supabase: librería oficial para conectar catálogos Ynea -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <header>
@@ -3644,287 +3645,165 @@ document.addEventListener("click", function(e){
 
 
 
-<style id="ynea-pro-estable-css">
-:root{--ynea-pink:#ec4899;--ynea-pink-dark:#db2777;--ynea-soft:#fff1f7;}
-.ynea-hidden{display:none!important;}
-#semanaView,#mensualView,#agendaView,#pacientesView,#configView,#bloqueosView,#listadosView,#avisosView,#copiasView,#infoDiariaView{min-height:120px;}
-button,.tab{touch-action:manipulation;}
-.tab.active,.mobileNavBtn.active,#installAppBtn{background:var(--ynea-pink)!important;color:#fff!important;}
-#installAppBtn{border-radius:14px!important;margin-left:8px;min-height:42px;}
-#anualView{display:none!important;}
-.yneaPacienteEditorOverlay,.yneaInstallOverlay{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:30000;display:none;align-items:center;justify-content:center;padding:18px;}
-.yneaPacienteEditorModal,.yneaInstallModal{background:#fff;width:min(620px,100%);border-radius:24px;box-shadow:0 24px 80px rgba(15,23,42,.28);padding:22px;border:1px solid #f3cfe0;}
-.yneaPacienteEditorModal h2,.yneaInstallModal h2{margin:0 0 12px;color:var(--ynea-pink-dark);}
-.yneaEditorGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.yneaEditorGrid .full{grid-column:1/-1;}
-.yneaEditorActions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap;}
-#pacientesTable tbody tr{cursor:pointer;}
-#pacientesTable tbody tr:hover{background:#fff1f7;}
-@media (max-width:900px){
-  .desktop-only-mobile-hidden{display:none!important;}
-  header{gap:8px!important;}
-  #installAppBtn{font-size:12px;padding:8px 10px;margin-left:auto;}
-  .mobileBottomNav{grid-template-columns:repeat(4,1fr)!important;}
-  .mobileBottomNav .mobileNavBtn[data-mobile-view="config"],
-  .mobileBottomNav .mobileNavBtn[data-mobile-view="listados"],
-  .mobileBottomNav .mobileNavBtn[data-mobile-view="copias"],
-  .mobileBottomNav .mobileNavBtn[data-mobile-view="infoDiaria"],
-  .mobileBottomNav .mobileNavBtn[data-mobile-view="bloqueos"],
-  .mobileBottomNav .mobileNavBtn[data-mobile-view="avisos"]{display:none!important;}
-  #configView,#listadosView,#infoDiariaView,#copiasView,#bloqueosView,#avisosView,#anualView{display:none!important;}
-  #pacientesView .grid{display:block!important;}
-  #pacientesView .card{margin-bottom:12px!important;}
-  #pacientesTable{min-width:0!important;width:100%!important;}
-  #pacientesTable thead{display:none!important;}
-  #pacientesTable tr{display:block!important;border:1px solid #f3cfe0!important;border-radius:18px!important;margin-bottom:10px!important;padding:10px!important;background:#fff!important;}
-  #pacientesTable td{display:block!important;border:0!important;padding:4px 0!important;}
-  .yneaEditorGrid{grid-template-columns:1fr;}
-  .yneaPacienteEditorOverlay,.yneaInstallOverlay{align-items:flex-end;padding:0 10px;}
-  .yneaPacienteEditorModal,.yneaInstallModal{border-radius:24px 24px 0 0;max-height:90vh;overflow:auto;}
-}
-@media (orientation:landscape) and (max-height:520px){
-  #pacientesView .grid{grid-template-columns:320px 1fr!important;display:grid!important;gap:12px!important;}
-  .mobileBottomNav{padding:5px!important;bottom:5px!important;}
-  body{padding-bottom:70px!important;}
-}
-</style>
-
-<script id="ynea-pro-estable-js">
+<script id="ynea-supabase-catalogos-fix">
 (function(){
-  'use strict';
-  const VIEWS=['semana','mensual','agenda','pacientes','config','bloqueos','listados','avisos','copias','infoDiaria'];
-  const MOBILE_ALLOWED=['semana','mensual','pacientes','agenda'];
-  const YNEA_PINK='#ec4899';
-  function byId(id){return document.getElementById(id)}
-  function isMobileApp(){return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (window.matchMedia && window.matchMedia('(max-width: 900px) and (pointer: coarse)').matches)}
-  function normalizeView(v){
-    v=String(v||'semana').replace('View','');
-    if(v==='month') return 'mensual';
-    if(v==='week') return 'semana';
-    if(v==='patients') return 'pacientes';
-    if(v==='settings') return 'config';
-    if(v==='anual') return 'semana';
-    return VIEWS.includes(v)?v:'semana';
-  }
-  function safeRenderAll(){try{ if(typeof renderAll==='function') renderAll(); }catch(err){ console.error('renderAll bloqueado:',err); }}
-  function unlockUI(){
-    document.body.style.pointerEvents='auto';
-    document.documentElement.style.pointerEvents='auto';
-    ['nuevoPacienteOverlay','editorCitaOverlay','citaEnlazadaOverlay'].forEach(id=>{
-      const el=byId(id);
-      if(el && el.style.display!=='flex') el.style.display='none';
-    });
-    document.querySelectorAll('.yneaPacienteEditorOverlay,.yneaInstallOverlay').forEach(el=>{
-      if(el.style.display!=='flex') el.style.display='none';
-    });
-  }
-  function setActiveButtons(view, btn){
-    document.querySelectorAll('.tab').forEach(b=>{
-      const text=(b.textContent||'').toLowerCase();
-      const active=(btn && b===btn) ||
-        (view==='semana' && text.includes('seman')) ||
-        (view==='mensual' && text.includes('mensual')) ||
-        (view==='pacientes' && text.includes('paciente')) ||
-        (view==='config' && text.includes('config')) ||
-        (view==='agenda' && (text.includes('cita') || text.includes('agenda')));
-      b.classList.toggle('active', !!active);
-    });
-    document.querySelectorAll('.mobileNavBtn').forEach(b=>b.classList.toggle('active', normalizeView(b.dataset.mobileView)===view));
-  }
-  function yneaSetView(view, btn){
-    unlockUI();
-    view=normalizeView(view);
-    if(isMobileApp() && !MOBILE_ALLOWED.includes(view)) view='semana';
-    VIEWS.concat(['anual']).forEach(v=>{
-      const el=byId(v+'View');
-      if(!el) return;
-      el.style.display=(v===view)?'block':'none';
-      el.hidden=(v!==view);
-    });
-    setActiveButtons(view, btn||null);
-    safeRenderAll();
-    setTimeout(unlockUI,0);
-    if(isMobileApp()) window.scrollTo({top:0,behavior:'smooth'});
-  }
-  window.setView=yneaSetView;
-  window.appMobileSetView=yneaSetView;
+  const STORAGE_KEY = "yneaSupabaseConfig";
+  const STATUS_ID = "yneaSupabaseEstado";
 
-  function fillCitaBase(fecha,hora,consulta){
-    unlockUI();
-    const fechaEl=byId('fechaCita'), horaEl=byId('horaCita'), consultaEl=byId('consultaCita');
-    if(fechaEl) fechaEl.value=fecha || fechaEl.value || new Date().toISOString().slice(0,10);
-    if(horaEl) horaEl.value=hora || horaEl.value || '09:00';
-    if(consulta && consultaEl) consultaEl.value=consulta;
-    const profFiltro=byId('weekProf'), profEl=byId('profesionalCita');
-    if(profFiltro && profFiltro.value && profEl) profEl.value=profFiltro.value;
-    yneaSetView('agenda');
-    setTimeout(()=>{const p=byId('pacienteBusqueda')||byId('pacienteCita'); if(p) p.focus();},80);
+  function $(id){ return document.getElementById(id); }
+  function safeText(value){ return String(value ?? "").trim(); }
+  function uniqueClean(list){
+    return [...new Set((list || []).map(safeText).filter(Boolean))];
   }
-  window.quickNewCita=function(fecha,hora){fillCitaBase(fecha,hora,'')};
-  window.quickNewCitaConsulta=function(fecha,hora,consulta){fillCitaBase(fecha,hora,consulta)};
-
-  window.addCita=function(){
-    unlockUI();
+  function getSavedConfig(){
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+    catch(e){ return {}; }
+  }
+  function setStatus(message, isError){
+    console[isError ? "error" : "log"]("YNEA SUPABASE:", message);
+    const el=$(STATUS_ID);
+    if(el){
+      el.style.display="block";
+      el.style.background=isError ? "#fee2e2" : "#ecfdf5";
+      el.style.color=isError ? "#991b1b" : "#065f46";
+      el.style.borderColor=isError ? "#fecaca" : "#bbf7d0";
+      el.textContent=message;
+    }
+  }
+  function getConfig(){
+    const saved=getSavedConfig();
+    const url=safeText((window.SUPABASE_URL && window.SUPABASE_URL !== "AQUI_TU_URL") ? window.SUPABASE_URL : (saved.url || ""));
+    const key=safeText((window.SUPABASE_KEY && window.SUPABASE_KEY !== "AQUI_TU_KEY") ? window.SUPABASE_KEY : (saved.key || ""));
+    return {url,key};
+  }
+  function getClient(){
+    const cfg=getConfig();
+    if(!cfg.url || !cfg.key){
+      setStatus("Falta pegar Project URL y anon public key de Supabase en Configuración → Base de datos Supabase.", true);
+      return null;
+    }
+    if(!window.supabase || typeof window.supabase.createClient !== "function"){
+      setStatus("No se ha cargado la librería de Supabase. Revisa la conexión a internet o bloqueadores del navegador.", true);
+      return null;
+    }
+    if(!window.yneaSupabaseClient || window.yneaSupabaseClient.__url !== cfg.url || window.yneaSupabaseClient.__key !== cfg.key){
+      window.yneaSupabaseClient = window.supabase.createClient(cfg.url, cfg.key);
+      window.yneaSupabaseClient.__url = cfg.url;
+      window.yneaSupabaseClient.__key = cfg.key;
+    }
+    return window.yneaSupabaseClient;
+  }
+  function nombreFila(row){
+    return safeText(row.nombre || row.name || row.titulo || row.title || row.descripcion || row.label);
+  }
+  function filaActiva(row){
+    if(row.activo === false) return false;
+    if(row.activa === false) return false;
+    if(String(row.estado || "").toLowerCase() === "inactivo") return false;
+    return true;
+  }
+  function duracionFila(row){
+    const n = Number(row.duracion ?? row.duracion_minutos ?? row.minutos ?? row.duration ?? 10);
+    return Number.isFinite(n) && n > 0 ? String(n) : "10";
+  }
+  async function readTable(client, table){
+    const {data, error} = await client.from(table).select("*");
+    if(error){ throw new Error(table + ": " + (error.message || JSON.stringify(error))); }
+    return Array.isArray(data) ? data : [];
+  }
+  async function cargarCatalogosDesdeSupabase(opts={}){
+    const client=getClient();
+    if(!client) return false;
     try{
-      const pacienteId = (typeof pacienteSeleccionadoParaCita==='function') ? pacienteSeleccionadoParaCita() : (byId('pacienteCita') && byId('pacienteCita').value);
-      const c={
-        id:Date.now(),
-        fecha:byId('fechaCita')?.value,
-        hora:byId('horaCita')?.value,
-        duracion:byId('duracionCita')?.value || 10,
-        pacienteId,
-        profesional:byId('profesionalCita')?.value || '',
-        consulta:byId('consultaCita')?.value || '',
-        tipo:byId('tipoCita')?.value || '',
-        estado:byId('estadoCita')?.value || 'Confirmada',
-        obs:byId('obsCita')?.value || ''
-      };
-      if(!c.fecha || !c.hora || !c.pacienteId){alert('Falta fecha, hora o paciente.'); return;}
-      if(typeof bloqueoImpideCita==='function' && bloqueoImpideCita(c) && !confirm('Ese horario está bloqueado. ¿Quieres guardar la cita igualmente?')) return;
-      if(typeof overlapsNewCita==='function' && overlapsNewCita(c) && !confirm('Ya existe una cita solapada. ¿Quieres guardarla igualmente?')) return;
-      data.citas=data.citas||[]; data.citas.push(c);
-      if(typeof save==='function') save();
-      if(typeof monday==='function') weekStart=monday(new Date(c.fecha));
-      const wp=byId('weekPicker'); if(wp) wp.value=c.fecha;
-      ['obsCita'].forEach(id=>{const el=byId(id); if(el) el.value='';});
-      safeRenderAll();
-      yneaSetView('semana');
-    }catch(err){console.error(err); alert('No se pudo guardar la cita. Revisa los datos e inténtalo de nuevo.');}
-    finally{setTimeout(unlockUI,0);}
-  };
+      setStatus("Conectando con Supabase y leyendo catálogos…", false);
+      const [profRows, tipoRows, consultaRows] = await Promise.all([
+        readTable(client, "profesionales"),
+        readTable(client, "tipos_cita"),
+        readTable(client, "consultas").catch(err => { console.warn(err); return []; })
+      ]);
 
-  function patientEditor(){
-    let overlay=byId('yneaPacienteEditorOverlay');
-    if(overlay) return overlay;
-    overlay=document.createElement('div');
-    overlay.id='yneaPacienteEditorOverlay';
-    overlay.className='yneaPacienteEditorOverlay';
-    overlay.innerHTML=`<div class="yneaPacienteEditorModal" role="dialog" aria-modal="true">
-      <h2>Editar paciente</h2>
-      <input type="hidden" id="editPacId">
-      <div class="yneaEditorGrid">
-        <div class="full"><label>Nombre</label><input id="editPacNombre"></div>
-        <div><label>Teléfono</label><input id="editPacTelefono"></div>
-        <div><label>Email</label><input id="editPacEmail" type="email"></div>
-        <div class="full"><label>Observaciones</label><textarea id="editPacObs"></textarea></div>
-      </div>
-      <div class="yneaEditorActions">
-        <button type="button" class="danger" id="deletePacBtn">Eliminar</button>
-        <button type="button" class="secondary" id="closePacBtn">Cancelar</button>
-        <button type="button" id="savePacBtn">Guardar cambios</button>
-      </div>
-    </div>`;
-    document.body.appendChild(overlay);
-    overlay.addEventListener('click',e=>{if(e.target===overlay) closePatientEditor();});
-    byId('closePacBtn').onclick=closePatientEditor;
-    byId('savePacBtn').onclick=savePatientEditor;
-    byId('deletePacBtn').onclick=deletePatientEditor;
-    return overlay;
-  }
-  function openPatientEditor(id){
-    const p=(data.pacientes||[]).find(x=>String(x.id)===String(id));
-    if(!p) return;
-    patientEditor();
-    byId('editPacId').value=p.id;
-    byId('editPacNombre').value=p.nombre||'';
-    byId('editPacTelefono').value=p.telefono||'';
-    byId('editPacEmail').value=p.email||'';
-    byId('editPacObs').value=p.obs||'';
-    byId('yneaPacienteEditorOverlay').style.display='flex';
-    setTimeout(()=>byId('editPacNombre').focus(),60);
-  }
-  function closePatientEditor(){const el=byId('yneaPacienteEditorOverlay'); if(el) el.style.display='none'; unlockUI();}
-  function savePatientEditor(){
-    const id=byId('editPacId').value;
-    const p=(data.pacientes||[]).find(x=>String(x.id)===String(id));
-    if(!p) return closePatientEditor();
-    p.nombre=byId('editPacNombre').value.trim();
-    p.telefono=byId('editPacTelefono').value.trim();
-    p.email=byId('editPacEmail').value.trim();
-    p.obs=byId('editPacObs').value.trim();
-    if(!p.nombre){alert('El nombre no puede estar vacío.'); return;}
-    if(typeof save==='function') save();
-    if(typeof refreshAllSelects==='function') refreshAllSelects();
-    safeRenderAll(); closePatientEditor();
-  }
-  function deletePatientEditor(){
-    const id=byId('editPacId').value;
-    if(!confirm('¿Eliminar este paciente? Sus citas se conservarán sin ficha vinculada.')) return;
-    data.pacientes=(data.pacientes||[]).filter(p=>String(p.id)!==String(id));
-    if(typeof save==='function') save();
-    if(typeof refreshAllSelects==='function') refreshAllSelects();
-    safeRenderAll(); closePatientEditor();
-  }
-  window.abrirEditorPacienteYnea=openPatientEditor;
-  function enhancePatients(){
-    const table=byId('pacientesTable');
-    if(!table || !data || !Array.isArray(data.pacientes)) return;
-    const rows=table.querySelectorAll('tbody tr');
-    rows.forEach((tr,i)=>{
-      const p=data.pacientes[i]; if(!p) return;
-      tr.dataset.pacienteId=p.id;
-      tr.onclick=function(){openPatientEditor(p.id)};
-      tr.title='Clicar para editar paciente';
-    });
-  }
-  const oldRenderPatients=window.renderPatients;
-  window.renderPatients=function(){
-    if(typeof oldRenderPatients==='function') oldRenderPatients();
-    enhancePatients();
-  };
+      const profesionales = uniqueClean(profRows.filter(filaActiva).map(nombreFila));
+      const tipos = uniqueClean(tipoRows.filter(filaActiva).map(nombreFila));
+      const consultas = uniqueClean(consultaRows.filter(filaActiva).map(nombreFila));
 
-  function setupInstall(){
-    let deferredPrompt=null;
-    window.addEventListener('beforeinstallprompt',e=>{e.preventDefault(); deferredPrompt=e; const b=byId('installAppBtn'); if(b) b.style.display='inline-flex';});
-    if(!byId('installAppBtn')){
-      const b=document.createElement('button'); b.id='installAppBtn'; b.type='button'; b.textContent='Instalar app';
-      const header=document.querySelector('header'); if(header) header.appendChild(b);
-    }
-    const btn=byId('installAppBtn'); if(btn){btn.onclick=async()=>{
-      if(deferredPrompt){deferredPrompt.prompt(); try{await deferredPrompt.userChoice;}catch(e){} deferredPrompt=null; return;}
-      showInstallHelp();
-    }}
-  }
-  function showInstallHelp(){
-    let overlay=byId('yneaInstallOverlay');
-    if(!overlay){
-      overlay=document.createElement('div'); overlay.id='yneaInstallOverlay'; overlay.className='yneaInstallOverlay';
-      overlay.innerHTML=`<div class="yneaInstallModal"><h2>Instalar app</h2>
-      <p><b>iPhone/iPad:</b> abre Safari, toca Compartir y elige “Añadir a pantalla de inicio”.</p>
-      <p><b>Android/Chrome:</b> abre el menú ⋮ y elige “Instalar app” o “Añadir a pantalla de inicio”.</p>
-      <div class="yneaEditorActions"><button type="button" id="closeInstallHelp">Entendido</button></div></div>`;
-      document.body.appendChild(overlay); overlay.addEventListener('click',e=>{if(e.target===overlay) overlay.style.display='none';});
-      byId('closeInstallHelp').onclick=()=>overlay.style.display='none';
-    }
-    overlay.style.display='flex';
-  }
-  function removeAnnualAndMobileDisallowed(){
-    document.querySelectorAll('.tab').forEach(btn=>{
-      const text=(btn.textContent||'').toLowerCase();
-      if(text.includes('anual')) btn.remove();
-      if(isMobileApp() && (text.includes('config')||text.includes('bloqueo')||text.includes('listado')||text.includes('información diaria')||text.includes('avisos')||text.includes('copias'))) btn.remove();
-    });
-    const annual=byId('anualView'); if(annual) annual.remove();
-    if(isMobileApp()) ['configView','bloqueosView','listadosView','avisosView','copiasView','infoDiariaView'].forEach(id=>{const el=byId(id); if(el) el.style.display='none';});
-    const nav=document.querySelector('.mobileBottomNav');
-    if(nav){
-      nav.innerHTML=`<button class="mobileNavBtn active" type="button" data-mobile-view="semana"><span class="ico">📅</span><span>Semana</span></button>
-      <button class="mobileNavBtn" type="button" data-mobile-view="mensual"><span class="ico">🗓️</span><span>Mes</span></button>
-      <button class="mobileNavBtn" type="button" data-mobile-view="pacientes"><span class="ico">👤</span><span>Pacientes</span></button>
-      <button class="mobileNavBtn" type="button" data-mobile-view="agenda"><span class="ico">➕</span><span>Cita</span></button>`;
+      if(typeof data === "undefined"){
+        setStatus("La app aún no ha inicializado sus datos internos. Recarga la página.", true);
+        return false;
+      }
+
+      if(profesionales.length) data.profesionales = profesionales;
+      if(tipos.length) data.tipos = tipos;
+      if(consultas.length) data.consultas = consultas;
+
+      data.duracionesTipo = data.duracionesTipo || {};
+      tipoRows.filter(filaActiva).forEach(row => {
+        const nombre = nombreFila(row);
+        if(nombre) data.duracionesTipo[nombre] = duracionFila(row);
+      });
+
+      data.caracteristicasTipo = data.caracteristicasTipo || {};
+      (data.tipos || []).forEach(t => {
+        if(!data.caracteristicasTipo[t]) data.caracteristicasTipo[t] = {descripcion:"", color:"", activo:true};
+      });
+
+      if(typeof save === "function") save();
+      if(typeof refreshAllSelects === "function") refreshAllSelects();
+      if(typeof renderAll === "function") renderAll();
+
+      setStatus(`Catálogos cargados: ${profesionales.length} profesionales, ${tipos.length} tipos de cita, ${consultas.length} consultas físicas.`, false);
+      console.log("YNEA Supabase profesionales", profRows);
+      console.log("YNEA Supabase tipos_cita", tipoRows);
+      console.log("YNEA Supabase consultas", consultaRows);
+      return true;
+    }catch(err){
+      setStatus("Error leyendo Supabase: " + (err.message || err), true);
+      console.error("YNEA Supabase error", err);
+      return false;
     }
   }
-  document.addEventListener('click',function(e){
-    const mb=e.target.closest('.mobileNavBtn');
-    if(mb){e.preventDefault(); e.stopPropagation(); yneaSetView(mb.dataset.mobileView); return;}
-  },true);
-  window.addEventListener('error',function(){setTimeout(unlockUI,0);});
-  document.addEventListener('DOMContentLoaded',function(){
-    removeAnnualAndMobileDisallowed(); setupInstall(); unlockUI();
-    setTimeout(()=>{safeRenderAll(); enhancePatients(); yneaSetView('semana');},50);
-    setTimeout(unlockUI,250);
+  function guardarConexionSupabase(){
+    const url=safeText($("yneaSupabaseUrl") && $("yneaSupabaseUrl").value);
+    const key=safeText($("yneaSupabaseKey") && $("yneaSupabaseKey").value);
+    if(!url || !key){ setStatus("Pega Project URL y anon public key antes de guardar.", true); return; }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({url,key}));
+    window.yneaSupabaseClient = null;
+    setStatus("Conexión guardada. Ahora pulsa ‘Cargar catálogos desde Supabase’.", false);
+  }
+  function insertarPanelSupabase(){
+    if($("yneaSupabasePanel")) return;
+    const configView=$("configView") || document.querySelector("#configView,.configGrid") || document.body;
+    const cfg=getSavedConfig();
+    const panel=document.createElement("div");
+    panel.id="yneaSupabasePanel";
+    panel.className="card";
+    panel.style.marginTop="18px";
+    panel.innerHTML=`
+      <h2>Base de datos Supabase</h2>
+      <p class="small">Carga los catálogos desde Supabase: <b>profesionales</b>, <b>tipos_cita</b> y <b>consultas</b> (espacios físicos).</p>
+      <label>Project URL</label>
+      <input id="yneaSupabaseUrl" placeholder="https://xxxx.supabase.co" value="${(cfg.url || "").replaceAll('"','&quot;')}">
+      <label>anon public key</label>
+      <input id="yneaSupabaseKey" placeholder="eyJhbGci..." value="${(cfg.key || "").replaceAll('"','&quot;')}">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <button type="button" onclick="guardarConexionSupabase()">Guardar conexión</button>
+        <button type="button" onclick="cargarCatalogosDesdeSupabase({manual:true})">Cargar catálogos desde Supabase</button>
+      </div>
+      <div id="${STATUS_ID}" class="notice" style="display:none;margin-top:12px"></div>
+    `;
+    configView.appendChild(panel);
+  }
+
+  window.guardarConexionSupabase = guardarConexionSupabase;
+  window.cargarCatalogosDesdeSupabase = cargarCatalogosDesdeSupabase;
+
+  document.addEventListener("DOMContentLoaded", function(){
+    insertarPanelSupabase();
+    const cfg=getConfig();
+    if(cfg.url && cfg.key){
+      // Pequeño retraso para no interferir con la inicialización original de la agenda.
+      setTimeout(() => cargarCatalogosDesdeSupabase({auto:true}), 350);
+    }
   });
-  setTimeout(function(){try{removeAnnualAndMobileDisallowed(); setupInstall(); yneaSetView('semana'); enhancePatients();}catch(e){console.error(e);}},300);
 })();
 </script>
 
