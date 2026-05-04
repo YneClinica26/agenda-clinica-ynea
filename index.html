@@ -555,8 +555,6 @@ button:not(.secondary):not(.danger):not(.tab):not(.mobileNavBtn):not(.appFab):ho
 }
 </style>
 
-
-<!-- Supabase: librería oficial para conectar catálogos Ynea -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -717,6 +715,22 @@ button:not(.secondary):not(.danger):not(.tab):not(.mobileNavBtn):not(.appFab):ho
 
   <section id="configView" style="display:none">
     
+      <div class="card" id="supabaseConfigCard">
+        <h2>Base de datos Supabase</h2>
+        <p class="small">Conecta la app con Supabase y carga los catálogos ya creados: profesionales, tipos de cita y consultas/salas.</p>
+        <label>Project URL</label>
+        <input id="supabaseUrlInput" placeholder="https://xxxx.supabase.co">
+        <label>anon public key</label>
+        <textarea id="supabaseKeyInput" placeholder="eyJhbGciOi..." style="min-height:90px"></textarea>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+          <button onclick="guardarConexionSupabaseYnea()">Guardar conexión</button>
+          <button class="secondary" onclick="cargarCatalogosSupabaseYnea()">Cargar catálogos desde Supabase</button>
+          <button class="secondary" onclick="probarSupabaseYnea()">Probar conexión</button>
+        </div>
+        <p class="small" id="supabaseYneaStatus" style="margin-top:10px">Sin comprobar.</p>
+      </div>
+
+
 
       <div class="card">
         <h2>Tipos por profesional</h2>
@@ -3644,165 +3658,119 @@ document.addEventListener("click", function(e){
 </script>
 
 
-
-<script id="ynea-supabase-catalogos-fix">
+<script id="ynea-supabase-catalogos-real-js">
 (function(){
-  const STORAGE_KEY = "yneaSupabaseConfig";
-  const STATUS_ID = "yneaSupabaseEstado";
+  const STORAGE_URL = "yneaSupabaseUrl";
+  const STORAGE_KEY = "yneaSupabaseAnonKey";
 
-  function $(id){ return document.getElementById(id); }
-  function safeText(value){ return String(value ?? "").trim(); }
-  function uniqueClean(list){
-    return [...new Set((list || []).map(safeText).filter(Boolean))];
-  }
-  function getSavedConfig(){
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
-    catch(e){ return {}; }
-  }
-  function setStatus(message, isError){
-    console[isError ? "error" : "log"]("YNEA SUPABASE:", message);
-    const el=$(STATUS_ID);
+  function byId(id){ return document.getElementById(id); }
+  function status(msg, isError){
+    const el = byId("supabaseYneaStatus");
     if(el){
-      el.style.display="block";
-      el.style.background=isError ? "#fee2e2" : "#ecfdf5";
-      el.style.color=isError ? "#991b1b" : "#065f46";
-      el.style.borderColor=isError ? "#fecaca" : "#bbf7d0";
-      el.textContent=message;
+      el.textContent = msg;
+      el.style.color = isError ? "#991b1b" : "#166534";
     }
+    console[isError ? "error" : "log"]("Ynea Supabase:", msg);
   }
-  function getConfig(){
-    const saved=getSavedConfig();
-    const url=safeText((window.SUPABASE_URL && window.SUPABASE_URL !== "AQUI_TU_URL") ? window.SUPABASE_URL : (saved.url || ""));
-    const key=safeText((window.SUPABASE_KEY && window.SUPABASE_KEY !== "AQUI_TU_KEY") ? window.SUPABASE_KEY : (saved.key || ""));
+  function getCreds(){
+    const url = (byId("supabaseUrlInput")?.value || localStorage.getItem(STORAGE_URL) || "").trim();
+    const key = (byId("supabaseKeyInput")?.value || localStorage.getItem(STORAGE_KEY) || "").trim();
     return {url,key};
   }
-  function getClient(){
-    const cfg=getConfig();
-    if(!cfg.url || !cfg.key){
-      setStatus("Falta pegar Project URL y anon public key de Supabase en Configuración → Base de datos Supabase.", true);
-      return null;
-    }
-    if(!window.supabase || typeof window.supabase.createClient !== "function"){
-      setStatus("No se ha cargado la librería de Supabase. Revisa la conexión a internet o bloqueadores del navegador.", true);
-      return null;
-    }
-    if(!window.yneaSupabaseClient || window.yneaSupabaseClient.__url !== cfg.url || window.yneaSupabaseClient.__key !== cfg.key){
-      window.yneaSupabaseClient = window.supabase.createClient(cfg.url, cfg.key);
-      window.yneaSupabaseClient.__url = cfg.url;
-      window.yneaSupabaseClient.__key = cfg.key;
-    }
-    return window.yneaSupabaseClient;
+  function client(){
+    const {url,key}=getCreds();
+    if(!url || !key) throw new Error("Faltan Project URL o anon public key.");
+    if(!window.supabase || typeof window.supabase.createClient !== "function") throw new Error("No se ha cargado la librería de Supabase.");
+    return window.supabase.createClient(url,key);
   }
-  function nombreFila(row){
-    return safeText(row.nombre || row.name || row.titulo || row.title || row.descripcion || row.label);
+  function pickName(row){
+    return String(row?.nombre ?? row?.name ?? row?.titulo ?? row?.title ?? row?.descripcion ?? row?.label ?? "").trim();
   }
-  function filaActiva(row){
-    if(row.activo === false) return false;
-    if(row.activa === false) return false;
-    if(String(row.estado || "").toLowerCase() === "inactivo") return false;
+  function uniqueClean(arr){
+    return [...new Set((arr||[]).map(x=>String(x||"").trim()).filter(Boolean))];
+  }
+  function pickDuration(row){
+    const v = row?.duracion ?? row?.duracion_minutos ?? row?.duration ?? row?.minutos ?? row?.tiempo;
+    const s = String(v ?? "10").trim();
+    return s || "10";
+  }
+  function normalizeActive(row){
+    if(row?.activo === false || row?.active === false) return false;
     return true;
   }
-  function duracionFila(row){
-    const n = Number(row.duracion ?? row.duracion_minutos ?? row.minutos ?? row.duration ?? 10);
-    return Number.isFinite(n) && n > 0 ? String(n) : "10";
-  }
-  async function readTable(client, table){
-    const {data, error} = await client.from(table).select("*");
-    if(error){ throw new Error(table + ": " + (error.message || JSON.stringify(error))); }
-    return Array.isArray(data) ? data : [];
-  }
-  async function cargarCatalogosDesdeSupabase(opts={}){
-    const client=getClient();
-    if(!client) return false;
+
+  window.guardarConexionSupabaseYnea = function(){
+    const {url,key}=getCreds();
+    if(!url || !key){ alert("Pega Project URL y anon public key."); return; }
+    localStorage.setItem(STORAGE_URL,url);
+    localStorage.setItem(STORAGE_KEY,key);
+    status("Conexión guardada. Ahora pulsa ‘Cargar catálogos desde Supabase’.");
+  };
+
+  window.probarSupabaseYnea = async function(){
     try{
-      setStatus("Conectando con Supabase y leyendo catálogos…", false);
-      const [profRows, tipoRows, consultaRows] = await Promise.all([
-        readTable(client, "profesionales"),
-        readTable(client, "tipos_cita"),
-        readTable(client, "consultas").catch(err => { console.warn(err); return []; })
+      const sb=client();
+      const [p,t,c] = await Promise.all([
+        sb.from("profesionales").select("*").limit(5),
+        sb.from("tipos_cita").select("*").limit(5),
+        sb.from("consultas").select("*").limit(5)
       ]);
+      if(p.error) throw new Error("profesionales: "+p.error.message);
+      if(t.error) throw new Error("tipos_cita: "+t.error.message);
+      if(c.error) throw new Error("consultas: "+c.error.message);
+      status(`Conexión OK. Leídos: profesionales ${p.data.length}, tipos_cita ${t.data.length}, consultas ${c.data.length}.`);
+      console.log("Profesionales Supabase", p.data);
+      console.log("Tipos cita Supabase", t.data);
+      console.log("Consultas Supabase", c.data);
+    }catch(e){ status(e.message || String(e), true); alert("Error Supabase: "+(e.message || e)); }
+  };
 
-      const profesionales = uniqueClean(profRows.filter(filaActiva).map(nombreFila));
-      const tipos = uniqueClean(tipoRows.filter(filaActiva).map(nombreFila));
-      const consultas = uniqueClean(consultaRows.filter(filaActiva).map(nombreFila));
+  window.cargarCatalogosSupabaseYnea = async function(){
+    try{
+      const sb=client();
+      status("Cargando catálogos desde Supabase...");
+      const [pRes,tRes,cRes] = await Promise.all([
+        sb.from("profesionales").select("*"),
+        sb.from("tipos_cita").select("*"),
+        sb.from("consultas").select("*")
+      ]);
+      if(pRes.error) throw new Error("profesionales: "+pRes.error.message);
+      if(tRes.error) throw new Error("tipos_cita: "+tRes.error.message);
+      if(cRes.error) throw new Error("consultas: "+cRes.error.message);
 
-      if(typeof data === "undefined"){
-        setStatus("La app aún no ha inicializado sus datos internos. Recarga la página.", true);
-        return false;
-      }
+      const profesionales = uniqueClean((pRes.data||[]).filter(normalizeActive).map(pickName));
+      const tipos = uniqueClean((tRes.data||[]).filter(normalizeActive).map(pickName));
+      const consultas = uniqueClean((cRes.data||[]).filter(normalizeActive).map(pickName));
 
       if(profesionales.length) data.profesionales = profesionales;
       if(tipos.length) data.tipos = tipos;
       if(consultas.length) data.consultas = consultas;
 
       data.duracionesTipo = data.duracionesTipo || {};
-      tipoRows.filter(filaActiva).forEach(row => {
-        const nombre = nombreFila(row);
-        if(nombre) data.duracionesTipo[nombre] = duracionFila(row);
+      (tRes.data||[]).forEach(row=>{
+        const nombre=pickName(row);
+        if(nombre) data.duracionesTipo[nombre]=pickDuration(row);
       });
-
       data.caracteristicasTipo = data.caracteristicasTipo || {};
-      (data.tipos || []).forEach(t => {
-        if(!data.caracteristicasTipo[t]) data.caracteristicasTipo[t] = {descripcion:"", color:"", activo:true};
-      });
+      data.tipos.forEach(t=>{ if(!data.caracteristicasTipo[t]) data.caracteristicasTipo[t]={descripcion:"",color:"",activo:true}; });
+      data.tiposPorProfesional = data.tiposPorProfesional || {};
 
       if(typeof save === "function") save();
       if(typeof refreshAllSelects === "function") refreshAllSelects();
       if(typeof renderAll === "function") renderAll();
+      if(typeof renderConfig === "function") renderConfig();
 
-      setStatus(`Catálogos cargados: ${profesionales.length} profesionales, ${tipos.length} tipos de cita, ${consultas.length} consultas físicas.`, false);
-      console.log("YNEA Supabase profesionales", profRows);
-      console.log("YNEA Supabase tipos_cita", tipoRows);
-      console.log("YNEA Supabase consultas", consultaRows);
-      return true;
-    }catch(err){
-      setStatus("Error leyendo Supabase: " + (err.message || err), true);
-      console.error("YNEA Supabase error", err);
-      return false;
-    }
-  }
-  function guardarConexionSupabase(){
-    const url=safeText($("yneaSupabaseUrl") && $("yneaSupabaseUrl").value);
-    const key=safeText($("yneaSupabaseKey") && $("yneaSupabaseKey").value);
-    if(!url || !key){ setStatus("Pega Project URL y anon public key antes de guardar.", true); return; }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({url,key}));
-    window.yneaSupabaseClient = null;
-    setStatus("Conexión guardada. Ahora pulsa ‘Cargar catálogos desde Supabase’.", false);
-  }
-  function insertarPanelSupabase(){
-    if($("yneaSupabasePanel")) return;
-    const configView=$("configView") || document.querySelector("#configView,.configGrid") || document.body;
-    const cfg=getSavedConfig();
-    const panel=document.createElement("div");
-    panel.id="yneaSupabasePanel";
-    panel.className="card";
-    panel.style.marginTop="18px";
-    panel.innerHTML=`
-      <h2>Base de datos Supabase</h2>
-      <p class="small">Carga los catálogos desde Supabase: <b>profesionales</b>, <b>tipos_cita</b> y <b>consultas</b> (espacios físicos).</p>
-      <label>Project URL</label>
-      <input id="yneaSupabaseUrl" placeholder="https://xxxx.supabase.co" value="${(cfg.url || "").replaceAll('"','&quot;')}">
-      <label>anon public key</label>
-      <input id="yneaSupabaseKey" placeholder="eyJhbGci..." value="${(cfg.key || "").replaceAll('"','&quot;')}">
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-        <button type="button" onclick="guardarConexionSupabase()">Guardar conexión</button>
-        <button type="button" onclick="cargarCatalogosDesdeSupabase({manual:true})">Cargar catálogos desde Supabase</button>
-      </div>
-      <div id="${STATUS_ID}" class="notice" style="display:none;margin-top:12px"></div>
-    `;
-    configView.appendChild(panel);
-  }
-
-  window.guardarConexionSupabase = guardarConexionSupabase;
-  window.cargarCatalogosDesdeSupabase = cargarCatalogosDesdeSupabase;
+      status(`Catálogos cargados: ${profesionales.length} profesionales, ${tipos.length} tipos de cita, ${consultas.length} consultas.`);
+      alert("Catálogos cargados desde Supabase.");
+    }catch(e){ status(e.message || String(e), true); alert("Error cargando catálogos: "+(e.message || e)); }
+  };
 
   document.addEventListener("DOMContentLoaded", function(){
-    insertarPanelSupabase();
-    const cfg=getConfig();
-    if(cfg.url && cfg.key){
-      // Pequeño retraso para no interferir con la inicialización original de la agenda.
-      setTimeout(() => cargarCatalogosDesdeSupabase({auto:true}), 350);
-    }
+    const url=localStorage.getItem(STORAGE_URL)||"";
+    const key=localStorage.getItem(STORAGE_KEY)||"";
+    if(byId("supabaseUrlInput")) byId("supabaseUrlInput").value=url;
+    if(byId("supabaseKeyInput")) byId("supabaseKeyInput").value=key;
+    if(url && key) status("Conexión guardada. Puedes probar o cargar catálogos.");
   });
 })();
 </script>
