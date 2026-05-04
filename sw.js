@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ynea-cache-final-safe-2026-05-04-2';
+const CACHE_NAME = 'ynea-agenda-cache-fix-bloqueo-20260504-2';
 const APP_SHELL = ["./","./index.html","./manifest.json","./apple-touch-icon.png","./icon-192.png","./icon-512.png","./logo-ynea.png"];
 self.addEventListener("install",(event)=>{self.skipWaiting();event.waitUntil(caches.open(CACHE_NAME).then((cache)=>cache.addAll(APP_SHELL)));});
 self.addEventListener("activate",(event)=>{event.waitUntil(caches.keys().then((keys)=>Promise.all(keys.filter((key)=>key!==CACHE_NAME).map((key)=>caches.delete(key)))));self.clients.claim();});
