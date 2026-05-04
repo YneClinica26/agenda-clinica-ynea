@@ -5010,5 +5010,218 @@ html.ynea-mobile-pro .mobileBottomNav [data-view="bloqueos"]{display:none!import
 })();
 </script>
 
+
+
+<!-- YNEA PRO MOVIL FIX CITAS + EDITAR PACIENTE 2026-05-04 -->
+<style id="ynea-pro-mobile-citas-pacientes-fix-2026-05-04">
+html.ynea-mobile-pro.ynea-agenda-mobile-open #agendaView{
+  display:block!important;
+  position:fixed!important;
+  inset:0!important;
+  z-index:30000!important;
+  overflow:auto!important;
+  background:#fff8fb!important;
+  padding:12px!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+html.ynea-mobile-pro.ynea-agenda-mobile-open #agendaView .card{
+  max-width:720px!important;
+  margin:0 auto 12px!important;
+}
+html.ynea-mobile-pro.ynea-agenda-mobile-open #semanaView,
+html.ynea-mobile-pro.ynea-agenda-mobile-open #mensualView,
+html.ynea-mobile-pro.ynea-agenda-mobile-open #pacientesView{
+  display:none!important;
+}
+.yneaMobileAgendaTop{
+  display:none;
+  max-width:720px;
+  margin:0 auto 10px;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+html.ynea-mobile-pro.ynea-agenda-mobile-open .yneaMobileAgendaTop{display:flex!important;}
+html.ynea-mobile-pro.ynea-agenda-mobile-open .mobileBottomNav{display:none!important;}
+.pacienteEditOverlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:31000;
+  background:rgba(15,23,42,.48);
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+}
+.pacienteEditModal{
+  background:#fff;
+  width:min(620px,100%);
+  max-height:92vh;
+  overflow:auto;
+  border-radius:24px;
+  border:1px solid #f3cfe0;
+  box-shadow:0 24px 90px rgba(15,23,42,.28);
+  padding:22px;
+}
+.pacienteEditHeader{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
+.pacienteEditHeader h2{margin:0;font-size:22px;color:#db2777}
+.pacienteEditHeader p{margin:5px 0 0;color:#64748b}
+.pacienteEditActions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:16px}
+#pacientesTable tbody tr{cursor:pointer}
+#pacientesTable tbody tr:hover{background:#fff1f7}
+@media(max-width:900px){
+  .pacienteEditOverlay{align-items:flex-end!important;padding:8px!important}
+  .pacienteEditModal{border-radius:24px 24px 0 0!important;padding:18px!important}
+  .pacienteEditActions{display:grid!important;grid-template-columns:1fr!important}
+  .pacienteEditActions button{width:100%!important}
+}
+</style>
+
+<div class="pacienteEditOverlay" id="pacienteEditOverlay">
+  <div class="pacienteEditModal">
+    <div class="pacienteEditHeader">
+      <div>
+        <h2>Editar paciente</h2>
+        <p>Modifica la ficha del paciente seleccionado.</p>
+      </div>
+      <button type="button" class="secondary" onclick="cerrarEditorPaciente()">Cerrar</button>
+    </div>
+    <input type="hidden" id="editPacienteId">
+    <label>Nombre</label>
+    <input id="editPacienteNombre">
+    <label>Teléfono</label>
+    <input id="editPacienteTelefono">
+    <label>Email</label>
+    <input id="editPacienteEmail">
+    <label>Observaciones</label>
+    <textarea id="editPacienteObs"></textarea>
+    <div class="pacienteEditActions">
+      <button type="button" class="danger" onclick="eliminarPacienteDesdeEditor()">Eliminar paciente</button>
+      <button type="button" class="secondary" onclick="cerrarEditorPaciente()">Cancelar</button>
+      <button type="button" onclick="guardarPacienteDesdeEditor()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<script id="ynea-pro-mobile-citas-pacientes-fix-script-2026-05-04">
+(function(){
+  function isMobileOS(){
+    var ua=navigator.userAgent||'';
+    var iPadDesktop=(navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+    return /iPhone|iPad|iPod|Android/i.test(ua)||iPadDesktop;
+  }
+  function byId(id){return document.getElementById(id);}
+  function ensureAgendaTop(){
+    var agenda=byId('agendaView'); if(!agenda) return;
+    if(!agenda.querySelector('.yneaMobileAgendaTop')){
+      var bar=document.createElement('div');
+      bar.className='yneaMobileAgendaTop';
+      bar.innerHTML='<strong style="color:#db2777;font-size:18px">Nueva cita</strong><button type="button" class="secondary" onclick="cerrarAgendaMovil()">Cerrar</button>';
+      agenda.insertBefore(bar, agenda.firstChild);
+    }
+  }
+  window.abrirAgendaMovil=function(fecha,hora,consulta){
+    ensureAgendaTop();
+    if(byId('fechaCita')) byId('fechaCita').value=fecha||byId('fechaCita').value;
+    if(byId('horaCita')) byId('horaCita').value=hora||byId('horaCita').value;
+    if(consulta && byId('consultaCita')) byId('consultaCita').value=consulta;
+    var prof=byId('weekProf')&&byId('weekProf').value;
+    if(prof && byId('profesionalCita')) byId('profesionalCita').value=prof;
+    if(typeof refreshAllSelects==='function') { try{ refreshAllSelects(); }catch(e){} }
+    document.documentElement.classList.add('ynea-agenda-mobile-open');
+    var agenda=byId('agendaView'); if(agenda){agenda.hidden=false; agenda.style.setProperty('display','block','important');}
+    setTimeout(function(){var el=byId('pacienteBusqueda')||byId('pacienteCita'); if(el) el.focus();},80);
+  };
+  window.cerrarAgendaMovil=function(){
+    document.documentElement.classList.remove('ynea-agenda-mobile-open');
+    var agenda=byId('agendaView'); if(agenda) agenda.style.setProperty('display','none','important');
+    if(typeof window.setView==='function') window.setView('semana');
+  };
+
+  var oldQuick=window.quickNewCita;
+  window.quickNewCita=function(fecha,hora){
+    if(isMobileOS()){ window.abrirAgendaMovil(fecha,hora,''); return false; }
+    return typeof oldQuick==='function'?oldQuick.apply(this,arguments):undefined;
+  };
+  var oldQuickConsulta=window.quickNewCitaConsulta;
+  window.quickNewCitaConsulta=function(fecha,hora,consulta){
+    if(isMobileOS()){ window.abrirAgendaMovil(fecha,hora,consulta||''); return false; }
+    return typeof oldQuickConsulta==='function'?oldQuickConsulta.apply(this,arguments):undefined;
+  };
+  var oldAddCita=window.addCita;
+  window.addCita=function(){
+    var before=(window.data&&Array.isArray(data.citas))?data.citas.length:0;
+    var r=typeof oldAddCita==='function'?oldAddCita.apply(this,arguments):undefined;
+    var after=(window.data&&Array.isArray(data.citas))?data.citas.length:before;
+    if(isMobileOS() && after>before){
+      document.documentElement.classList.remove('ynea-agenda-mobile-open');
+      var agenda=byId('agendaView'); if(agenda) agenda.style.setProperty('display','none','important');
+      if(typeof window.setView==='function') window.setView('semana');
+    }
+    return r;
+  };
+
+  function esc(x){return String(x==null?'':x).replace(/[&<>'"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c];});}
+  function renderPatientsEditable(){
+    var table=byId('pacientesTable'); if(!table || !window.data) return;
+    table.innerHTML='<thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Observaciones</th><th>Acción</th></tr></thead><tbody>'+
+      (data.pacientes||[]).map(function(p){
+        return '<tr data-paciente-id="'+esc(p.id)+'" onclick="abrirEditorPaciente(\''+String(p.id).replace(/'/g,"\\'")+'\')"><td><b>'+esc(p.nombre)+'</b></td><td>'+esc(p.telefono)+'</td><td>'+esc(p.email)+'</td><td>'+esc(p.obs)+'</td><td><button type="button" onclick="event.stopPropagation(); abrirEditorPaciente(\''+String(p.id).replace(/'/g,"\\'")+'\')">Editar</button></td></tr>';
+      }).join('')+'</tbody>';
+  }
+  var oldRenderPatients=window.renderPatients;
+  window.renderPatients=function(){
+    if(typeof oldRenderPatients==='function') { try{ oldRenderPatients.apply(this,arguments); }catch(e){} }
+    renderPatientsEditable();
+  };
+  window.renderPacientes=window.renderPatients;
+  var oldRenderAll=window.renderAll;
+  if(typeof oldRenderAll==='function'){
+    window.renderAll=function(){
+      var r=oldRenderAll.apply(this,arguments);
+      try{renderPatientsEditable();}catch(e){}
+      return r;
+    };
+  }
+  window.abrirEditorPaciente=function(id){
+    var p=(data.pacientes||[]).find(function(x){return String(x.id)===String(id);});
+    if(!p) return;
+    byId('editPacienteId').value=p.id;
+    byId('editPacienteNombre').value=p.nombre||'';
+    byId('editPacienteTelefono').value=p.telefono||'';
+    byId('editPacienteEmail').value=p.email||'';
+    byId('editPacienteObs').value=p.obs||'';
+    byId('pacienteEditOverlay').style.display='flex';
+  };
+  window.cerrarEditorPaciente=function(){var o=byId('pacienteEditOverlay'); if(o) o.style.display='none';};
+  window.guardarPacienteDesdeEditor=function(){
+    var id=byId('editPacienteId').value;
+    var p=(data.pacientes||[]).find(function(x){return String(x.id)===String(id);});
+    if(!p) return;
+    var nombre=byId('editPacienteNombre').value.trim();
+    if(!nombre){alert('Escribe el nombre del paciente.'); return;}
+    p.nombre=nombre; p.telefono=byId('editPacienteTelefono').value; p.email=byId('editPacienteEmail').value; p.obs=byId('editPacienteObs').value;
+    if(typeof save==='function') save();
+    window.cerrarEditorPaciente();
+    if(typeof refreshAllSelects==='function') refreshAllSelects();
+    if(typeof renderAll==='function') renderAll(); else renderPatientsEditable();
+  };
+  window.eliminarPacienteDesdeEditor=function(){
+    var id=byId('editPacienteId').value;
+    var tieneCitas=(data.citas||[]).some(function(c){return String(c.pacienteId)===String(id);});
+    if(tieneCitas){alert('No se puede eliminar: este paciente tiene citas asociadas. Puedes editar su ficha.'); return;}
+    if(!confirm('¿Eliminar este paciente?')) return;
+    data.pacientes=(data.pacientes||[]).filter(function(x){return String(x.id)!==String(id);});
+    if(typeof save==='function') save();
+    window.cerrarEditorPaciente();
+    if(typeof refreshAllSelects==='function') refreshAllSelects();
+    if(typeof renderAll==='function') renderAll(); else renderPatientsEditable();
+  };
+  function boot(){ensureAgendaTop(); try{renderPatientsEditable();}catch(e){}}
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  window.addEventListener('load',function(){setTimeout(boot,120);setTimeout(boot,800);});
+})();
+</script>
+
 </body>
 </html>
