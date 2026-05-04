@@ -651,6 +651,87 @@ button:not(.secondary):not(.danger):not(.tab):not(.mobileNavBtn):not(.appFab):ho
 }
 </style>
 
+
+
+<style id="ynea-pro-mobile-compact-final">
+/* Ajustes solicitados: sin ventana de autoguardado, controles móviles compactos y botón instalar sin solapes */
+.autosaveBar{display:none!important;visibility:hidden!important;pointer-events:none!important;}
+@media (max-width:900px){
+  header{
+    position:sticky!important;
+    top:0!important;
+    padding:6px 92px 6px 10px!important;
+    min-height:54px!important;
+    overflow:visible!important;
+  }
+  .yneaBrandTitle{gap:7px!important;width:100%!important;min-width:0!important;}
+  .yneaBrandTitle img{height:36px!important;max-width:58px!important;}
+  .yneaBrandTitle .brandText{
+    font-size:16px!important;
+    line-height:1.05!important;
+    max-width:calc(100vw - 178px)!important;
+    color:var(--app-pink-2,#db2777)!important;
+  }
+  #installAppBtn{
+    position:absolute!important;
+    right:8px!important;
+    top:9px!important;
+    margin:0!important;
+    min-height:30px!important;
+    height:30px!important;
+    max-width:78px!important;
+    padding:4px 7px!important;
+    font-size:10px!important;
+    line-height:1!important;
+    border-radius:10px!important;
+    white-space:normal!important;
+    z-index:99!important;
+  }
+  #semanaView .card,#mensualView .card{padding:10px!important;}
+  #semanaView .card h2,#mensualView .card h2{font-size:15px!important;margin-bottom:6px!important;}
+  #semanaView .small,#mensualView .small{font-size:10px!important;line-height:1.2!important;margin:4px 0!important;}
+  #semanaView .weekbar,#mensualView .weekbar{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:4px!important;
+    align-items:end!important;
+    margin-bottom:6px!important;
+  }
+  #semanaView .weekbar > div,#mensualView .weekbar > div{min-width:0!important;width:100%!important;}
+  #semanaView .weekbar label,#mensualView .weekbar label{
+    display:block!important;
+    margin:0 0 2px!important;
+    font-size:9px!important;
+    line-height:1!important;
+    font-weight:700!important;
+  }
+  #semanaView .weekbar input,#semanaView .weekbar select,
+  #mensualView .weekbar input,#mensualView .weekbar select{
+    min-height:30px!important;
+    height:30px!important;
+    padding:3px 5px!important;
+    font-size:11px!important;
+    border-radius:9px!important;
+  }
+  #semanaView .weekbar button,#mensualView .weekbar button{
+    min-width:0!important;
+    width:100%!important;
+    min-height:30px!important;
+    height:30px!important;
+    padding:3px 4px!important;
+    font-size:10px!important;
+    line-height:1.05!important;
+    border-radius:9px!important;
+  }
+}
+@media (max-width:380px){
+  #semanaView .weekbar,#mensualView .weekbar{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  header{padding-right:84px!important;}
+  .yneaBrandTitle .brandText{font-size:15px!important;max-width:calc(100vw - 162px)!important;}
+  #installAppBtn{max-width:70px!important;font-size:9px!important;padding:3px 5px!important;}
+}
+</style>
+
 </head>
 <body>
 <header>
@@ -2318,10 +2399,6 @@ function guardarNuevoPacienteModal(){
 }
 </script>
 
-
-<div class="autosaveBar">
-  <span id="autosaveStatus">Autoguardado activo</span>
-  </div>
 
 
 <script id="autosave-backup-script">
