@@ -4309,5 +4309,211 @@ async function instalarYneaApp(){
 })();
 </script>
 
+
+<script id="ynea-recovery-stable-v1">
+(function(){
+  'use strict';
+  var MOBILE_ALLOWED = {semana:1, mensual:1, pacientes:1, agenda:1};
+  var ALL_VIEWS = ['semana','mensual','agenda','pacientes','config','bloqueos','listados','copias','avisos','infoDiaria'];
+  var MOBILE_HIDDEN = {config:1,bloqueos:1,listados:1,copias:1,avisos:1,infoDiaria:1};
+  function byId(id){ return document.getElementById(id); }
+  function isMobileOS(){
+    var ua = navigator.userAgent || '';
+    return /Android|iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+  function escapeHtml(v){
+    return String(v == null ? '' : v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
+  }
+  function normalizeTab(btn){
+    if(!btn || btn.id === 'installPwaBtn') return;
+    var txt = (btn.textContent || '').toLowerCase();
+    var oc = btn.getAttribute('onclick') || '';
+    var view = btn.getAttribute('data-view') || '';
+    if(!view){
+      if(oc.indexOf('semana') >= 0 || txt.indexOf('semanal') >= 0) view='semana';
+      else if(oc.indexOf('mensual') >= 0 || txt.indexOf('mensual') >= 0 || txt.indexOf('mes') >= 0) view='mensual';
+      else if(oc.indexOf('pacientes') >= 0 || txt.indexOf('pacientes') >= 0) view='pacientes';
+      else if(oc.indexOf('config') >= 0 || txt.indexOf('config') >= 0) view='config';
+      else if(oc.indexOf('bloqueos') >= 0 || txt.indexOf('bloqueos') >= 0) view='bloqueos';
+      else if(oc.indexOf('listados') >= 0 || txt.indexOf('listados') >= 0) view='listados';
+      else if(oc.indexOf('infoDiaria') >= 0 || txt.indexOf('información diaria') >= 0 || txt.indexOf('informacion diaria') >= 0) view='infoDiaria';
+      else if(oc.indexOf('avisos') >= 0 || txt.indexOf('avisos') >= 0) view='avisos';
+      else if(oc.indexOf('copias') >= 0 || txt.indexOf('copia') >= 0) view='copias';
+      else if(oc.indexOf('agenda') >= 0) view='agenda';
+    }
+    if(txt.indexOf('anual') >= 0 || oc.indexOf('anual') >= 0){ btn.style.display='none'; return; }
+    if(view){
+      btn.setAttribute('data-view', view);
+      btn.removeAttribute('onclick');
+    }
+  }
+  function setupTabs(){
+    document.documentElement.classList.toggle('ynea-mobile-app', isMobileOS());
+    document.querySelectorAll('.tabs .tab').forEach(function(btn){
+      normalizeTab(btn);
+      var v = btn.getAttribute('data-view');
+      if(isMobileOS() && v && !MOBILE_ALLOWED[v] && btn.id !== 'installPwaBtn'){
+        btn.style.setProperty('display','none','important');
+      } else if(v && btn.id !== 'installPwaBtn') {
+        btn.style.removeProperty('display');
+      }
+    });
+    var annual = byId('anualView');
+    if(annual) annual.style.setProperty('display','none','important');
+  }
+  function safeRender(view){
+    try{
+      if(view === 'semana' && typeof renderWeek === 'function') renderWeek();
+      else if(view === 'mensual' && typeof renderMonthView === 'function') renderMonthView();
+      else if(view === 'pacientes' && typeof renderPatients === 'function') renderPatients();
+      else if(view === 'config' && typeof renderConfig === 'function') renderConfig();
+      else if(view === 'listados' && typeof renderLists === 'function') renderLists();
+      else if(view === 'infoDiaria' && typeof renderInfoDiaria === 'function') renderInfoDiaria();
+      else if(view === 'avisos' && typeof renderAvisos === 'function') renderAvisos();
+      else if(view === 'bloqueos' && typeof renderBloqueos === 'function') renderBloqueos();
+    }catch(e){ console.error('Ynea render vista', view, e); }
+  }
+  function forceView(view, btn){
+    setupTabs();
+    if(view === 'anual') view = 'semana';
+    if(isMobileOS() && !MOBILE_ALLOWED[view]) view = 'semana';
+    if(!view) view = 'semana';
+    ALL_VIEWS.forEach(function(v){
+      var el = byId(v+'View');
+      if(!el) return;
+      if(isMobileOS() && MOBILE_HIDDEN[v]) el.style.setProperty('display','none','important');
+      else el.style.setProperty('display', v === view ? 'block' : 'none', 'important');
+    });
+    var annual = byId('anualView'); if(annual) annual.style.setProperty('display','none','important');
+    document.querySelectorAll('.tabs .tab').forEach(function(b){
+      var active = (b === btn) || (b.getAttribute('data-view') === view);
+      b.classList.toggle('active', !!active);
+    });
+    safeRender(view);
+    window.__yneaCurrentView = view;
+    return false;
+  }
+  window.setView = forceView;
+  window.yneaForceView = forceView;
+  document.addEventListener('click', function(e){
+    var tab = e.target.closest && e.target.closest('.tabs .tab[data-view]');
+    if(tab){ e.preventDefault(); e.stopPropagation(); return forceView(tab.getAttribute('data-view'), tab); }
+  }, true);
+  window.quickNewCita = function(fecha,hora){
+    if(byId('fechaCita')) byId('fechaCita').value = fecha || byId('fechaCita').value;
+    if(byId('horaCita')) byId('horaCita').value = hora || byId('horaCita').value;
+    if(byId('weekProf') && byId('weekProf').value && byId('profesionalCita')) byId('profesionalCita').value = byId('weekProf').value;
+    forceView('agenda');
+    setTimeout(function(){ var f = byId('pacienteBusqueda') || byId('pacienteCita') || byId('fechaCita'); if(f) f.focus(); }, 50);
+    return false;
+  };
+  window.quickNewCitaConsulta = function(fecha,hora,consulta){
+    if(byId('consultaCita') && consulta) byId('consultaCita').value = consulta;
+    return window.quickNewCita(fecha,hora);
+  };
+  // Reemplazo seguro de la tabla de pacientes para permitir editar al clicar.
+  function renderPatientsEditable(){
+    try{
+      if(typeof data === 'undefined' || !data.pacientes || !byId('pacientesTable')) return;
+      byId('pacientesTable').innerHTML = '<thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Observaciones</th><th>Acción</th></tr></thead><tbody>' +
+        data.pacientes.map(function(p){
+          return '<tr data-paciente-id="'+escapeHtml(p.id)+'" style="cursor:pointer"><td><b>'+escapeHtml(p.nombre)+'</b></td><td>'+escapeHtml(p.telefono||'')+'</td><td>'+escapeHtml(p.email||'')+'</td><td>'+escapeHtml(p.obs||'')+'</td><td><button type="button" data-edit-paciente="'+escapeHtml(p.id)+'">Editar</button></td></tr>';
+        }).join('') + '</tbody>';
+    }catch(e){ console.error('Ynea pacientes', e); }
+  }
+  var originalRenderPatients = window.renderPatients;
+  window.renderPatients = function(){ renderPatientsEditable(); };
+  function ensurePatientEditor(){
+    if(byId('yneaPatientEditOverlay')) return;
+    var div = document.createElement('div');
+    div.id = 'yneaPatientEditOverlay';
+    div.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:20000;align-items:center;justify-content:center;padding:16px;';
+    div.innerHTML = '<div style="background:#fff;width:min(560px,100%);border-radius:24px;padding:22px;box-shadow:0 24px 80px rgba(15,23,42,.25);max-height:92vh;overflow:auto">'+
+      '<h2 style="margin:0 0 12px;color:#db2777">Editar paciente</h2>'+
+      '<input id="yneaEditPacienteId" type="hidden">'+
+      '<label>Nombre</label><input id="yneaEditPacienteNombre">'+
+      '<label>Teléfono</label><input id="yneaEditPacienteTelefono">'+
+      '<label>Email</label><input id="yneaEditPacienteEmail">'+
+      '<label>Observaciones</label><textarea id="yneaEditPacienteObs"></textarea>'+
+      '<div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px"><button type="button" class="danger" id="yneaBtnEliminarPaciente">Eliminar</button><button type="button" class="secondary" id="yneaBtnCancelarPaciente">Cancelar</button><button type="button" id="yneaBtnGuardarPaciente">Guardar cambios</button></div>'+
+      '</div>';
+    document.body.appendChild(div);
+    byId('yneaBtnCancelarPaciente').addEventListener('click', window.yneaCerrarEditorPaciente);
+    byId('yneaBtnGuardarPaciente').addEventListener('click', window.yneaGuardarPacienteEditado);
+    byId('yneaBtnEliminarPaciente').addEventListener('click', window.yneaEliminarPacienteEditado);
+  }
+  window.yneaAbrirEditorPaciente = function(id){
+    ensurePatientEditor();
+    var p = (typeof data !== 'undefined' && data.pacientes || []).find(function(x){ return String(x.id) === String(id); });
+    if(!p) return false;
+    byId('yneaEditPacienteId').value = p.id;
+    byId('yneaEditPacienteNombre').value = p.nombre || '';
+    byId('yneaEditPacienteTelefono').value = p.telefono || '';
+    byId('yneaEditPacienteEmail').value = p.email || '';
+    byId('yneaEditPacienteObs').value = p.obs || '';
+    byId('yneaPatientEditOverlay').style.display = 'flex';
+    setTimeout(function(){ byId('yneaEditPacienteNombre').focus(); }, 40);
+    return false;
+  };
+  window.yneaCerrarEditorPaciente = function(){ var ov = byId('yneaPatientEditOverlay'); if(ov) ov.style.display='none'; return false; };
+  window.yneaGuardarPacienteEditado = function(){
+    var id = byId('yneaEditPacienteId').value;
+    var p = (typeof data !== 'undefined' && data.pacientes || []).find(function(x){ return String(x.id) === String(id); });
+    if(!p) return false;
+    var nombre = byId('yneaEditPacienteNombre').value.trim();
+    if(!nombre){ alert('El nombre es obligatorio.'); return false; }
+    p.nombre = nombre; p.telefono = byId('yneaEditPacienteTelefono').value; p.email = byId('yneaEditPacienteEmail').value; p.obs = byId('yneaEditPacienteObs').value;
+    try{ if(typeof save === 'function') save(); if(typeof refreshAllSelects === 'function') refreshAllSelects(); }catch(e){}
+    renderPatientsEditable(); window.yneaCerrarEditorPaciente(); return false;
+  };
+  window.yneaEliminarPacienteEditado = function(){
+    var id = byId('yneaEditPacienteId').value;
+    if(typeof data !== 'undefined' && (data.citas||[]).some(function(c){ return String(c.pacienteId) === String(id); })){ alert('No se puede eliminar: tiene citas asociadas.'); return false; }
+    if(!confirm('¿Eliminar este paciente?')) return false;
+    data.pacientes = (data.pacientes||[]).filter(function(p){ return String(p.id) !== String(id); });
+    try{ if(typeof save === 'function') save(); if(typeof refreshAllSelects === 'function') refreshAllSelects(); }catch(e){}
+    renderPatientsEditable(); window.yneaCerrarEditorPaciente(); return false;
+  };
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest && e.target.closest('[data-edit-paciente]');
+    var row = e.target.closest && e.target.closest('#pacientesTable tbody tr[data-paciente-id]');
+    var id = btn ? btn.getAttribute('data-edit-paciente') : (row ? row.getAttribute('data-paciente-id') : '');
+    if(id){ e.preventDefault(); e.stopPropagation(); return window.yneaAbrirEditorPaciente(id); }
+  }, true);
+  // Botón instalar app: funciona aunque el navegador no permita prompt automático.
+  window.instalarYneaApp = function(){
+    if(window.deferredInstallPrompt && window.deferredInstallPrompt.prompt){
+      window.deferredInstallPrompt.prompt();
+      return false;
+    }
+    var existing = byId('yneaInstallHelp');
+    if(!existing){
+      var ov = document.createElement('div'); ov.id='yneaInstallHelp'; ov.style.cssText='display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:21000;align-items:center;justify-content:center;padding:18px;';
+      ov.innerHTML='<div style="background:#fff;border-radius:24px;padding:22px;width:min(520px,100%);box-shadow:0 24px 80px rgba(15,23,42,.25)"><h2 style="margin:0 0 10px;color:#db2777">Instalar app</h2><ol id="yneaInstallSteps"></ol><button type="button" onclick="cerrarAyudaInstalarYnea()">Entendido</button></div>';
+      document.body.appendChild(ov); existing=ov;
+    }
+    var ios = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    var android = /Android/i.test(navigator.userAgent);
+    var steps = ios ? ['Abre esta agenda en Safari.','Pulsa Compartir.','Elige “Añadir a pantalla de inicio”.','Pulsa Añadir.'] : android ? ['Abre esta agenda en Chrome.','Pulsa el menú ⋮.','Elige “Instalar app” o “Añadir a pantalla de inicio”.'] : ['En Chrome o Edge usa el icono de instalación de la barra de direcciones.','También puedes abrir el menú del navegador y elegir “Instalar app”.'];
+    byId('yneaInstallSteps').innerHTML = steps.map(function(s){ return '<li>'+escapeHtml(s)+'</li>'; }).join('');
+    existing.style.display='flex'; return false;
+  };
+  window.cerrarAyudaInstalarYnea = function(){ var ov=byId('yneaInstallHelp'); if(ov) ov.style.display='none'; return false; };
+  window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); window.deferredInstallPrompt=e; var b=byId('installPwaBtn'); if(b) b.style.display='inline-flex'; });
+  function boot(){
+    setupTabs();
+    ensurePatientEditor();
+    renderPatientsEditable();
+    // Si no hay ninguna vista visible, recupera la semanal.
+    var visible = ALL_VIEWS.some(function(v){ var el=byId(v+'View'); return el && getComputedStyle(el).display !== 'none'; });
+    if(!visible) forceView('semana');
+    else if(window.__yneaCurrentView) forceView(window.__yneaCurrentView);
+    else forceView('semana');
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+  window.addEventListener('load', function(){ setTimeout(boot,80); setTimeout(boot,500); });
+})();
+</script>
+
 </body>
 </html>
