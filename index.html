@@ -972,7 +972,7 @@ button:active,.btn:active,.tab:active { transform:scale(.985); }
     <button class="tab" onclick="setView('infoDiaria', this)">Información diaria</button>
     <button class="tab" onclick="setView('avisos', this)">Avisos</button>
     <button class="tab" onclick="setView('copias', this)">Copias de seguridad</button>
-    <button id="installPwaBtn" class="tab" style="display:none;background:#9f244f;color:#fff" onclick="instalarYneaApp()">Instalar app</button>
+    <button id="installPwaBtn" class="tab" style="display:none;background:#ec4899;color:#fff;border-color:#ec4899" onclick="instalarYneaApp()">Instalar app</button>
   </div>
 </header>
 
@@ -4214,52 +4214,32 @@ async function instalarYneaApp(){
 <script id="ynea-mobile-cleanup-patient-filter">
 (function(){
   function cleanHelpTexts(){
-    var nodes = Array.from(document.querySelectorAll('p, div, span'));
+    var nodes = Array.from(document.querySelectorAll('p, span, small'));
     nodes.forEach(function(el){
-      var t = (el.textContent || '').trim().toLowerCase();
-      if (
-        t.startsWith('uso rápido') ||
-        t.startsWith('uso rapido') ||
-        t.includes('uso rápido:') ||
-        t.includes('uso rapido:') ||
-        (t.includes('elige') && t.includes('calendario'))
-      ) {
-        el.style.display = 'none';
+      var t=(el.textContent||'').trim().toLowerCase();
+      if(t.startsWith('uso rápido') || t.startsWith('uso rapido') || t.includes('uso rápido:') || t.includes('uso rapido:')){
+        el.style.display='none';
       }
     });
   }
-
   function ensurePatientFilter(){
-    var table = document.getElementById('pacientesTable') ||
-                document.querySelector('table[id*="paciente"], table[id*="Paciente"]');
+    var table=document.getElementById('pacientesTable') || document.querySelector('table[id*="paciente"], table[id*="Paciente"]');
     if(!table || document.getElementById('yneaPacienteFiltroMovil')) return;
-
-    var input = document.createElement('input');
-    input.id = 'yneaPacienteFiltroMovil';
-    input.type = 'search';
-    input.placeholder = 'Filtrar pacientes por nombre';
-    input.style.margin = '0 0 8px 0';
-    input.style.width = '100%';
-
-    table.parentNode.insertBefore(input, table);
-
-    input.addEventListener('input', function(){
-      var q = input.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    var input=document.createElement('input');
+    input.id='yneaPacienteFiltroMovil'; input.type='search'; input.placeholder='Filtrar pacientes por nombre';
+    input.style.margin='0 0 8px 0'; input.style.width='100%';
+    table.parentNode.insertBefore(input,table);
+    input.addEventListener('input',function(){
+      var q=input.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
       Array.from(table.querySelectorAll('tbody tr')).forEach(function(tr){
-        var txt = (tr.textContent || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-        tr.style.display = txt.includes(q) ? '' : 'none';
+        var txt=(tr.textContent||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+        tr.style.display=txt.includes(q)?'':'none';
       });
     });
   }
-
-  function run(){
-    cleanHelpTexts();
-    ensurePatientFilter();
-  }
-
-  document.addEventListener('DOMContentLoaded', run);
-  setTimeout(run, 500);
-  setTimeout(run, 1500);
+  function run(){cleanHelpTexts();ensurePatientFilter();}
+  document.addEventListener('DOMContentLoaded',run);
+  setTimeout(run,500); setTimeout(run,1500);
 })();
 </script>
 
@@ -4343,6 +4323,192 @@ button:not(.secondary):not(.danger):not(.tab):hover{background:#7f1d3f!important
   }
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot); else boot();
   window.addEventListener("load",function(){setTimeout(boot,100)});
+})();
+</script>
+
+
+
+<!-- YNEA FIX DEFINITIVO VISIBILIDAD NAVEGACION 2026-05-04 -->
+<style id="ynea-fix-visibilidad-real-2026-05-04">
+:root{--primary:#9f244f!important;--primary2:#7f1d3f!important;--ynea-rosa:#9f244f!important;}
+html,body{width:100%!important;min-height:100%!important;overflow-x:hidden!important;}
+body{background:#f4f7fb!important;color:#1f2937!important;}
+header{
+  display:block!important;
+  position:static!important;
+  top:auto!important;
+  z-index:10!important;
+  padding:12px 14px!important;
+  background:#fff!important;
+  border-bottom:1px solid #dbe3ee!important;
+  overflow:visible!important;
+  max-height:none!important;
+  height:auto!important;
+}
+header h1{display:block!important;width:100%!important;margin:0!important;line-height:1!important;}
+.yneaBrandTitle{
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;
+  gap:12px!important;width:100%!important;max-width:100%!important;min-width:0!important;
+  flex-wrap:nowrap!important;margin:0!important;
+}
+.yneaBrandTitle img{height:58px!important;max-height:58px!important;width:auto!important;max-width:150px!important;object-fit:contain!important;flex:0 0 auto!important;}
+.yneaBrandTitle .yneaSeparator,.yneaBrandTitle .separator{display:block!important;width:1px!important;height:38px!important;background:#f3c7da!important;flex:0 0 1px!important;}
+.yneaBrandTitle .brandText{display:block!important;color:#9f244f!important;font-size:24px!important;line-height:1.05!important;font-weight:700!important;letter-spacing:-.02em!important;white-space:normal!important;}
+.yneaBrandTitle .brandSub{display:none!important;}
+header .tabs,.tabs{
+  display:flex!important;visibility:visible!important;opacity:1!important;
+  flex-wrap:wrap!important;gap:8px!important;width:100%!important;max-width:100%!important;
+  margin:12px 0 0!important;padding:0!important;overflow:visible!important;max-height:none!important;height:auto!important;
+  align-items:center!important;justify-content:flex-start!important;white-space:normal!important;
+}
+.tabs .tab,header .tabs .tab,#installPwaBtn{
+  display:inline-flex!important;visibility:visible!important;opacity:1!important;position:static!important;
+  align-items:center!important;justify-content:center!important;flex:0 0 auto!important;
+  min-width:auto!important;max-width:none!important;min-height:36px!important;height:auto!important;
+  padding:9px 12px!important;border-radius:12px!important;border:1px solid #f3c7da!important;
+  background:#fce7f3!important;color:#9f244f!important;font-size:14px!important;font-weight:700!important;
+  line-height:1.1!important;white-space:nowrap!important;text-decoration:none!important;
+}
+.tabs .tab.active,header .tabs .tab.active,#installPwaBtn:hover{background:#9f244f!important;color:#fff!important;border-color:#9f244f!important;}
+button:not(.secondary):not(.danger):not(.tab){background:#9f244f!important;color:#fff!important;}
+button:not(.secondary):not(.danger):not(.tab):hover{background:#7f1d3f!important;}
+.container{display:block!important;visibility:visible!important;opacity:1!important;max-width:1480px!important;margin:0 auto!important;padding:18px!important;overflow:visible!important;}
+section{visibility:visible!important;opacity:1!important;max-height:none!important;overflow:visible!important;}
+section[style*="display: block"], section.ynea-visible-view{display:block!important;}
+#semanaView,#mensualView,#pacientesView,#configView,#bloqueosView,#listadosView,#avisosView,#copiasView,#infoDiariaView{min-height:120px!important;}
+#agendaView,#anualView,#yearTable,[onclick*="agenda"],[onclick*="nueva"],[onclick*="Nueva"],[onclick*="anual"],[onclick*="year"]{display:none!important;}
+.tableWrap{display:block!important;overflow-x:auto!important;overflow-y:visible!important;max-height:none!important;-webkit-overflow-scrolling:touch!important;}
+#weekTable,#monthTable,#pacientesTable{display:table!important;visibility:visible!important;opacity:1!important;width:100%!important;min-width:760px!important;border-collapse:separate!important;}
+@media(max-width:700px){
+  header{padding:10px 10px!important;}
+  .yneaBrandTitle{gap:8px!important;}
+  .yneaBrandTitle img{height:46px!important;max-height:46px!important;max-width:118px!important;}
+  .yneaBrandTitle .yneaSeparator,.yneaBrandTitle .separator{height:30px!important;}
+  .yneaBrandTitle .brandText{font-size:16px!important;color:#9f244f!important;}
+  header .tabs,.tabs{flex-wrap:nowrap!important;overflow-x:auto!important;overflow-y:hidden!important;padding-bottom:6px!important;}
+  .tabs .tab,header .tabs .tab,#installPwaBtn{font-size:12px!important;padding:8px 10px!important;min-height:34px!important;}
+  .container{padding:10px!important;}
+}
+</style>
+<script id="ynea-fix-navegacion-real-2026-05-04">
+(function(){
+  var VIEWS=["semana","mensual","pacientes","config","bloqueos","listados","infoDiaria","avisos","copias"];
+  var LABELS={semana:"Calendario semanal",mensual:"Vista mensual",pacientes:"Pacientes",config:"Configuración",bloqueos:"Bloqueos",listados:"Listados",infoDiaria:"Información diaria",avisos:"Avisos",copias:"Copias de seguridad"};
+  function byId(id){return document.getElementById(id);}
+  function ensureTabs(){
+    var header=document.querySelector('header'); if(!header) return;
+    var tabs=header.querySelector('.tabs');
+    if(!tabs){ tabs=document.createElement('div'); tabs.className='tabs'; header.appendChild(tabs); }
+    Array.prototype.slice.call(tabs.querySelectorAll('.tab')).forEach(function(b){
+      var txt=(b.textContent||'').toLowerCase(); var oc=(b.getAttribute('onclick')||'').toLowerCase();
+      if(txt.indexOf('nueva')>=0 || txt.indexOf('agregar')>=0 || txt.indexOf('anual')>=0 || oc.indexOf('agenda')>=0 || oc.indexOf('anual')>=0 || oc.indexOf('year')>=0){ b.remove(); }
+    });
+    VIEWS.forEach(function(v){
+      var exists=Array.prototype.slice.call(tabs.querySelectorAll('.tab')).some(function(b){return (b.getAttribute('data-view')===v) || ((b.getAttribute('onclick')||'').indexOf("'"+v+"'")>=0) || ((b.getAttribute('onclick')||'').indexOf('"'+v+'"')>=0);});
+      if(!exists && byId(v+'View')){
+        var b=document.createElement('button'); b.type='button'; b.className='tab'; b.textContent=LABELS[v]||v; b.setAttribute('data-view',v); tabs.appendChild(b);
+      }
+    });
+    Array.prototype.slice.call(tabs.querySelectorAll('.tab')).forEach(function(b){
+      var view=b.getAttribute('data-view');
+      if(!view){
+        var oc=b.getAttribute('onclick')||''; var m=oc.match(/setView\(['"]([^'"]+)/); if(m) view=m[1];
+      }
+      if(view){ b.setAttribute('data-view',view); b.removeAttribute('onclick'); b.onclick=function(e){e.preventDefault(); window.setView(view,b);}; }
+    });
+  }
+  function show(view,btn){
+    if(VIEWS.indexOf(view)<0) view='semana';
+    VIEWS.concat(['agenda','anual','year']).forEach(function(v){
+      var el=byId(v+'View'); if(el){ el.classList.toggle('ynea-visible-view',v===view); el.style.display=(v===view?'block':'none'); }
+    });
+    document.querySelectorAll('.tabs .tab').forEach(function(b){ b.classList.toggle('active', b===btn || b.getAttribute('data-view')===view); });
+    try{ if(typeof window.renderAll==='function') window.renderAll(); }catch(e){ console.warn('Ynea render seguro:', e); }
+  }
+  window.setView=function(view,btn){ ensureTabs(); show(view,btn || document.querySelector('.tabs .tab[data-view="'+view+'"]')); };
+  function boot(){ ensureTabs(); show('semana', document.querySelector('.tabs .tab[data-view="semana"]')); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  window.addEventListener('load',function(){ setTimeout(boot,100); });
+})();
+</script>
+
+
+
+<!-- YNEA FIX FINAL REAL: navegación visible + rosa Ynea + sin vista anual/agregar cita -->
+<style id="ynea-fix-final-real-2026-05-04">
+:root{--primary:#ec4899!important;--primary2:#db2777!important;--ynea-rosa:#ec4899!important;--app-pink:#ec4899!important;--app-pink-2:#db2777!important;}
+html,body{display:block!important;min-height:100%!important;background:#fff8fb!important;}
+header{display:block!important;visibility:visible!important;opacity:1!important;height:auto!important;max-height:none!important;overflow:visible!important;background:#fff!important;border-bottom:1px solid #f3c7da!important;}
+.container{display:block!important;visibility:visible!important;opacity:1!important;height:auto!important;max-height:none!important;overflow:visible!important;}
+.yneaBrandTitle{display:flex!important;align-items:center!important;gap:12px!important;visibility:visible!important;opacity:1!important;}
+.yneaBrandTitle img{height:58px!important;max-height:58px!important;width:auto!important;max-width:150px!important;object-fit:contain!important;display:block!important;}
+.yneaBrandTitle .brandText{color:#ec4899!important;font-size:24px!important;font-weight:700!important;line-height:1.05!important;display:block!important;}
+.yneaBrandTitle .brandSub{display:none!important;}
+.tabs{display:flex!important;visibility:visible!important;opacity:1!important;flex-wrap:wrap!important;gap:8px!important;overflow:visible!important;height:auto!important;max-height:none!important;margin-top:12px!important;}
+.tabs .tab,#installPwaBtn{display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center!important;justify-content:center!important;background:#fce7f3!important;color:#ec4899!important;border:1px solid #f3c7da!important;border-radius:12px!important;font-weight:700!important;}
+.tabs .tab.active,#installPwaBtn:hover{background:#ec4899!important;color:#fff!important;border-color:#ec4899!important;}
+button:not(.secondary):not(.danger):not(.tab){background:#ec4899!important;color:#fff!important;}
+button:not(.secondary):not(.danger):not(.tab):hover{background:#db2777!important;}
+section{visibility:visible!important;opacity:1!important;max-height:none!important;overflow:visible!important;}
+.card,.tableWrap{visibility:visible!important;opacity:1!important;max-height:none!important;}
+.tableWrap{overflow-x:auto!important;overflow-y:visible!important;-webkit-overflow-scrolling:touch!important;}
+#weekTable,#monthTable,#pacientesTable{visibility:visible!important;opacity:1!important;width:100%!important;min-width:760px!important;}
+#agendaView,#anualView,#yearTable,[data-view="agenda"],[data-view="anual"],[onclick*="agenda"],[onclick*="anual"],[onclick*="year"]{display:none!important;}
+@media(max-width:700px){
+  header{padding:10px!important;position:static!important;}
+  .yneaBrandTitle{gap:8px!important;flex-direction:row!important;}
+  .yneaBrandTitle img{height:46px!important;max-height:46px!important;max-width:118px!important;}
+  .yneaBrandTitle .brandText{font-size:16px!important;color:#ec4899!important;white-space:normal!important;}
+  .tabs{flex-wrap:nowrap!important;overflow-x:auto!important;overflow-y:hidden!important;padding-bottom:6px!important;}
+  .tabs .tab,#installPwaBtn{font-size:12px!important;padding:8px 10px!important;min-height:34px!important;white-space:nowrap!important;}
+  .container{padding:10px!important;}
+}
+</style>
+<script id="ynea-fix-final-real-navigation-2026-05-04">
+(function(){
+  var VIEWS=['semana','mensual','pacientes','config','bloqueos','listados','infoDiaria','avisos','copias'];
+  var LABELS={semana:'Calendario semanal',mensual:'Vista mensual',pacientes:'Pacientes',config:'Configuración',bloqueos:'Bloqueos',listados:'Listados',infoDiaria:'Información diaria',avisos:'Avisos',copias:'Copias de seguridad'};
+  function byId(id){return document.getElementById(id);}
+  function unhideImportant(){
+    ['header','.container','.tabs','#semanaView','#mensualView','#pacientesView','#configView'].forEach(function(sel){
+      var el=sel[0]==='#'?document.getElementById(sel.slice(1)):document.querySelector(sel);
+      while(el && el!==document.body){
+        if(el.id==='agendaView'||el.id==='anualView'||el.classList.contains('nuevoPacienteOverlay')||el.classList.contains('editorCitaOverlay')||el.classList.contains('citaEnlazadaOverlay')) break;
+        if(el.style && el.style.display==='none') el.style.display='';
+        el=el.parentElement;
+      }
+    });
+  }
+  function ensureTabs(){
+    var header=document.querySelector('header'); if(!header) return;
+    var tabs=header.querySelector('.tabs'); if(!tabs){tabs=document.createElement('div');tabs.className='tabs';header.appendChild(tabs);}
+    Array.from(tabs.querySelectorAll('.tab')).forEach(function(b){
+      var txt=(b.textContent||'').toLowerCase(); var oc=(b.getAttribute('onclick')||'').toLowerCase();
+      if(txt.includes('nueva')||txt.includes('agregar')||txt.includes('anual')||oc.includes('agenda')||oc.includes('anual')||oc.includes('year')) b.remove();
+    });
+    VIEWS.forEach(function(v){
+      if(!byId(v+'View')) return;
+      var b=tabs.querySelector('.tab[data-view="'+v+'"]');
+      if(!b){
+        b=Array.from(tabs.querySelectorAll('.tab')).find(function(x){var oc=x.getAttribute('onclick')||''; return oc.includes("'"+v+"'")||oc.includes('"'+v+'"');});
+      }
+      if(!b){b=document.createElement('button');b.type='button';b.className='tab';b.textContent=LABELS[v]||v;tabs.appendChild(b);}
+      b.setAttribute('data-view',v); b.removeAttribute('onclick');
+      b.onclick=function(e){e.preventDefault(); window.setView(v,b);};
+    });
+    var install=byId('installPwaBtn'); if(install){install.style.backgroundColor='#ec4899';install.style.color='#fff';install.style.borderColor='#ec4899';}
+  }
+  function show(view,btn){
+    if(VIEWS.indexOf(view)<0) view='semana';
+    unhideImportant(); ensureTabs();
+    VIEWS.concat(['agenda','anual','year']).forEach(function(v){var el=byId(v+'View'); if(el) el.style.display=(v===view?'block':'none');});
+    Array.from(document.querySelectorAll('.tabs .tab')).forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===view || b===btn);});
+    try{ if(typeof window.renderAll==='function') window.renderAll(); }catch(e){ console.warn('Ynea: render protegido',e); }
+  }
+  window.setView=function(view,btn){show(view,btn);};
+  function boot(){unhideImportant();ensureTabs();show('semana',document.querySelector('.tabs .tab[data-view="semana"]'));}
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  window.addEventListener('load',function(){setTimeout(boot,50);setTimeout(boot,700);setTimeout(function(){unhideImportant();},1700);});
 })();
 </script>
 
