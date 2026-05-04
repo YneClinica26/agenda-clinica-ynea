@@ -1197,7 +1197,7 @@ function refreshAllSelects(){
  fillSelect("weekConsulta",data.consultas,'<option value="">Todas</option>');
  fillSelect("filtroProf",data.profesionales,'<option value="">Todos</option>');
  fillSelect("filtroTipo",data.tipos,'<option value="">Todos</option>');
- actualizarBuscadorPacienteCita();
+ if(typeof actualizarBuscadorPacienteCita==="function") actualizarBuscadorPacienteCita();
 }
 function setView(view,btn){
  ["semana","mensual","anual","agenda","pacientes","config","bloqueos","listados","copias","avisos","infoDiaria"].forEach(v=>{
@@ -4106,229 +4106,106 @@ button,.tab{touch-action:manipulation;}
 
 
 <script id="ynea-supabase-database-layer">
-/* ===== YNEA DATABASE LAYER - SUPABASE PRO =====
-   Usa estas tablas separadas cuando existen:
-   - profesionales      -> data.profesionales
-   - tipos_cita         -> data.tipos y data.duracionesTipo
-   - consultas          -> data.consultas (espacios físicos)
-   Además mantiene ynea_agenda_state para pacientes, citas, bloqueos y resto de configuración.
+/* ===== YNEA SUPABASE PRO - TABLAS CORRECTAS + DIAGNÓSTICO =====
+   Lee SIEMPRE:
+   - profesionales -> selector de profesional
+   - tipos_cita    -> selector de tipo de cita
+   - consultas     -> espacio físico / sala
 */
 (function(){
-  const STORAGE_KEY = "agendaClinicaSemanal";
-  const CONFIG_KEY = "yneaSupabaseConfig";
-  const TABLE = "ynea_agenda_state";
-  const ROW_ID = "default";
-  let client = null;
-  let saveTimer = null;
-  let loadingCloud = false;
-  let lastCloudJson = "";
-
-  function $(id){ return document.getElementById(id); }
-  function getCurrentData(){
-    try{ return eval("data"); }catch(e){ return window.data || {}; }
+  const STORAGE_KEY="agendaClinicaSemanal";
+  const CONFIG_KEY="yneaSupabaseConfig";
+  const STATE_TABLE="ynea_agenda_state";
+  const ROW_ID="default";
+  let client=null, saveTimer=null, loading=false, lastJson="";
+  const OMIT=new Set(["id","uuid","created_at","updated_at","activo","active","duracion","duracion_minutos","minutos","duration"]);
+  function el(id){return document.getElementById(id)}
+  function currentData(){try{return eval("data")}catch(e){return window.data||{}}}
+  function setCurrentData(obj){window.data=obj;try{eval("data=window.data")}catch(e){}}
+  function cfg(){try{return JSON.parse(localStorage.getItem(CONFIG_KEY)||"{}")}catch(e){return {}}}
+  function hasCfg(){const c=cfg();return !!(c.url&&c.anonKey)}
+  function status(msg,ok){const x=el("yneaDbStatus"); if(x){x.textContent=msg; x.style.color=ok?"#15803d":"#be123c"}}
+  function logDiag(msg){const x=el("yneaDbDiag"); if(x){x.textContent=msg}}
+  function init(){const c=cfg(); if(!c.url||!c.anonKey||!window.supabase)return null; try{client=window.supabase.createClient(c.url,c.anonKey); window.yneaSupabaseClient=client; return client}catch(e){status("Error iniciando Supabase",false);return null}}
+  function nameFrom(row){
+    if(!row||typeof row!=="object")return "";
+    const preferred=["nombre","name","titulo","title","tipo","tipo_cita","descripcion","consulta","profesional"];
+    for(const k of preferred){if(row[k]!==undefined&&row[k]!==null&&String(row[k]).trim())return String(row[k]).trim()}
+    for(const [k,v] of Object.entries(row)){if(!OMIT.has(k)&&typeof v==="string"&&v.trim())return v.trim()}
+    return "";
   }
-  function assignData(obj){
-    window.data = obj;
-    try{ eval("data = window.data"); }catch(e){}
+  function durationFrom(row){return row?.duracion ?? row?.duracion_minutos ?? row?.minutos ?? row?.duration ?? 30}
+  function uniq(list){return [...new Set((list||[]).map(x=>String(x||"").trim()).filter(Boolean))]}
+  function render(){try{if(typeof refreshAllSelects==="function")refreshAllSelects()}catch(e){console.warn(e)} try{if(typeof renderAll==="function")renderAll()}catch(e){console.warn(e)}}
+  async function read(sb,table){
+    try{const r=await sb.from(table).select("*"); if(r.error)throw r.error; return Array.isArray(r.data)?r.data:[]}
+    catch(e){console.error("Supabase: no se pudo leer "+table,e); return {__error:String(e.message||e)}}
   }
-  function isEmptyObject(obj){ return obj && typeof obj === "object" && !Array.isArray(obj) && Object.keys(obj).length === 0; }
-  function uniqueNames(arr){
-    return [...new Set((arr||[]).map(x => (typeof x === "string" ? x : (x && x.nombre) || "").trim()).filter(Boolean))];
+  async function applyCatalogs(sb,base){
+    const [pr,tr,cr]=await Promise.all([read(sb,"profesionales"),read(sb,"tipos_cita"),read(sb,"consultas")]);
+    const errors=[]; if(pr.__error)errors.push("profesionales: "+pr.__error); if(tr.__error)errors.push("tipos_cita: "+tr.__error); if(cr.__error)errors.push("consultas: "+cr.__error);
+    const profRows=Array.isArray(pr)?pr:[], tipoRows=Array.isArray(tr)?tr:[], consultaRows=Array.isArray(cr)?cr:[];
+    const profesionales=uniq(profRows.filter(r=>r.activo!==false&&r.active!==false).map(nameFrom));
+    const tipos=uniq(tipoRows.filter(r=>r.activo!==false&&r.active!==false).map(nameFrom));
+    const consultas=uniq(consultaRows.filter(r=>r.activo!==false&&r.active!==false).map(nameFrom));
+    if(profesionales.length) base.profesionales=profesionales;
+    if(tipos.length){base.tipos=tipos; base.duracionesTipo=base.duracionesTipo||{}; tipoRows.forEach(r=>{const n=nameFrom(r); if(n)base.duracionesTipo[n]=String(durationFrom(r))})}
+    if(consultas.length) base.consultas=consultas;
+    logDiag(`Lectura Supabase → profesionales: ${profesionales.length}, tipos_cita: ${tipos.length}, consultas: ${consultas.length}${errors.length?"\nErrores: "+errors.join(" | "):""}`);
+    return base;
   }
-  function safeRender(){
-    try{ if(typeof refreshAllSelects === "function") refreshAllSelects(); }catch(e){ console.warn(e); }
-    try{ if(typeof renderAll === "function") renderAll(); }catch(e){ console.warn(e); }
-  }
-  function getConfig(){
-    try{ return JSON.parse(localStorage.getItem(CONFIG_KEY)||"{}"); }catch(e){ return {}; }
-  }
-  function setStatus(msg, ok){
-    const el=$("yneaDbStatus");
-    if(el){ el.textContent=msg; el.style.color = ok ? "#15803d" : "#9f1239"; }
-  }
-  function hasConfig(){
-    const c=getConfig();
-    return !!(c.url && c.anonKey);
-  }
-  function initClient(){
-    const c=getConfig();
-    if(!c.url || !c.anonKey || !window.supabase) return null;
+  async function loadCloud(){
+    if(loading)return; const sb=client||init(); if(!sb){status("Supabase no conectado: revisa URL y anon key",false);return}
+    loading=true; status("Cargando Supabase...",true);
     try{
-      client = window.supabase.createClient(c.url, c.anonKey);
-      return client;
-    }catch(e){ console.error(e); setStatus("No se pudo iniciar Supabase", false); return null; }
+      let base=currentData()||{};
+      try{const r=await sb.from(STATE_TABLE).select("data").eq("id",ROW_ID).maybeSingle(); if(!r.error&&r.data&&r.data.data)base=r.data.data}catch(e){console.warn("Sin estado general",e)}
+      base=await applyCatalogs(sb,base);
+      setCurrentData(base); localStorage.setItem(STORAGE_KEY,JSON.stringify(base)); lastJson=JSON.stringify(base); render();
+      status("Conectado. Catálogos cargados desde profesionales, tipos_cita y consultas.",true);
+    }catch(e){console.error(e); status("Error cargando Supabase. Mira diagnóstico.",false); logDiag(String(e.message||e));}
+    finally{loading=false}
   }
-
-  async function selectAllSafe(sb, table){
+  async function insertMissing(sb,table,names,extra){
+    const rows=await read(sb,table); if(!Array.isArray(rows))return;
+    const existing=new Set(uniq(rows.map(nameFrom)).map(x=>x.toLowerCase()));
+    const add=uniq(names).filter(n=>!existing.has(n.toLowerCase())).map(n=>Object.assign({nombre:n,activo:true},extra?extra(n):{}));
+    if(add.length){try{await sb.from(table).insert(add)}catch(e){console.warn("No se pudieron insertar faltantes en "+table,e)}}
+  }
+  async function saveCloud(force){
+    if(loading&&!force)return; const sb=client||init(); if(!sb)return; const d=currentData(); if(!d)return;
+    const json=JSON.stringify(d); if(!force&&json===lastJson)return;
     try{
-      const { data, error } = await sb.from(table).select("*");
-      if(error) throw error;
-      return Array.isArray(data) ? data : [];
-    }catch(e){
-      console.warn("No se pudo leer tabla", table, e);
-      return [];
-    }
+      await insertMissing(sb,"profesionales",d.profesionales||[]);
+      await insertMissing(sb,"tipos_cita",d.tipos||[],n=>({duracion:Number((d.duracionesTipo||{})[n]||30)}));
+      await insertMissing(sb,"consultas",d.consultas||[]);
+      const r=await sb.from(STATE_TABLE).upsert({id:ROW_ID,data:d,updated_at:new Date().toISOString()}); if(r.error)throw r.error;
+      lastJson=json; status("Guardado en Supabase",true);
+    }catch(e){console.error(e); status("No se pudo guardar en Supabase",false)}
   }
-
-  async function loadCatalogosFromTables(sb, current){
-    current = current || {};
-    const [profRows, tipoRows, consultaRows] = await Promise.all([
-      selectAllSafe(sb, "profesionales"),
-      selectAllSafe(sb, "tipos_cita"),
-      selectAllSafe(sb, "consultas")
-    ]);
-
-    const profesionales = uniqueNames(profRows.filter(r => r.activo !== false).map(r => r.nombre));
-    if(profesionales.length) current.profesionales = profesionales;
-
-    const tipos = uniqueNames(tipoRows.filter(r => r.activo !== false).map(r => r.nombre));
-    if(tipos.length){
-      current.tipos = tipos;
-      current.duracionesTipo = current.duracionesTipo || {};
-      tipoRows.forEach(r => {
-        const nombre = (r.nombre || "").trim();
-        if(nombre && (r.duracion !== undefined && r.duracion !== null)) current.duracionesTipo[nombre] = String(r.duracion);
-      });
-    }
-
-    const consultas = uniqueNames(consultaRows.filter(r => r.activo !== false).map(r => r.nombre));
-    if(consultas.length) current.consultas = consultas;
-
-    return current;
-  }
-
-  async function insertRowsSafe(sb, table, rows){
-    if(!rows.length) return;
-    try{
-      const { error } = await sb.from(table).insert(rows);
-      if(error) throw error;
-    }catch(e){
-      // Fallback por si alguna columna opcional no existe.
-      const minimal = rows.map(r => ({ nombre: r.nombre, activo: r.activo !== false }));
-      try{ await sb.from(table).insert(minimal); }catch(e2){ console.warn("No se pudo sincronizar tabla", table, e2); }
-    }
-  }
-
-  async function syncCatalogosToTables(sb, current){
-    if(!sb || !current) return;
-    try{
-      const [profRows, tipoRows, consultaRows] = await Promise.all([
-        selectAllSafe(sb, "profesionales"),
-        selectAllSafe(sb, "tipos_cita"),
-        selectAllSafe(sb, "consultas")
-      ]);
-      const profExist = new Set(uniqueNames(profRows.map(r => r.nombre)).map(x => x.toLowerCase()));
-      const tipoExist = new Set(uniqueNames(tipoRows.map(r => r.nombre)).map(x => x.toLowerCase()));
-      const consultaExist = new Set(uniqueNames(consultaRows.map(r => r.nombre)).map(x => x.toLowerCase()));
-
-      await insertRowsSafe(sb, "profesionales", uniqueNames(current.profesionales).filter(n => !profExist.has(n.toLowerCase())).map(nombre => ({nombre, activo:true})));
-      await insertRowsSafe(sb, "tipos_cita", uniqueNames(current.tipos).filter(n => !tipoExist.has(n.toLowerCase())).map(nombre => ({nombre, duracion: Number((current.duracionesTipo||{})[nombre] || 30), activo:true})));
-      await insertRowsSafe(sb, "consultas", uniqueNames(current.consultas).filter(n => !consultaExist.has(n.toLowerCase())).map(nombre => ({nombre, activo:true})));
-    }catch(e){ console.warn("Sincronización de catálogos parcial", e); }
-  }
-
-  async function loadFromCloud(){
-    if(loadingCloud) return;
-    const sb = client || initClient();
-    if(!sb) { setStatus("Base de datos no conectada. Se usa guardado local.", false); return; }
-    loadingCloud = true;
-    setStatus("Cargando datos de Supabase...", true);
-    try{
-      const { data: row, error } = await sb.from(TABLE).select("data,updated_at").eq("id", ROW_ID).maybeSingle();
-      if(error) throw error;
-
-      let current = getCurrentData() || {};
-      if(row && row.data && !isEmptyObject(row.data)){
-        current = row.data;
-      }
-
-      current = await loadCatalogosFromTables(sb, current);
-      assignData(current);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
-      lastCloudJson = JSON.stringify(current);
-      safeRender();
-
-      if(!row || !row.data || isEmptyObject(row.data)){
-        await saveNow(true);
-      }
-      setStatus("Datos cargados: profesionales, tipos de cita y consultas desde sus tablas", true);
-    }catch(e){
-      console.error(e);
-      setStatus("Error de conexión con Supabase. Se conserva guardado local.", false);
-    }finally{
-      loadingCloud = false;
-    }
-  }
-
-  async function saveNow(force){
-    if(loadingCloud && !force) return;
-    const sb = client || initClient();
-    if(!sb) return;
-    const current = getCurrentData();
-    if(!current) return;
-    const json = JSON.stringify(current);
-    if(!force && json === lastCloudJson) return;
-    try{
-      await syncCatalogosToTables(sb, current);
-      const { error } = await sb.from(TABLE).upsert({ id: ROW_ID, data: current, updated_at: new Date().toISOString() });
-      if(error) throw error;
-      lastCloudJson = json;
-      setStatus("Guardado en Supabase", true);
-    }catch(e){
-      console.error(e);
-      setStatus("No se pudo guardar en Supabase. Hay copia local.", false);
-    }
-  }
-
-  window.yneaQueueCloudSave = function(){
-    if(!hasConfig() || loadingCloud) return;
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(()=>saveNow(false), 450);
-  };
-  window.yneaLoadFromCloud = loadFromCloud;
-  window.yneaSaveToCloudNow = ()=>saveNow(true);
-
-  function addDbPanel(){
-    const config = $("configView");
-    if(!config || $("yneaDbPanel")) return;
-    const c=getConfig();
-    const panel=document.createElement("div");
-    panel.id="yneaDbPanel";
-    panel.className="card";
-    panel.innerHTML=`
+  window.yneaQueueCloudSave=function(){if(!hasCfg()||loading)return; clearTimeout(saveTimer); saveTimer=setTimeout(()=>saveCloud(false),500)};
+  window.yneaLoadFromCloud=loadCloud; window.yneaSaveToCloudNow=()=>saveCloud(true); window.yneaTestSupabase=async()=>{const sb=client||init(); if(!sb) return {error:"Sin conexión: falta URL/anon key o librería"}; return await sb.from("profesionales").select("*");};
+  function panel(){
+    const cv=el("configView"); if(!cv||el("yneaDbPanel"))return; const c=cfg();
+    const p=document.createElement("div"); p.id="yneaDbPanel"; p.className="card"; p.innerHTML=`
       <h2>Base de datos Supabase</h2>
-      <p class="small">La app lee <b>profesionales</b>, <b>tipos_cita</b> y <b>consultas</b> desde sus tablas de Supabase. Pacientes, citas y el resto se guardan en <b>ynea_agenda_state</b>.</p>
-      <label>Project URL</label>
-      <input id="yneaSupabaseUrl" placeholder="https://xxxxx.supabase.co" value="${(c.url||"").replaceAll('"','&quot;')}">
-      <label>Anon public key</label>
-      <input id="yneaSupabaseAnon" placeholder="eyJhbGciOi..." value="${(c.anonKey||"").replaceAll('"','&quot;')}">
+      <p class="small">Esta versión carga <b>profesionales</b>, <b>tipos_cita</b> y <b>consultas</b> directamente de Supabase.</p>
+      <label>Project URL</label><input id="yneaSupabaseUrl" value="${(c.url||"").replaceAll('"','&quot;')}" placeholder="https://xxxxx.supabase.co">
+      <label>Anon public key</label><input id="yneaSupabaseAnon" value="${(c.anonKey||"").replaceAll('"','&quot;')}" placeholder="eyJhbGciOi...">
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-        <button type="button" id="yneaConnectDbBtn">Conectar y cargar Supabase</button>
-        <button type="button" id="yneaUploadDbBtn" class="secondary">Guardar ahora en Supabase</button>
-        <button type="button" id="yneaClearDbBtn" class="danger">Desconectar este dispositivo</button>
+        <button type="button" id="yneaConnectDbBtn">Conectar y recargar catálogos</button>
+        <button type="button" id="yneaUploadDbBtn" class="secondary">Guardar estado actual</button>
+        <button type="button" id="yneaClearDbBtn" class="danger">Desconectar</button>
       </div>
-      <p id="yneaDbStatus" class="small" style="margin-top:10px">${hasConfig()?"Configuración guardada":"Pendiente de configurar"}</p>`;
-    config.prepend(panel);
-    $("yneaConnectDbBtn").onclick=async()=>{
-      localStorage.setItem(CONFIG_KEY, JSON.stringify({url:$("yneaSupabaseUrl").value.trim(), anonKey:$("yneaSupabaseAnon").value.trim()}));
-      client=null; initClient(); await loadFromCloud();
-    };
-    $("yneaUploadDbBtn").onclick=async()=>{
-      localStorage.setItem(CONFIG_KEY, JSON.stringify({url:$("yneaSupabaseUrl").value.trim(), anonKey:$("yneaSupabaseAnon").value.trim()}));
-      client=null; initClient(); await saveNow(true);
-    };
-    $("yneaClearDbBtn").onclick=()=>{
-      if(confirm("¿Desconectar Supabase en este dispositivo? No borra la nube.")){
-        localStorage.removeItem(CONFIG_KEY); client=null; setStatus("Desconectado. Se usa guardado local.", false);
-      }
-    };
+      <p id="yneaDbStatus" class="small" style="margin-top:10px">${hasCfg()?"Conexión guardada":"Pendiente de configurar"}</p>
+      <pre id="yneaDbDiag" style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px;font-size:12px;color:#334155;max-height:140px;overflow:auto">Pulsa “Conectar y recargar catálogos” para comprobar filas leídas.</pre>`;
+    cv.prepend(p);
+    el("yneaConnectDbBtn").onclick=async()=>{localStorage.setItem(CONFIG_KEY,JSON.stringify({url:el("yneaSupabaseUrl").value.trim(),anonKey:el("yneaSupabaseAnon").value.trim()}));client=null;init();await loadCloud()};
+    el("yneaUploadDbBtn").onclick=async()=>{localStorage.setItem(CONFIG_KEY,JSON.stringify({url:el("yneaSupabaseUrl").value.trim(),anonKey:el("yneaSupabaseAnon").value.trim()}));client=null;init();await saveCloud(true)};
+    el("yneaClearDbBtn").onclick=()=>{localStorage.removeItem(CONFIG_KEY);client=null;status("Desconectado",false)};
   }
-
-  document.addEventListener("DOMContentLoaded", function(){
-    addDbPanel();
-    if(hasConfig()) setTimeout(loadFromCloud, 700);
-  });
-  window.addEventListener("focus", function(){ if(hasConfig()) setTimeout(loadFromCloud, 200); });
+  document.addEventListener("DOMContentLoaded",()=>{panel(); if(hasCfg())setTimeout(loadCloud,900)});
+  window.addEventListener("focus",()=>{if(hasCfg())setTimeout(loadCloud,250)});
 })();
 </script>
 
