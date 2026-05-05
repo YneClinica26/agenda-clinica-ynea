@@ -773,7 +773,7 @@ button[onclick*="setView('anual'"], #anualView, .autosaveBar, .appFab { display:
         <label>Observaciones</label><textarea id="pacObs"></textarea>
         <button style="width:100%;margin-top:14px" onclick="addPaciente()">Guardar paciente</button>
       </div>
-      <div class="card"><h2>Base de pacientes</h2><div class="tableWrap"><table id="pacientesTable"></table></div></div>
+      <div class="card"><h2>Base de pacientes</h2><div id="pacientesSearchWrap" class="pacientesSearchWrapStatic"><input id="buscadorPacientes" type="search" placeholder="Buscar por nombre, email o teléfono..." autocomplete="off" oninput="window.renderPatients && window.renderPatients()"><span id="pacientesSearchInfo"></span></div><div class="tableWrap"><table id="pacientesTable"></table></div></div>
     </div>
   </section>
 
@@ -4896,7 +4896,7 @@ th,td{padding:4px !important;font-size:12px !important;}
     if(!table) return;
     const wrap = table.closest('.tableWrap') || table.parentElement;
     if(!wrap) return;
-    if($('buscadorPacientes')) return;
+    if($('buscadorPacientes')){ const el=$('buscadorPacientes'); if(!el.dataset.yneaSearchBound){ el.addEventListener('input', () => window.renderPatients && window.renderPatients()); el.dataset.yneaSearchBound='1'; } return; }
 
     const box = document.createElement('div');
     box.id = 'pacientesSearchWrap';
@@ -4962,5 +4962,29 @@ th,td{padding:4px !important;font-size:12px !important;}
 })();
 </script>
 
+
+<style id="ynea-pacientes-search-pc-force">
+#pacientesView #pacientesSearchWrap,
+#pacientesSearchWrap.pacientesSearchWrapStatic{
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  gap:8px !important;
+  align-items:center !important;
+  margin:0 0 10px 0 !important;
+}
+#pacientesView #buscadorPacientes{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  width:100% !important;
+  max-width:520px !important;
+  height:auto !important;
+}
+@media(max-width:900px){
+  #pacientesView #pacientesSearchWrap{display:block !important;}
+  #pacientesView #buscadorPacientes{max-width:none !important;}
+}
+</style>
 </body>
 </html>
