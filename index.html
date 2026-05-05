@@ -5398,5 +5398,187 @@ th,td{padding:4px !important;font-size:12px !important;}
 })();
 </script>
 
+
+
+<!-- ===== YNEA FIX DEFINITIVO: acceso = profesionales reales + panel vivo ===== -->
+<style id="ynea-access-professionals-live-css">
+.ynea-login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#fff7fb,#f8fafc);z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:18px;}
+.ynea-login-card{width:min(420px,100%);background:#fff;border:1px solid #f3cfe0;border-radius:24px;box-shadow:0 24px 80px rgba(15,23,42,.18);padding:24px;}
+.ynea-login-card h2{margin:0 0 8px;color:#db2777;font-size:24px;}
+.ynea-login-card p{margin:0 0 16px;color:#64748b;}
+.ynea-login-card select,.ynea-login-card input{width:100%;margin-bottom:10px;}
+.ynea-login-error{display:none;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:12px;padding:10px;margin:8px 0;}
+.ynea-access-row{display:grid;grid-template-columns:1fr 150px 190px;gap:8px;align-items:center;border:1px solid #e5e7eb;border-radius:12px;padding:8px;margin-top:8px;background:#fff;}
+@media(max-width:900px){.ynea-access-row{grid-template-columns:1fr}.ynea-login-card{padding:18px;border-radius:20px}.ynea-login-card h2{font-size:20px}}
+</style>
+<script id="ynea-access-professionals-live-js">
+(function(){
+  const URL_KEY='yneaSupabaseUrl';
+  const API_KEY='yneaSupabaseAnonKey';
+  const DISABLED_BOOT='yneaDefault1234Disabled';
+  const ACCESS_CONFIGURED='yneaAccessConfigured';
+  const ROLE_LABELS={usuario:'Usuario profesional',recepcion:'Recepción',admin:'Administrador'};
+  const ALLOWED={
+    usuario:['semana','mensual','pacientes','agenda'],
+    recepcion:['semana','mensual','pacientes','agenda','bloqueos'],
+    admin:['semana','mensual','pacientes','agenda','config','bloqueos','listados','infoDiaria','avisos','copias']
+  };
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  function d(){try{return data}catch(e){return null}}
+  function saveSafe(){try{save()}catch(e){try{localStorage.setItem('agendaClinicaSemanal',JSON.stringify(data))}catch(_){}}}
+  function cleanUrl(url){return String(url||'').trim().replace(/\/+rest\/v1\/?$/,'').replace(/\/+$/,'');}
+  function creds(){return {url:cleanUrl(localStorage.getItem(URL_KEY)||$('supabaseUrlInput')?.value||''),key:String(localStorage.getItem(API_KEY)||$('supabaseKeyInput')?.value||'').trim()};}
+  function pickName(row){return String(row?.nombre??row?.name??row?.titulo??row?.title??row?.descripcion??row?.label??'').trim();}
+  function pickDuration(row){return String(row?.duracion??row?.duracion_minutos??row?.duration??row?.minutos??row?.tiempo??'10').trim()||'10';}
+  function active(row){return !(row?.activo===false||row?.active===false||row?.estado==='inactivo');}
+  function unique(arr){return [...new Set((arr||[]).map(x=>String(x||'').trim()).filter(Boolean))];}
+  function profs(){const x=d(); return Array.isArray(x?.profesionales)?x.profesionales:[];}
+  async function fetchTable(table){
+    const {url,key}=creds();
+    if(!url||!key) return null;
+    if(window.supabase&&typeof window.supabase.createClient==='function'){
+      const sb=window.supabase.createClient(url,key);
+      const res=await sb.from(table).select('*');
+      if(res.error) throw new Error(table+': '+res.error.message);
+      return res.data||[];
+    }
+    const r=await fetch(url+'/rest/v1/'+table+'?select=*',{headers:{apikey:key,Authorization:'Bearer '+key}});
+    if(!r.ok) throw new Error(table+': HTTP '+r.status+' '+await r.text());
+    return await r.json();
+  }
+  async function syncCatalogs(){
+    const x=d(); if(!x) return false;
+    try{
+      const [pr,tr,cr]=await Promise.allSettled([fetchTable('profesionales'),fetchTable('tipos_cita'),fetchTable('consultas')]);
+      if(pr.status==='fulfilled'&&pr.value){const names=unique(pr.value.filter(active).map(pickName)); if(names.length) x.profesionales=names;}
+      if(tr.status==='fulfilled'&&tr.value){const tipos=unique(tr.value.filter(active).map(pickName)); if(tipos.length) x.tipos=tipos; x.duracionesTipo=x.duracionesTipo||{}; tr.value.forEach(row=>{const n=pickName(row); if(n) x.duracionesTipo[n]=pickDuration(row);});}
+      if(cr.status==='fulfilled'&&cr.value){const cons=unique(cr.value.filter(active).map(pickName)); if(cons.length) x.consultas=cons;}
+      syncAccess(false); saveSafe(); safeRefresh();
+      return true;
+    }catch(e){console.warn('Ynea: no se pudo sincronizar Supabase',e); return false;}
+  }
+  function access(){const x=d(); if(!x) return {}; if(!x.accesosProfesionales||typeof x.accesosProfesionales!=='object') x.accesosProfesionales={}; return x.accesosProfesionales;}
+  function syncAccess(allowBootstrap){
+    const x=d(); if(!x) return {};
+    const a=access(); const list=profs();
+    list.forEach(p=>{if(!a[p]) a[p]={codigo:'',rol:'usuario'}; if(!a[p].rol) a[p].rol='usuario';});
+    Object.keys(a).forEach(p=>{if(!list.includes(p)) delete a[p];});
+    const hasAdminWithCode=list.some(p=>a[p]?.rol==='admin'&&String(a[p]?.codigo||'').trim());
+    const configured=localStorage.getItem(ACCESS_CONFIGURED)==='1' || localStorage.getItem(DISABLED_BOOT)==='1';
+    if(!hasAdminWithCode && allowBootstrap && !configured && list[0]) a[list[0]]={codigo:'1234',rol:'admin'};
+    if(configured){
+      list.forEach(p=>{if(String(a[p]?.codigo||'')==='1234') a[p].codigo='';});
+    }
+    return a;
+  }
+  function current(){try{return JSON.parse(sessionStorage.getItem('yneaCurrentUser')||'null')}catch(e){return null}}
+  function role(){return current()?.rol||null}
+  function currentProf(){return current()?.nombre||''}
+  function canAll(){return ['recepcion','admin'].includes(role())}
+  function firstAllowed(){return (ALLOWED[role()]||['semana'])[0]||'semana'}
+  function viewAllowed(v){return (ALLOWED[role()]||[]).includes(v)}
+  function showOnly(view){
+    const target=viewAllowed(view)?view:firstAllowed();
+    ['semana','mensual','anual','agenda','pacientes','config','bloqueos','listados','copias','avisos','infoDiaria'].forEach(v=>{const el=$(v+'View'); if(el) el.style.display=(v===target)?'block':'none';});
+    document.querySelectorAll('.tab').forEach(b=>{const oc=b.getAttribute('onclick')||'';const m=oc.match(/setView\('([^']+)'/); b.classList.toggle('active',!!m&&m[1]===target);});
+    applyVisibility(); return target;
+  }
+  function applyVisibility(){
+    const allowed=ALLOWED[role()]||[];
+    document.querySelectorAll('.tabs .tab').forEach(btn=>{const oc=btn.getAttribute('onclick')||'';const m=oc.match(/setView\('([^']+)'/); if(m){const v=m[1]; btn.style.display=(v==='anual'||!allowed.includes(v))?'none':'';}});
+    const panel=$('yneaUsuariosPanel'); if(panel) panel.style.display=role()==='admin'?'block':'none';
+    const x=d(); if(!x) return;
+    ['weekProf','monthProf','yearProf','filtroProf','avisosProfesional'].forEach(id=>{const el=$(id); if(!el) return; if(canAll()){el.disabled=false;} else if(currentProf()){el.innerHTML=`<option value="${esc(currentProf())}">${esc(currentProf())}</option>`; el.value=currentProf(); el.disabled=true;}});
+    ['profesionalCita','editCitaProfesional','enlaceProfesional'].forEach(id=>{const el=$(id); if(!el) return; if(!canAll()&&currentProf()){el.innerHTML=`<option value="${esc(currentProf())}">${esc(currentProf())}</option>`; el.value=currentProf(); el.disabled=true;} else el.disabled=false;});
+  }
+  function fillSelect(id,arr,first=''){
+    const el=$(id); if(!el) return;
+    const old=el.value;
+    el.innerHTML=first+(arr||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    if([...el.options].some(o=>o.value===old)) el.value=old;
+  }
+  function safeRefresh(){
+    const x=d(); if(!x) return;
+    const p=x.profesionales||[];
+    fillSelect('weekProf',p,'<option value="">Todos</option>');
+    fillSelect('monthProf',p,'<option value="">Todos</option>');
+    fillSelect('filtroProf',p,'<option value="">Todos</option>');
+    fillSelect('avisosProfesional',p,'<option value="">Todos</option>');
+    fillSelect('bloqProfesionalNuevo',p,'<option value="todos">Todos los profesionales</option>');
+    fillSelect('profesionalCita',p);
+    fillSelect('editCitaProfesional',p);
+    fillSelect('enlaceProfesional',p);
+    fillSelect('tipoCita',x.tipos||[]);
+    fillSelect('filtroTipo',x.tipos||[],'<option value="">Todos</option>');
+    fillSelect('consultaCita',x.consultas||[]);
+    fillSelect('weekConsulta',x.consultas||[],'<option value="">Todas</option>');
+    applyVisibility();
+  }
+  function renderAccessPanel(){
+    const x=d(); if(!x) return;
+    let config=$('configView'); if(!config) return;
+    let card=$('yneaUsuariosPanel');
+    if(!card){card=document.createElement('div'); card.id='yneaUsuariosPanel'; card.className='card'; config.insertBefore(card,config.firstChild);}
+    const a=syncAccess(false);
+    card.innerHTML=`<h2>Accesos de profesionales</h2><p class="small">Los usuarios son los mismos que los profesionales. Un profesional normal solo ve su calendario. Recepción y Administrador pueden ver todos los calendarios.</p><div id="yneaProfessionalAccessList"></div><div style="margin-top:12px"><button type="button" class="secondary" onclick="yneaLogout()">Cerrar sesión</button></div>`;
+    const list=$('yneaProfessionalAccessList');
+    list.innerHTML=profs().map(p=>{const r=a[p]||{codigo:'',rol:'usuario'};return `<div class="ynea-access-row"><b>${esc(p)}</b><input placeholder="Código" value="${esc(r.codigo||'')}" onchange="yneaSetProfessionalAccess('${esc(p)}','codigo',this.value.trim())"><select onchange="yneaSetProfessionalAccess('${esc(p)}','rol',this.value)"><option value="usuario" ${r.rol==='usuario'?'selected':''}>Usuario profesional</option><option value="recepcion" ${r.rol==='recepcion'?'selected':''}>Recepción</option><option value="admin" ${r.rol==='admin'?'selected':''}>Administrador</option></select></div>`}).join('');
+    applyVisibility();
+  }
+  window.yneaSetProfessionalAccess=function(prof,field,value){
+    localStorage.setItem(ACCESS_CONFIGURED,'1'); localStorage.setItem(DISABLED_BOOT,'1');
+    const a=syncAccess(false); if(!a[prof]) a[prof]={codigo:'',rol:'usuario'}; a[prof][field]=value;
+    if(!profs().some(p=>a[p]?.rol==='admin'&&String(a[p]?.codigo||'').trim())){a[prof].rol='admin'; if(field!=='codigo'&&!a[prof].codigo) alert('Debe existir al menos un administrador con código.');}
+    saveSafe(); renderAccessPanel(); buildLogin(false);
+  };
+  function buildLogin(allowBootstrap){
+    const a=syncAccess(allowBootstrap);
+    let overlay=$('yneaLoginOverlay'); if(overlay) overlay.remove();
+    overlay=document.createElement('div'); overlay.id='yneaLoginOverlay'; overlay.className='ynea-login-overlay';
+    const options=profs().map(p=>`<option value="${esc(p)}">${esc(p)} · ${ROLE_LABELS[a[p]?.rol||'usuario']}</option>`).join('');
+    overlay.innerHTML=`<div class="ynea-login-card"><h2>Acceso Ynea</h2><p>Selecciona tu profesional e introduce tu código.</p><label>Profesional</label><select id="yneaLoginUser">${options}</select><label>Código</label><input id="yneaLoginCode" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Código"><div id="yneaLoginError" class="ynea-login-error">Profesional o código incorrecto.</div><button style="width:100%;margin-top:8px" id="yneaLoginBtn">Entrar</button></div>`;
+    document.body.appendChild(overlay);
+    const enter=()=>{
+      const prof=$('yneaLoginUser')?.value||''; const code=($('yneaLoginCode')?.value||'').trim(); const aa=syncAccess(allowBootstrap);
+      if(!prof||!aa[prof]||String(aa[prof].codigo||'')!==code){const er=$('yneaLoginError'); if(er) er.style.display='block'; return;}
+      const usedBootstrap=code==='1234' && localStorage.getItem(ACCESS_CONFIGURED)!=='1' && localStorage.getItem(DISABLED_BOOT)!=='1';
+      if(usedBootstrap){localStorage.setItem(DISABLED_BOOT,'1'); aa[prof].codigo=''; saveSafe();}
+      sessionStorage.setItem('yneaCurrentUser',JSON.stringify({nombre:prof,rol:aa[prof].rol||'usuario'}));
+      overlay.remove(); safeRefresh(); renderAccessPanel(); showOnly(firstAllowed()); try{if(typeof renderAll==='function') renderAll();}catch(e){}
+    };
+    $('yneaLoginBtn').onclick=enter; $('yneaLoginCode').addEventListener('keydown',e=>{if(e.key==='Enter') enter();});
+    setTimeout(()=>$('yneaLoginCode')?.focus(),60);
+  }
+  window.yneaLogout=function(){sessionStorage.removeItem('yneaCurrentUser'); buildLogin(false);};
+  window.setView=function(view){showOnly(view); try{if(typeof renderAll==='function') renderAll();}catch(e){}};
+  async function ensureLogin(){
+    await syncCatalogs();
+    syncAccess(localStorage.getItem(DISABLED_BOOT)!=='1'&&localStorage.getItem(ACCESS_CONFIGURED)!=='1');
+    safeRefresh(); renderAccessPanel();
+    const cur=current();
+    if(!cur||!profs().includes(cur.nombre)) buildLogin(localStorage.getItem(DISABLED_BOOT)!=='1'&&localStorage.getItem(ACCESS_CONFIGURED)!=='1');
+    else {showOnly(firstAllowed());}
+  }
+  const oldAddItem=window.addItem;
+  window.addItem=function(key,inputId){const r=oldAddItem?oldAddItem.apply(this,arguments):undefined; if(key==='profesionales') setTimeout(()=>{syncAccess(false); safeRefresh(); renderAccessPanel(); buildLogin(false); saveSafe();},80); return r;};
+  const oldRemove=window.removeItem;
+  window.removeItem=function(key,item){const r=oldRemove?oldRemove.apply(this,arguments):undefined; if(key==='profesionales') setTimeout(()=>{syncAccess(false); safeRefresh(); renderAccessPanel(); saveSafe();},80); return r;};
+  const oldRename=window.renameItemDirect;
+  window.renameItemDirect=function(key,oldName,newName){const r=oldRename?oldRename.apply(this,arguments):undefined; if(key==='profesionales') setTimeout(()=>{syncAccess(false); safeRefresh(); renderAccessPanel(); buildLogin(false); saveSafe();},80); return r;};
+  const oldCatalog=window.cargarCatalogosSupabaseYnea;
+  window.cargarCatalogosSupabaseYnea=async function(){const r=oldCatalog?await oldCatalog.apply(this,arguments):undefined; await syncCatalogs(); renderAccessPanel(); return r;};
+  const oldRefresh=window.refreshAllSelects;
+  window.refreshAllSelects=function(){try{oldRefresh&&oldRefresh()}catch(e){} safeRefresh();};
+  const oldRenderAll=window.renderAll;
+  window.renderAll=function(){try{oldRenderAll&&oldRenderAll()}catch(e){} safeRefresh(); renderAccessPanel();};
+  document.addEventListener('DOMContentLoaded',()=>{
+    setTimeout(ensureLogin,900);
+    setTimeout(ensureLogin,2200);
+    setInterval(()=>{syncAccess(false); safeRefresh(); if($('configView')?.style.display!=='none') renderAccessPanel();},3000);
+  });
+})();
+</script>
+
 </body>
 </html>
