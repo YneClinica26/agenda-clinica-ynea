@@ -619,6 +619,7 @@ button[onclick*="setView('anual'"], #anualView, .autosaveBar, .appFab { display:
 }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <header>
@@ -4460,6 +4461,212 @@ th,td{padding:4px !important;font-size:12px !important;}
     requireLogin(); enforceProfessionalScope(); applyVisibility(); try{renderAll()}catch(e){}
   }
   setTimeout(boot,80);
+})();
+</script>
+
+
+<style id="ynea-final-catalogos-pacientes-fix-css">
+/* Corrección final: citas más compactas y pacientes clicables */
+.appt{min-height:18px !important;padding:3px 5px !important;line-height:1.15 !important;}
+.appt strong{font-size:11px !important;line-height:1.1 !important;}
+.appt span{font-size:10px !important;line-height:1.1 !important;}
+.appt .badge{font-size:9px !important;padding:1px 5px !important;margin-top:2px !important;}
+#weekTable .slot{min-height:24px !important;}
+#pacientesTable tbody tr{cursor:pointer !important;}
+#pacientesTable tbody tr:hover{background:#fff5f8 !important;}
+#supabaseConfigCard{border:2px solid #f3cfe0 !important;}
+.ynea-supabase-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.ynea-access-row{display:grid;grid-template-columns:1fr 150px 190px;gap:8px;align-items:center;border:1px solid #e5e7eb;border-radius:12px;padding:8px;margin-top:8px;background:#fff;}
+@media(max-width:900px){
+  .appt{padding:1px 2px !important;min-height:14px !important;}
+  .appt strong,.appt span{font-size:7px !important;}
+  .appt .badge{display:none !important;}
+  #weekTable .slot{min-height:18px !important;}
+  .ynea-access-row{grid-template-columns:1fr;}
+}
+</style>
+
+<script id="ynea-final-catalogos-pacientes-fix-js">
+(function(){
+  const STORAGE_URL='yneaSupabaseUrl';
+  const STORAGE_KEY='yneaSupabaseAnonKey';
+  const ROLE_LABELS={usuario:'Usuario profesional',recepcion:'Recepción',admin:'Administrador'};
+  const PROF_SELECT_IDS=['weekProf','monthProf','yearProf','filtroProf','profesionalCita','editCitaProfesional','enlaceProfesional','bloqProfesionalNuevo','avisosProfesional'];
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  function getData(){try{return data}catch(e){return null}}
+  function persist(){try{save()}catch(e){try{localStorage.setItem('agendaClinicaSemanal',JSON.stringify(data))}catch(_){}}}
+  function status(msg,isError){
+    const el=$('supabaseYneaStatus');
+    if(el){el.textContent=msg; el.style.color=isError?'#991b1b':'#166534';}
+    console[isError?'error':'log']('Ynea Supabase:',msg);
+  }
+  function cleanUrl(url){return String(url||'').trim().replace(/\/+rest\/v1\/?$/,'').replace(/\/+$/,'');}
+  function getCreds(){
+    const url=cleanUrl(($('supabaseUrlInput')?.value)||localStorage.getItem(STORAGE_URL)||'');
+    const key=(($('supabaseKeyInput')?.value)||localStorage.getItem(STORAGE_KEY)||'').trim();
+    return {url,key};
+  }
+  function supabaseClient(){
+    const {url,key}=getCreds();
+    if(!url||!key) throw new Error('Faltan Project URL o anon public key.');
+    if(!window.supabase||typeof window.supabase.createClient!=='function') throw new Error('No se ha cargado la librería de Supabase.');
+    return window.supabase.createClient(url,key);
+  }
+  function pickName(row){return String(row?.nombre??row?.name??row?.titulo??row?.title??row?.descripcion??row?.label??'').trim();}
+  function pickDuration(row){return String(row?.duracion??row?.duracion_minutos??row?.duration??row?.minutos??row?.tiempo??'10').trim()||'10';}
+  function isActive(row){return !(row?.activo===false||row?.active===false||row?.estado==='inactivo');}
+  function unique(arr){return [...new Set((arr||[]).map(x=>String(x||'').trim()).filter(Boolean))];}
+  function current(){try{return JSON.parse(sessionStorage.getItem('yneaCurrentUser')||'null')}catch(e){return null}}
+  function currentRole(){return current()?.rol||null}
+  function currentProf(){return current()?.nombre||''}
+  function canAllCalendars(){return ['recepcion','admin'].includes(currentRole());}
+  function ensureAccess(){
+    const d=getData(); if(!d) return {};
+    if(!d.accesosProfesionales||typeof d.accesosProfesionales!=='object') d.accesosProfesionales={};
+    (d.profesionales||[]).forEach(p=>{ if(!d.accesosProfesionales[p]) d.accesosProfesionales[p]={codigo:'',rol:'usuario'}; if(!d.accesosProfesionales[p].rol) d.accesosProfesionales[p].rol='usuario'; });
+    Object.keys(d.accesosProfesionales).forEach(p=>{if(!(d.profesionales||[]).includes(p)) delete d.accesosProfesionales[p];});
+    if((d.profesionales||[]).length && !(d.profesionales||[]).some(p=>d.accesosProfesionales[p]?.rol==='admin')){
+      const p=d.profesionales[0]; d.accesosProfesionales[p].rol='admin'; if(!d.accesosProfesionales[p].codigo) d.accesosProfesionales[p].codigo='1234';
+    }
+    return d.accesosProfesionales;
+  }
+  function addSupabasePanel(){
+    const config=$('configView'); if(!config||$('supabaseConfigCard')) return;
+    const card=document.createElement('div'); card.className='card'; card.id='supabaseConfigCard';
+    card.innerHTML=`<h2>Base de datos Supabase</h2><p class="small">Carga desde Supabase los catálogos ya creados: profesionales, tipos de cita y consultas físicas.</p><label>Project URL</label><input id="supabaseUrlInput" placeholder="https://xxxx.supabase.co"><label>anon public key</label><textarea id="supabaseKeyInput" placeholder="eyJhbGciOi..." style="min-height:90px"></textarea><div class="ynea-supabase-actions"><button type="button" onclick="guardarConexionSupabaseYnea()">Guardar conexión</button><button type="button" class="secondary" onclick="cargarCatalogosSupabaseYnea()">Cargar catálogos desde Supabase</button><button type="button" class="secondary" onclick="probarSupabaseYnea()">Probar conexión</button></div><p class="small" id="supabaseYneaStatus" style="margin-top:10px">Sin comprobar.</p>`;
+    config.insertBefore(card,config.firstChild);
+    if($('supabaseUrlInput')) $('supabaseUrlInput').value=localStorage.getItem(STORAGE_URL)||'';
+    if($('supabaseKeyInput')) $('supabaseKeyInput').value=localStorage.getItem(STORAGE_KEY)||'';
+  }
+  window.guardarConexionSupabaseYnea=function(){
+    const {url,key}=getCreds();
+    if(!url||!key) return alert('Pega Project URL y anon public key.');
+    localStorage.setItem(STORAGE_URL,url); localStorage.setItem(STORAGE_KEY,key);
+    if($('supabaseUrlInput')) $('supabaseUrlInput').value=url;
+    status('Conexión guardada. Ahora pulsa “Cargar catálogos desde Supabase”.');
+  };
+  window.probarSupabaseYnea=async function(){
+    try{
+      const sb=supabaseClient();
+      const [p,t,c]=await Promise.all([sb.from('profesionales').select('*').limit(5),sb.from('tipos_cita').select('*').limit(5),sb.from('consultas').select('*').limit(5)]);
+      if(p.error) throw new Error('profesionales: '+p.error.message);
+      if(t.error) throw new Error('tipos_cita: '+t.error.message);
+      if(c.error) throw new Error('consultas: '+c.error.message);
+      status(`Conexión OK. Leídos: profesionales ${p.data.length}, tipos_cita ${t.data.length}, consultas ${c.data.length}.`);
+      console.log('Profesionales Supabase',p.data); console.log('Tipos cita Supabase',t.data); console.log('Consultas Supabase',c.data);
+    }catch(e){status(e.message||String(e),true); alert('Error Supabase: '+(e.message||e));}
+  };
+  async function loadCatalogs(silent=false){
+    const d=getData(); if(!d) return false;
+    const sb=supabaseClient();
+    if(!silent) status('Cargando catálogos desde Supabase...');
+    const [pRes,tRes,cRes]=await Promise.all([sb.from('profesionales').select('*'),sb.from('tipos_cita').select('*'),sb.from('consultas').select('*')]);
+    if(pRes.error) throw new Error('profesionales: '+pRes.error.message);
+    if(tRes.error) throw new Error('tipos_cita: '+tRes.error.message);
+    if(cRes.error) throw new Error('consultas: '+cRes.error.message);
+    const profesionales=unique((pRes.data||[]).filter(isActive).map(pickName));
+    const tipos=unique((tRes.data||[]).filter(isActive).map(pickName));
+    const consultas=unique((cRes.data||[]).filter(isActive).map(pickName));
+    if(profesionales.length) d.profesionales=profesionales;
+    if(tipos.length) d.tipos=tipos;
+    if(consultas.length) d.consultas=consultas;
+    d.duracionesTipo=d.duracionesTipo||{};
+    (tRes.data||[]).forEach(row=>{const n=pickName(row); if(n) d.duracionesTipo[n]=pickDuration(row);});
+    d.caracteristicasTipo=d.caracteristicasTipo||{}; (d.tipos||[]).forEach(t=>{if(!d.caracteristicasTipo[t]) d.caracteristicasTipo[t]={descripcion:'',color:'',activo:true};});
+    d.tiposPorProfesional=d.tiposPorProfesional||{};
+    ensureAccess(); persist();
+    try{refreshAllSelects()}catch(e){} try{renderAll()}catch(e){} try{renderConfig()}catch(e){} renderProfessionalAccessPanelFinal();
+    const msg=`Catálogos cargados: ${profesionales.length} profesionales, ${tipos.length} tipos de cita, ${consultas.length} consultas.`;
+    status(msg,!profesionales.length&&!tipos.length); if(!silent) alert(msg);
+    return true;
+  }
+  window.cargarCatalogosSupabaseYnea=async function(){try{await loadCatalogs(false)}catch(e){status(e.message||String(e),true); alert('Error cargando catálogos: '+(e.message||e));}};
+  function optionHTML(arr,first=''){return first+(arr||[]).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');}
+  function fillSelectFinal(id,arr,first=''){
+    const el=$(id); if(!el) return; const old=el.value; el.innerHTML=optionHTML(arr,first); if([...el.options].some(o=>o.value===old)) el.value=old;
+  }
+  function enforceScope(){
+    const d=getData(); if(!d) return;
+    const ps=d.profesionales||[];
+    PROF_SELECT_IDS.forEach(id=>{
+      const el=$(id); if(!el) return;
+      if(canAllCalendars()){
+        let first='';
+        if(['weekProf','monthProf','yearProf','filtroProf','avisosProfesional'].includes(id)) first='<option value="">Todos</option>';
+        if(id==='bloqProfesionalNuevo') first='<option value="todos">Todos los profesionales</option>';
+        fillSelectFinal(id,ps,first); el.disabled=false;
+      }else{
+        const p=currentProf(); if(p){el.innerHTML=`<option value="${esc(p)}">${esc(p)}</option>`; el.value=p; el.disabled=true;}
+      }
+    });
+  }
+  const prevRefresh=window.refreshAllSelects;
+  window.refreshAllSelects=function(){
+    try{prevRefresh&&prevRefresh()}catch(e){console.warn('refresh previo',e)}
+    const d=getData(); if(!d) return;
+    fillSelectFinal('profesionalCita',d.profesionales||[]);
+    fillSelectFinal('enlaceProfesional',d.profesionales||[]);
+    fillSelectFinal('weekProf',d.profesionales||[],'<option value="">Todos</option>');
+    fillSelectFinal('monthProf',d.profesionales||[],'<option value="">Todos</option>');
+    fillSelectFinal('bloqProfesionalNuevo',d.profesionales||[],'<option value="todos">Todos los profesionales</option>');
+    fillSelectFinal('filtroProf',d.profesionales||[],'<option value="">Todos</option>');
+    fillSelectFinal('consultaCita',d.consultas||[]);
+    fillSelectFinal('weekConsulta',d.consultas||[],'<option value="">Todas</option>');
+    fillSelectFinal('tipoCita',d.tipos||[]);
+    fillSelectFinal('filtroTipo',d.tipos||[],'<option value="">Todos</option>');
+    try{if(typeof actualizarBuscadorPacienteCita==='function') actualizarBuscadorPacienteCita()}catch(e){}
+    enforceScope();
+  };
+  window.editarPacienteYnea=function(id){
+    const d=getData(); if(!d) return; const p=(d.pacientes||[]).find(x=>String(x.id)===String(id)); if(!p) return;
+    const nombre=prompt('Nombre del paciente:',p.nombre||''); if(nombre===null) return;
+    const telefono=prompt('Teléfono obligatorio:',p.telefono||''); if(telefono===null) return;
+    const email=prompt('Email obligatorio:',p.email||''); if(email===null) return;
+    if(!String(nombre).trim()) return alert('El nombre es obligatorio.');
+    if(!String(telefono).trim()) return alert('El teléfono es obligatorio.');
+    if(!String(email).trim()) return alert('El email es obligatorio.');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim())) return alert('Introduce un email válido.');
+    const obs=prompt('Observaciones:',p.obs||''); if(obs===null) return;
+    Object.assign(p,{nombre:String(nombre).trim(),telefono:String(telefono).trim(),email:String(email).trim(),obs:String(obs||'').trim()});
+    persist(); try{refreshAllSelects(); renderAll();}catch(e){}
+  };
+  window.renderPatients=function(){
+    const d=getData(), table=$('pacientesTable'); if(!d||!table) return;
+    const pacientes=d.pacientes||[];
+    table.innerHTML='<thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Observaciones</th></tr></thead><tbody>'+pacientes.map(p=>`<tr data-paciente-id="${esc(p.id)}"><td><b>${esc(p.nombre)}</b></td><td>${esc(p.telefono||'')}</td><td>${esc(p.email||'')}</td><td>${esc(p.obs||'')}</td></tr>`).join('')+'</tbody>';
+    table.querySelectorAll('tbody tr').forEach(tr=>{tr.onclick=()=>window.editarPacienteYnea(tr.dataset.pacienteId)});
+  };
+  window.addPaciente=function(){
+    const d=getData(); if(!d) return;
+    const nombre=($('pacNombre')?.value||'').trim(), telefono=($('pacTelefono')?.value||'').trim(), email=($('pacEmail')?.value||'').trim(), obs=$('pacObs')?.value||'';
+    if(!nombre) return alert('Escribe el nombre del paciente.');
+    if(!telefono) return alert('El teléfono es obligatorio.');
+    if(!email) return alert('El email es obligatorio.');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return alert('Introduce un email válido.');
+    d.pacientes.push({id:'p'+Date.now(),nombre,telefono,email,obs}); persist(); ['pacNombre','pacTelefono','pacEmail','pacObs'].forEach(id=>{if($(id)) $(id).value='';}); refreshAllSelects(); renderAll(); alert('Paciente guardado.');
+  };
+  function renderProfessionalAccessPanelFinal(){
+    const d=getData(); if(!d) return; const card=$('yneaUsuariosPanel'); if(!card) return;
+    const access=ensureAccess();
+    card.innerHTML=`<h2>Accesos de profesionales</h2><p class="small">Los usuarios son los mismos que los profesionales. Un profesional normal solo ve su calendario. Recepción y Administrador pueden ver todos los calendarios.</p><div id="yneaProfessionalAccessList"></div><div style="margin-top:12px"><button type="button" class="secondary" onclick="yneaLogout()">Cerrar sesión</button></div>`;
+    const list=$('yneaProfessionalAccessList'); if(!list) return;
+    list.innerHTML=(d.profesionales||[]).map(p=>{const a=access[p]||{codigo:'',rol:'usuario'};return `<div class="ynea-access-row"><b>${esc(p)}</b><input placeholder="Código" value="${esc(a.codigo||'')}" onchange="yneaSetProfessionalAccess('${esc(p)}','codigo',this.value.trim())"><select onchange="yneaSetProfessionalAccess('${esc(p)}','rol',this.value)"><option value="usuario" ${a.rol==='usuario'?'selected':''}>Usuario profesional</option><option value="recepcion" ${a.rol==='recepcion'?'selected':''}>Recepción</option><option value="admin" ${a.rol==='admin'?'selected':''}>Administrador</option></select></div>`}).join('');
+  }
+  const prevRenderAll=window.renderAll;
+  window.renderAll=function(){try{prevRenderAll&&prevRenderAll()}catch(e){console.warn('render previo',e)} try{renderPatients()}catch(e){} try{refreshAllSelects()}catch(e){} document.querySelectorAll('.autosaveBar,.appFab').forEach(el=>el.style.display='none');};
+  document.addEventListener('DOMContentLoaded',async function(){
+    addSupabasePanel();
+    if($('supabaseUrlInput')) $('supabaseUrlInput').value=localStorage.getItem(STORAGE_URL)||'';
+    if($('supabaseKeyInput')) $('supabaseKeyInput').value=localStorage.getItem(STORAGE_KEY)||'';
+    ensureAccess(); renderProfessionalAccessPanelFinal();
+    try{refreshAllSelects(); renderPatients(); renderAll();}catch(e){}
+    const {url,key}=getCreds();
+    if(url&&key){
+      status('Conexión guardada. Cargando catálogos automáticamente...');
+      try{await loadCatalogs(true);}catch(e){status('No se pudieron cargar catálogos automáticamente: '+(e.message||e),true);}
+    }
+  });
 })();
 </script>
 
