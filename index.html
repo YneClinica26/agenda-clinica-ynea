@@ -4420,7 +4420,7 @@ th,td{padding:4px !important;font-size:12px !important;}
     document.getElementById('yneaLoginOverlay')?.remove();
     const ps=profes(); const access=ensureAccess();
     const div=document.createElement('div'); div.id='yneaLoginOverlay'; div.className='ynea-login-overlay';
-    div.innerHTML=`<div class="ynea-login-card"><h2>Acceso Ynea</h2><p>Selecciona tu profesional e introduce tu código.</p><label>Profesional</label><select id="yneaLoginUser">${ps.map(p=>`<option value="${esc(p)}">${esc(p)} · ${ROLE_LABELS[access[p]?.rol||'usuario']}</option>`).join('')}</select><label>Código</label><input id="yneaLoginCode" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Código"><div id="yneaLoginError" class="ynea-login-error">Profesional o código incorrecto.</div><button style="width:100%;margin-top:8px" id="yneaLoginBtn">Entrar</button><p class="small" style="margin-top:12px">Primer acceso: el primer profesional queda como administrador con código <b>1234</b>. Cámbialo después en Configuración.</p></div>`;
+    div.innerHTML=`<div class="ynea-login-card"><h2>Acceso Ynea</h2><p>Selecciona tu profesional e introduce tu código.</p><label>Profesional</label><select id="yneaLoginUser">${ps.map(p=>`<option value="${esc(p)}">${esc(p)} · ${ROLE_LABELS[access[p]?.rol||'usuario']}</option>`).join('')}</select><label>Código</label><input id="yneaLoginCode" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Código"><div id="yneaLoginError" class="ynea-login-error">Profesional o código incorrecto.</div><button style="width:100%;margin-top:8px" id="yneaLoginBtn">Entrar</button></div>`;
     document.body.appendChild(div);
     const enter=()=>{
       const p=($('yneaLoginUser')?.value||'').trim(); const c=($('yneaLoginCode')?.value||'').trim();
@@ -4464,7 +4464,10 @@ th,td{padding:4px !important;font-size:12px !important;}
     document.querySelectorAll('.notice,.autosaveBar,.appFab').forEach(el=>el.style.display='none');
     requireLogin(); enforceProfessionalScope(); applyVisibility(); try{renderAll()}catch(e){}
   }
-  setTimeout(boot,80);
+  setTimeout(()=>{
+    if(window.yneaPreLoginCatalogSync){window.yneaPreLoginCatalogSync().finally(boot);}
+    else boot();
+  },400);
 })();
 </script>
 
@@ -4531,7 +4534,8 @@ th,td{padding:4px !important;font-size:12px !important;}
     (d.profesionales||[]).forEach(p=>{ if(!d.accesosProfesionales[p]) d.accesosProfesionales[p]={codigo:'',rol:'usuario'}; if(!d.accesosProfesionales[p].rol) d.accesosProfesionales[p].rol='usuario'; });
     Object.keys(d.accesosProfesionales).forEach(p=>{if(!(d.profesionales||[]).includes(p)) delete d.accesosProfesionales[p];});
     if((d.profesionales||[]).length && !(d.profesionales||[]).some(p=>d.accesosProfesionales[p]?.rol==='admin')){
-      const p=d.profesionales[0]; d.accesosProfesionales[p].rol='admin'; if(!d.accesosProfesionales[p].codigo) d.accesosProfesionales[p].codigo='1234';
+      const p=d.profesionales[0]; d.accesosProfesionales[p].rol='admin';
+      if(!localStorage.getItem('yneaDefault1234Disabled') && !d.accesosProfesionales[p].codigo) d.accesosProfesionales[p].codigo='1234';
     }
     return d.accesosProfesionales;
   }
@@ -5256,6 +5260,141 @@ th,td{padding:4px !important;font-size:12px !important;}
     setTimeout(refreshLoginFromSupabase,3000);
   });
   window.yneaRebuildLoginFromProfessionals=refreshLoginFromSupabase;
+})();
+</script>
+
+
+
+<script id="ynea-professional-login-sync-final">
+(function(){
+  const STORAGE_URL='yneaSupabaseUrl';
+  const STORAGE_KEY='yneaSupabaseAnonKey';
+  const ROLE_LABELS={usuario:'Usuario profesional',recepcion:'Recepción',admin:'Administrador'};
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  function d(){try{return data}catch(e){return null}}
+  function saveSafe(){try{save()}catch(e){try{localStorage.setItem('agendaClinicaSemanal',JSON.stringify(data))}catch(_){}}}
+  function cleanUrl(url){return String(url||'').trim().replace(/\/+rest\/v1\/?$/,'').replace(/\/+$/,'');}
+  function creds(){return {url:cleanUrl(localStorage.getItem(STORAGE_URL)||$('supabaseUrlInput')?.value||''), key:String(localStorage.getItem(STORAGE_KEY)||$('supabaseKeyInput')?.value||'').trim()};}
+  function pickName(row){return String(row?.nombre??row?.name??row?.titulo??row?.title??row?.descripcion??row?.label??'').trim();}
+  function isActive(row){return !(row?.activo===false||row?.active===false||row?.estado==='inactivo');}
+  function unique(a){return [...new Set((a||[]).map(x=>String(x||'').trim()).filter(Boolean))];}
+  function ensureAccessNoDefault(){
+    const x=d(); if(!x) return {};
+    if(!x.accesosProfesionales||typeof x.accesosProfesionales!=='object') x.accesosProfesionales={};
+    (x.profesionales||[]).forEach(p=>{ if(!x.accesosProfesionales[p]) x.accesosProfesionales[p]={codigo:'',rol:'usuario'}; if(!x.accesosProfesionales[p].rol) x.accesosProfesionales[p].rol='usuario'; });
+    Object.keys(x.accesosProfesionales).forEach(p=>{ if(!(x.profesionales||[]).includes(p)) delete x.accesosProfesionales[p]; });
+    const hasAdmin=(x.profesionales||[]).some(p=>x.accesosProfesionales[p]?.rol==='admin');
+    if(!hasAdmin && (x.profesionales||[]).length){
+      const p=x.profesionales[0];
+      x.accesosProfesionales[p].rol='admin';
+      if(!localStorage.getItem('yneaDefault1234Disabled') && !x.accesosProfesionales[p].codigo) x.accesosProfesionales[p].codigo='1234';
+    }
+    return x.accesosProfesionales;
+  }
+  async function fetchTable(table){
+    const {url,key}=creds();
+    if(!url||!key) return null;
+    if(window.supabase && typeof window.supabase.createClient==='function'){
+      const sb=window.supabase.createClient(url,key);
+      const res=await sb.from(table).select('*');
+      if(res.error) throw new Error(table+': '+res.error.message);
+      return res.data||[];
+    }
+    const r=await fetch(url+'/rest/v1/'+table+'?select=*',{headers:{apikey:key,Authorization:'Bearer '+key}});
+    if(!r.ok) throw new Error(table+': HTTP '+r.status+' '+await r.text());
+    return await r.json();
+  }
+  window.yneaPreLoginCatalogSync=async function(){
+    try{
+      const x=d(); if(!x) return false;
+      const rows=await fetchTable('profesionales');
+      if(!rows) return false;
+      const names=unique(rows.filter(isActive).map(pickName));
+      if(names.length){
+        x.profesionales=names;
+        ensureAccessNoDefault();
+        saveSafe();
+        try{if(typeof refreshAllSelects==='function') refreshAllSelects();}catch(e){}
+        refreshLoginSelect();
+        renderAccessPanelFinal();
+        return true;
+      }
+    }catch(e){console.warn('No se pudo sincronizar profesionales antes del acceso:',e);}
+    return false;
+  };
+  function refreshLoginSelect(){
+    const sel=$('yneaLoginUser'), x=d(); if(!sel||!x) return;
+    const current=sel.value;
+    const access=ensureAccessNoDefault();
+    sel.innerHTML=(x.profesionales||[]).map(p=>`<option value="${esc(p)}">${esc(p)} · ${ROLE_LABELS[access[p]?.rol||'usuario']}</option>`).join('');
+    if([...sel.options].some(o=>o.value===current)) sel.value=current;
+    const help=sel.closest('.ynea-login-card')?.querySelector('p.small');
+    if(help) help.remove();
+  }
+  function renderAccessPanelFinal(){
+    const card=$('yneaUsuariosPanel'), x=d(); if(!card||!x) return;
+    const access=ensureAccessNoDefault();
+    card.innerHTML=`<h2>Accesos de profesionales</h2><p class="small">Los usuarios son los mismos que los profesionales. Un profesional normal solo ve su calendario. Recepción y Administrador pueden ver todos los calendarios.</p><div id="yneaProfessionalAccessList"></div><div style="margin-top:12px"><button type="button" class="secondary" onclick="yneaLogout()">Cerrar sesión</button></div>`;
+    const list=$('yneaProfessionalAccessList'); if(!list) return;
+    list.innerHTML=(x.profesionales||[]).map(p=>{const a=access[p]||{codigo:'',rol:'usuario'};return `<div class="ynea-access-row"><b>${esc(p)}</b><input placeholder="Código" value="${esc(a.codigo||'')}" onchange="yneaSetProfessionalAccess('${esc(p)}','codigo',this.value.trim())"><select onchange="yneaSetProfessionalAccess('${esc(p)}','rol',this.value)"><option value="usuario" ${a.rol==='usuario'?'selected':''}>Usuario profesional</option><option value="recepcion" ${a.rol==='recepcion'?'selected':''}>Recepción</option><option value="admin" ${a.rol==='admin'?'selected':''}>Administrador</option></select></div>`}).join('');
+  }
+  const oldSet=window.yneaSetProfessionalAccess;
+  window.yneaSetProfessionalAccess=function(prof,field,value){
+    localStorage.setItem('yneaDefault1234Disabled','1');
+    const x=d(); if(x){
+      const access=ensureAccessNoDefault(); if(!access[prof]) access[prof]={codigo:'',rol:'usuario'};
+      access[prof][field]=value;
+      if(!Object.values(access).some(a=>a?.rol==='admin')){access[prof].rol='admin'; alert('Debe existir al menos un administrador.');}
+      saveSafe(); renderAccessPanelFinal(); refreshLoginSelect(); return;
+    }
+    if(typeof oldSet==='function') return oldSet.apply(this,arguments);
+  };
+  const oldAddItem=window.addItem;
+  window.addItem=function(key,inputId){
+    const r=typeof oldAddItem==='function'?oldAddItem.apply(this,arguments):undefined;
+    if(key==='profesionales'){
+      setTimeout(()=>{ensureAccessNoDefault(); renderAccessPanelFinal(); refreshLoginSelect(); saveSafe();},50);
+    }
+    return r;
+  };
+  const oldRemove=window.removeItem;
+  window.removeItem=function(key,item){
+    const r=typeof oldRemove==='function'?oldRemove.apply(this,arguments):undefined;
+    if(key==='profesionales') setTimeout(()=>{ensureAccessNoDefault(); renderAccessPanelFinal(); refreshLoginSelect(); saveSafe();},50);
+    return r;
+  };
+  const oldRename=window.renameItemDirect;
+  window.renameItemDirect=function(key,oldName,newName){
+    const r=typeof oldRename==='function'?oldRename.apply(this,arguments):undefined;
+    if(key==='profesionales') setTimeout(()=>{ensureAccessNoDefault(); renderAccessPanelFinal(); refreshLoginSelect(); saveSafe();},50);
+    return r;
+  };
+  const oldCatalog=window.cargarCatalogosSupabaseYnea;
+  window.cargarCatalogosSupabaseYnea=async function(){
+    const r=oldCatalog?await oldCatalog.apply(this,arguments):undefined;
+    await window.yneaPreLoginCatalogSync();
+    return r;
+  };
+  document.addEventListener('DOMContentLoaded',()=>{
+    setTimeout(async()=>{await window.yneaPreLoginCatalogSync(); refreshLoginSelect(); renderAccessPanelFinal();},700);
+    setInterval(()=>{refreshLoginSelect();},1000);
+  });
+  document.addEventListener('click',function(e){
+    if(e.target && e.target.id==='yneaLoginBtn'){
+      setTimeout(()=>{
+        const cur=sessionStorage.getItem('yneaCurrentUser');
+        const code=($('yneaLoginCode')?.value||'').trim();
+        if(cur && code==='1234'){
+          localStorage.setItem('yneaDefault1234Disabled','1');
+          const x=d(); if(x && x.accesosProfesionales){
+            Object.keys(x.accesosProfesionales).forEach(p=>{ if(x.accesosProfesionales[p]?.codigo==='1234') x.accesosProfesionales[p].codigo=''; });
+            saveSafe();
+          }
+        }
+      },250);
+    }
+  },true);
 })();
 </script>
 
