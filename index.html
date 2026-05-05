@@ -4838,5 +4838,129 @@ th,td{padding:4px !important;font-size:12px !important;}
 })();
 </script>
 
+<!-- ===== YNEA PATCH FINAL: búsqueda y orden en pacientes ===== -->
+<style id="ynea-pacientes-busqueda-orden-css">
+#pacientesSearchWrap{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin:0 0 10px 0;
+}
+#buscadorPacientes{
+  width:100%;
+  max-width:520px;
+  padding:9px 12px;
+  border:1px solid #dbe3ee;
+  border-radius:12px;
+  font-size:14px;
+  background:#fff;
+}
+#pacientesSearchInfo{
+  color:#64748b;
+  font-size:12px;
+  white-space:nowrap;
+}
+#pacientesTable th button{
+  appearance:none;
+  border:0;
+  background:transparent !important;
+  color:#1f2937 !important;
+  padding:0 !important;
+  min-height:0 !important;
+  min-width:0 !important;
+  font:inherit;
+  font-weight:700;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+#pacientesTable th button:hover{color:#db2777 !important;}
+@media(max-width:900px){
+  #pacientesSearchWrap{display:block;margin-bottom:8px;}
+  #buscadorPacientes{max-width:none;font-size:12px;padding:7px 9px;border-radius:9px;}
+  #pacientesSearchInfo{display:block;margin-top:4px;font-size:10px;}
+}
+</style>
+<script id="ynea-pacientes-busqueda-orden-script">
+(function(){
+  const $ = id => document.getElementById(id);
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const norm = v => String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  function getData(){ return window.data || (typeof data !== 'undefined' ? data : null); }
+
+  window.yneaPacientesSort = window.yneaPacientesSort || { campo:'nombre', dir:1 };
+
+  function ensureSearchBox(){
+    const table = $('pacientesTable');
+    if(!table) return;
+    const wrap = table.closest('.tableWrap') || table.parentElement;
+    if(!wrap) return;
+    if($('buscadorPacientes')) return;
+
+    const box = document.createElement('div');
+    box.id = 'pacientesSearchWrap';
+    box.innerHTML = '<input id="buscadorPacientes" type="search" placeholder="Buscar por nombre, email o teléfono..." autocomplete="off"><span id="pacientesSearchInfo"></span>';
+    wrap.parentElement.insertBefore(box, wrap);
+    $('buscadorPacientes').addEventListener('input', () => window.renderPatients && window.renderPatients());
+  }
+
+  window.ordenarPacientesYnea = function(campo){
+    const s = window.yneaPacientesSort || { campo:'nombre', dir:1 };
+    if(s.campo === campo){ s.dir *= -1; } else { s.campo = campo; s.dir = 1; }
+    window.yneaPacientesSort = s;
+    if(typeof window.renderPatients === 'function') window.renderPatients();
+  };
+
+  window.renderPatients = function(){
+    const d = getData();
+    const table = $('pacientesTable');
+    if(!d || !table) return;
+    ensureSearchBox();
+
+    const q = norm($('buscadorPacientes') ? $('buscadorPacientes').value : '');
+    const s = window.yneaPacientesSort || { campo:'nombre', dir:1 };
+    let pacientes = Array.isArray(d.pacientes) ? d.pacientes.slice() : [];
+
+    if(q){
+      pacientes = pacientes.filter(p => [p.nombre, p.email, p.telefono].some(x => norm(x).includes(q)));
+    }
+
+    pacientes.sort((a,b) => norm(a[s.campo]).localeCompare(norm(b[s.campo]), 'es') * s.dir);
+    const flecha = campo => s.campo === campo ? (s.dir === 1 ? ' ▲' : ' ▼') : '';
+
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th><button type="button" onclick="ordenarPacientesYnea('nombre')">Nombre${flecha('nombre')}</button></th>
+          <th><button type="button" onclick="ordenarPacientesYnea('telefono')">Teléfono${flecha('telefono')}</button></th>
+          <th><button type="button" onclick="ordenarPacientesYnea('email')">Email${flecha('email')}</button></th>
+          <th>Observaciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${pacientes.map(p => `<tr data-paciente-id="${esc(p.id)}"><td><b>${esc(p.nombre||'')}</b></td><td>${esc(p.telefono||'')}</td><td>${esc(p.email||'')}</td><td>${esc(p.obs||'')}</td></tr>`).join('')}
+      </tbody>`;
+
+    const info = $('pacientesSearchInfo');
+    if(info){ info.textContent = `${pacientes.length} paciente${pacientes.length === 1 ? '' : 's'}`; }
+  };
+
+  document.addEventListener('click', function(e){
+    const row = e.target.closest('#pacientesTable tbody tr');
+    if(!row) return;
+    const id = row.getAttribute('data-paciente-id');
+    if(id && typeof window.editarPacienteYnea === 'function'){
+      e.preventDefault();
+      window.editarPacienteYnea(id);
+    }
+  }, true);
+
+  document.addEventListener('DOMContentLoaded', function(){
+    try{ ensureSearchBox(); window.renderPatients(); }catch(e){ console.error('Pacientes búsqueda:', e); }
+  });
+})();
+</script>
+
 </body>
 </html>
