@@ -3670,12 +3670,14 @@ document.addEventListener("click", function(e){
     u=u.replace(/\/+$/g,"");
     u=u.replace(/\/rest\/v1$/i,"");
     if(!/^https?:\/\//i.test(u)) u="https://"+u;
+    // Supabase project URLs always end in .supabase.co, not .supabase.com
+    u=u.replace(/\.supabase\.com$/i,".supabase.co");
     return u;
   }
   function getConfig(){
     return {
       url: normalizeUrl(($("yneaSupabaseUrl")&&$("yneaSupabaseUrl").value) || localStorage.getItem(URL_KEY) || ""),
-      key: String(($("yneaSupabaseKey")&&$("yneaSupabaseKey").value) || localStorage.getItem(API_KEY) || "").trim()
+      key: String(($("yneaSupabaseKey")&&$("yneaSupabaseKey").value) || localStorage.getItem(API_KEY) || "").replace(/\s+/g,"").trim()
     };
   }
   function saveConfig(){
@@ -3684,13 +3686,14 @@ document.addEventListener("click", function(e){
     localStorage.setItem(URL_KEY,cfg.url);
     localStorage.setItem(API_KEY,cfg.key);
     if($("yneaSupabaseUrl")) $("yneaSupabaseUrl").value=cfg.url;
+    if($("yneaSupabaseKey")) $("yneaSupabaseKey").value=cfg.key;
     msg("Conexión guardada. URL normalizada: "+cfg.url, true);
     return true;
   }
   async function restSelect(table){
     const cfg=getConfig();
     if(!cfg.url || !cfg.key) throw new Error("Falta Project URL o publishable/anon key.");
-    const endpoint=cfg.url+"/rest/v1/"+encodeURIComponent(table)+"?select=*";
+    const endpoint=cfg.url+"/rest/v1/"+table+"?select=*";
     const res=await fetch(endpoint,{
       method:"GET",
       headers:{
@@ -3755,7 +3758,7 @@ document.addEventListener("click", function(e){
       msg("Catálogos cargados correctamente.\nProfesionales: "+(data.profesionales||[]).length+"\nTipos de cita: "+(data.tipos||[]).length+"\nConsultas físicas: "+(data.consultas||[]).length, true);
     }catch(e){
       console.error("Ynea Supabase", e);
-      msg("Error leyendo Supabase: "+(e.message||e), false);
+      msg("Error leyendo Supabase: "+(e.message||e)+"\n\nComprueba que la URL termine en .supabase.co y que la key no sea SECRET, sino publishable/anon.", false);
     }
   }
   async function probarConexion(){
@@ -3766,7 +3769,7 @@ document.addEventListener("click", function(e){
       console.log("Profesionales Supabase:", profesionales);
     }catch(e){
       console.error("Ynea Supabase test", e);
-      msg("Error de conexión: "+(e.message||e), false);
+      msg("Error de conexión: "+(e.message||e)+"\n\nComprueba que la URL sea https://vadovhwjoxghubceffpn.supabase.co y que la key sea publishable/anon, sin espacios ni saltos.", false);
     }
   }
   function insertPanel(){
