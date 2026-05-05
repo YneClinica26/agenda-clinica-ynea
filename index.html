@@ -5580,5 +5580,163 @@ th,td{padding:4px !important;font-size:12px !important;}
 })();
 </script>
 
+
+
+<!-- ===== YNEA FIX FINAL REAL: accesos siempre desde profesionales reales ===== -->
+<style id="ynea-final-access-sync-css">
+.ynea-login-card .ynea-login-syncbox{border:1px solid #f3cfe0;background:#fff7fb;border-radius:14px;padding:12px;margin:12px 0;}
+.ynea-login-card .ynea-login-syncbox input,.ynea-login-card .ynea-login-syncbox textarea{width:100%;font-size:13px;padding:8px;margin:5px 0 8px;border:1px solid #dbe3ee;border-radius:10px;}
+.ynea-login-card .ynea-login-syncbox button{width:100%;padding:9px 10px;min-height:36px;font-size:13px;}
+#yneaProfessionalAccessListFinal .ynea-access-row{display:grid;grid-template-columns:1fr 150px 190px;gap:8px;align-items:center;border:1px solid #e5e7eb;border-radius:12px;padding:8px;margin-top:8px;background:#fff;}
+@media(max-width:900px){#yneaProfessionalAccessListFinal .ynea-access-row{grid-template-columns:1fr}.ynea-login-card{max-height:92vh;overflow:auto}}
+</style>
+<script id="ynea-final-access-sync-js">
+(function(){
+  const URL_KEY='yneaSupabaseUrl';
+  const API_KEY='yneaSupabaseAnonKey';
+  const ACCESS_CONFIGURED='yneaAccessConfigured';
+  const DISABLED_BOOT='yneaDefault1234Disabled';
+  const DEFAULT_URL='https://vadohvwjoxghubceffpn.supabase.co';
+  const ROLE_LABELS={usuario:'Usuario profesional',recepcion:'Recepción',admin:'Administrador'};
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  function d(){try{return data}catch(e){return null}}
+  function saveSafe(){try{save()}catch(e){try{localStorage.setItem('agendaClinicaSemanal',JSON.stringify(data))}catch(_){}}}
+  function cleanUrl(url){return String(url||'').trim().replace(/\/+rest\/v1\/?$/,'').replace(/\/+$/,'');}
+  function cleanKey(key){return String(key||'').replace(/\s+/g,'').trim();}
+  function getCreds(){
+    return {
+      url: cleanUrl(localStorage.getItem(URL_KEY)||$('supabaseUrlInput')?.value||DEFAULT_URL),
+      key: cleanKey(localStorage.getItem(API_KEY)||$('supabaseKeyInput')?.value||'')
+    };
+  }
+  function setCreds(url,key){
+    url=cleanUrl(url); key=cleanKey(key);
+    if(url) localStorage.setItem(URL_KEY,url);
+    if(key) localStorage.setItem(API_KEY,key);
+    if($('supabaseUrlInput')) $('supabaseUrlInput').value=url;
+    if($('supabaseKeyInput')) $('supabaseKeyInput').value=key;
+  }
+  function pickName(row){return String(row?.nombre??row?.name??row?.titulo??row?.title??row?.descripcion??row?.label??'').trim();}
+  function active(row){return !(row?.activo===false||row?.active===false||row?.estado==='inactivo');}
+  function unique(arr){return [...new Set((arr||[]).map(x=>String(x||'').trim()).filter(Boolean))];}
+  function professionals(){const x=d();return Array.isArray(x?.profesionales)?x.profesionales:[];}
+  function access(){
+    const x=d(); if(!x) return {};
+    if(!x.accesosProfesionales||typeof x.accesosProfesionales!=='object') x.accesosProfesionales={};
+    const a=x.accesosProfesionales;
+    professionals().forEach(p=>{ if(!a[p]) a[p]={codigo:'',rol:'usuario'}; if(!a[p].rol) a[p].rol='usuario'; });
+    Object.keys(a).forEach(p=>{ if(!professionals().includes(p)) delete a[p]; });
+    // Si ya se configuró cualquier acceso, jamás reactivar el 1234 por defecto.
+    const configured=localStorage.getItem(ACCESS_CONFIGURED)==='1'||localStorage.getItem(DISABLED_BOOT)==='1';
+    if(configured){ professionals().forEach(p=>{ if(String(a[p]?.codigo||'')==='1234') a[p].codigo=''; }); }
+    // Solo bootstrap si no hay nada configurado y todavía no se ha desactivado.
+    const hasAnyCode=professionals().some(p=>String(a[p]?.codigo||'').trim());
+    if(!hasAnyCode && !configured && professionals()[0]) a[professionals()[0]]={codigo:'1234',rol:'admin'};
+    return a;
+  }
+  async function restFetch(table){
+    const {url,key}=getCreds();
+    if(!url||!key) throw new Error('Faltan URL o clave de Supabase en este dispositivo.');
+    const r=await fetch(url+'/rest/v1/'+table+'?select=*',{headers:{apikey:key,Authorization:'Bearer '+key}});
+    if(!r.ok) throw new Error(table+': HTTP '+r.status+' '+(await r.text()).slice(0,200));
+    return await r.json();
+  }
+  async function syncProfessionalsFromSupabase(){
+    const x=d(); if(!x) return false;
+    try{
+      const rows=await restFetch('profesionales');
+      const names=unique((rows||[]).filter(active).map(pickName));
+      if(names.length){
+        x.profesionales=names;
+        access();
+        saveSafe();
+        try{ if(typeof refreshAllSelects==='function') refreshAllSelects(); }catch(_){ }
+        renderAccessPanel();
+        refreshLoginSelect();
+        return true;
+      }
+    }catch(e){ console.warn('Ynea acceso: no se pudieron cargar profesionales',e); }
+    return false;
+  }
+  function renderAccessPanel(){
+    const x=d(); if(!x) return;
+    const config=$('configView'); if(!config) return;
+    let card=$('yneaUsuariosPanel')||$('yneaAccessPanelFinal');
+    if(!card){card=document.createElement('div'); card.id='yneaUsuariosPanel'; card.className='card'; config.insertBefore(card,config.firstChild);}
+    const a=access();
+    card.innerHTML=`<h2>Accesos de profesionales</h2><p class="small">Los usuarios son los mismos que los profesionales. Un profesional normal solo ve su calendario. Recepción y Administrador pueden ver todos los calendarios.</p><div id="yneaProfessionalAccessListFinal"></div><div style="margin-top:12px"><button type="button" class="secondary" onclick="yneaLogout()">Cerrar sesión</button></div>`;
+    const list=$('yneaProfessionalAccessListFinal'); if(!list) return;
+    const ps=professionals();
+    list.innerHTML=ps.length?ps.map(p=>{const r=a[p]||{codigo:'',rol:'usuario'};return `<div class="ynea-access-row"><b>${esc(p)}</b><input placeholder="Código" value="${esc(r.codigo||'')}" data-prof="${esc(p)}" data-field="codigo"><select data-prof="${esc(p)}" data-field="rol"><option value="usuario" ${r.rol==='usuario'?'selected':''}>Usuario profesional</option><option value="recepcion" ${r.rol==='recepcion'?'selected':''}>Recepción</option><option value="admin" ${r.rol==='admin'?'selected':''}>Administrador</option></select></div>`}).join(''):'<p class="small">No hay profesionales cargados. Pulsa “Cargar catálogos desde Supabase”.</p>';
+  }
+  function refreshLoginSelect(){
+    const sel=$('yneaLoginUser'); if(!sel) return;
+    const a=access(); const ps=professionals(); const old=sel.value;
+    sel.innerHTML=ps.map(p=>`<option value="${esc(p)}">${esc(p)} · ${ROLE_LABELS[a[p]?.rol||'usuario']}</option>`).join('');
+    if([...sel.options].some(o=>o.value===old)) sel.value=old;
+  }
+  function injectLoginSupabaseBox(){
+    const card=document.querySelector('#yneaLoginOverlay .ynea-login-card'); if(!card||$('yneaLoginSupabaseBox')) return;
+    const {url,key}=getCreds();
+    const box=document.createElement('div'); box.id='yneaLoginSupabaseBox'; box.className='ynea-login-syncbox';
+    box.innerHTML=`<b>Cargar profesionales</b><p class="small" style="margin:6px 0">Este dispositivo aún no tiene conexión guardada a Supabase.</p><input id="loginSupabaseUrl" value="${esc(url||DEFAULT_URL)}" placeholder="https://xxxx.supabase.co"><textarea id="loginSupabaseKey" placeholder="Publishable / anon key" style="min-height:68px">${esc(key||'')}</textarea><button type="button" id="loginSupabaseLoadBtn">Guardar y cargar profesionales</button><p class="small" id="loginSupabaseStatus" style="margin-top:6px"></p>`;
+    const btn=card.querySelector('#yneaLoginBtn');
+    card.insertBefore(box,btn||card.lastChild);
+    $('loginSupabaseLoadBtn').onclick=async()=>{
+      setCreds($('loginSupabaseUrl').value,$('loginSupabaseKey').value);
+      const st=$('loginSupabaseStatus'); if(st) st.textContent='Cargando...';
+      const ok=await syncProfessionalsFromSupabase();
+      if(st) st.textContent=ok?'Profesionales cargados. Introduce tu código.':'No se pudieron cargar. Revisa URL/key.';
+    };
+  }
+  function validateLoginClick(e){
+    if(!e.target||e.target.id!=='yneaLoginBtn') return;
+    const sel=$('yneaLoginUser'), codeEl=$('yneaLoginCode'); if(!sel||!codeEl) return;
+    const prof=sel.value, code=String(codeEl.value||'').trim(); const a=access();
+    if(!prof||!a[prof]||String(a[prof].codigo||'')!==code){
+      e.preventDefault(); e.stopImmediatePropagation();
+      const er=$('yneaLoginError'); if(er){er.textContent='Profesional o código incorrecto.'; er.style.display='block';}
+      return;
+    }
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(code==='1234'){localStorage.setItem(DISABLED_BOOT,'1'); localStorage.setItem(ACCESS_CONFIGURED,'1'); a[prof].codigo=''; saveSafe();}
+    sessionStorage.setItem('yneaCurrentUser',JSON.stringify({nombre:prof,rol:a[prof].rol||'usuario'}));
+    $('yneaLoginOverlay')?.remove();
+    try{ if(typeof refreshAllSelects==='function') refreshAllSelects(); }catch(_){ }
+    try{ if(typeof setView==='function') setView((a[prof].rol==='admin'||a[prof].rol==='recepcion')?'semana':'semana'); }catch(_){ }
+  }
+  document.addEventListener('change',e=>{
+    const el=e.target; if(!el||!el.closest||!el.closest('#yneaProfessionalAccessListFinal')) return;
+    const prof=el.getAttribute('data-prof'), field=el.getAttribute('data-field'); if(!prof||!field) return;
+    localStorage.setItem(ACCESS_CONFIGURED,'1'); localStorage.setItem(DISABLED_BOOT,'1');
+    const a=access(); if(!a[prof]) a[prof]={codigo:'',rol:'usuario'}; a[prof][field]=String(el.value||'').trim(); saveSafe(); refreshLoginSelect();
+  },true);
+  document.addEventListener('click',validateLoginClick,true);
+  const oldGuardar=window.guardarConexionSupabaseYnea;
+  window.guardarConexionSupabaseYnea=function(){
+    setCreds($('supabaseUrlInput')?.value,$('supabaseKeyInput')?.value);
+    if(typeof oldGuardar==='function') try{return oldGuardar.apply(this,arguments)}catch(_){ }
+    alert('Conexión guardada.');
+  };
+  const oldCatalog=window.cargarCatalogosSupabaseYnea;
+  window.cargarCatalogosSupabaseYnea=async function(){
+    if(typeof oldCatalog==='function') try{await oldCatalog.apply(this,arguments)}catch(e){console.warn(e)}
+    await syncProfessionalsFromSupabase(); renderAccessPanel(); refreshLoginSelect();
+  };
+  const oldAdd=window.addItem;
+  window.addItem=function(key,inputId){const r=oldAdd?oldAdd.apply(this,arguments):undefined; if(key==='profesionales') setTimeout(()=>{access(); saveSafe(); renderAccessPanel(); refreshLoginSelect();},120); return r;};
+  const oldRemove=window.removeItem;
+  window.removeItem=function(key,item){const r=oldRemove?oldRemove.apply(this,arguments):undefined; if(key==='profesionales') setTimeout(()=>{access(); saveSafe(); renderAccessPanel(); refreshLoginSelect();},120); return r;};
+  const oldRename=window.renameItemDirect;
+  window.renameItemDirect=function(key,oldName,newName){const r=oldRename?oldRename.apply(this,arguments):undefined; if(key==='profesionales') setTimeout(()=>{access(); saveSafe(); renderAccessPanel(); refreshLoginSelect();},120); return r;};
+  document.addEventListener('DOMContentLoaded',()=>{
+    setTimeout(async()=>{await syncProfessionalsFromSupabase(); renderAccessPanel(); refreshLoginSelect(); injectLoginSupabaseBox();},800);
+    setInterval(()=>{access(); if($('configView')&&getComputedStyle($('configView')).display!=='none') renderAccessPanel(); refreshLoginSelect(); if($('yneaLoginOverlay')) injectLoginSupabaseBox();},1500);
+  });
+  window.yneaForceAccessProfessionalsSync=async()=>{await syncProfessionalsFromSupabase(); renderAccessPanel(); refreshLoginSelect();};
+})();
+</script>
+
 </body>
 </html>
