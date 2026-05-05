@@ -4501,18 +4501,10 @@ th,td{padding:4px !important;font-size:12px !important;}
     if(el){el.textContent=msg; el.style.color=isError?'#991b1b':'#166534';}
     console[isError?'error':'log']('Ynea Supabase:',msg);
   }
-  function cleanUrl(url){
-    let u=String(url||'').trim().replace(/\s+/g,'');
-    u=u.replace(/\/+$/,'');
-    u=u.replace(/\/rest\/v1$/i,'');
-    u=u.replace(/\/rest\/v1\/.*$/i,'');
-    if(u && !/^https?:\/\//i.test(u)) u='https://'+u;
-    u=u.replace(/\.supabase\.com$/i,'.supabase.co');
-    return u;
-  }
+  function cleanUrl(url){return String(url||'').trim().replace(/\/+rest\/v1\/?$/,'').replace(/\/+$/,'');}
   function getCreds(){
     const url=cleanUrl(($('supabaseUrlInput')?.value)||localStorage.getItem(STORAGE_URL)||'');
-    const key=(($('supabaseKeyInput')?.value)||localStorage.getItem(STORAGE_KEY)||'').replace(/\s+/g,'').trim();
+    const key=(($('supabaseKeyInput')?.value)||localStorage.getItem(STORAGE_KEY)||'').trim();
     return {url,key};
   }
   function supabaseClient(){
@@ -4520,33 +4512,6 @@ th,td{padding:4px !important;font-size:12px !important;}
     if(!url||!key) throw new Error('Faltan Project URL o anon public key.');
     if(!window.supabase||typeof window.supabase.createClient!=='function') throw new Error('No se ha cargado la librería de Supabase.');
     return window.supabase.createClient(url,key);
-  }
-  async function restSelect(table, limit){
-    const {url,key}=getCreds();
-    if(!url||!key) throw new Error('Faltan Project URL o publishable/anon key.');
-    const endpoint=url+'/rest/v1/'+encodeURIComponent(table)+'?select=*'+(limit?('&limit='+Number(limit)):'');
-    async function attempt(headers){
-      const res=await fetch(endpoint,{method:'GET',mode:'cors',cache:'no-store',headers});
-      const text=await res.text();
-      if(!res.ok){
-        let detail=text;
-        try{const j=JSON.parse(text); detail=j.message||j.msg||text;}catch(_){ }
-        throw new Error(table+': HTTP '+res.status+' - '+detail);
-      }
-      try{return JSON.parse(text);}catch(_){throw new Error(table+': respuesta no JSON. '+text.slice(0,120));}
-    }
-    try{
-      // Con las claves nuevas de Supabase (sb_publishable_...), apikey suele ser suficiente para leer como anon.
-      return await attempt({'apikey':key,'Accept':'application/json'});
-    }catch(first){
-      // Fallback para claves anon antiguas tipo JWT.
-      try{return await attempt({'apikey':key,'Authorization':'Bearer '+key,'Accept':'application/json'});}catch(second){
-        if(second instanceof TypeError || /Failed to fetch/i.test(String(second.message))){
-          throw new Error(table+': Failed to fetch. URL usada: '+url+'. Revisa que el proyecto no esté pausado, que la URL termine exactamente en .supabase.co, y prueba abrir '+endpoint+' en otra pestaña.');
-        }
-        throw second;
-      }
-    }
   }
   function pickName(row){return String(row?.nombre??row?.name??row?.titulo??row?.title??row?.descripcion??row?.label??'').trim();}
   function pickDuration(row){return String(row?.duracion??row?.duracion_minutos??row?.duration??row?.minutos??row?.tiempo??'10').trim()||'10';}
@@ -4569,7 +4534,7 @@ th,td{padding:4px !important;font-size:12px !important;}
   function addSupabasePanel(){
     const config=$('configView'); if(!config||$('supabaseConfigCard')) return;
     const card=document.createElement('div'); card.className='card'; card.id='supabaseConfigCard';
-    card.innerHTML=`<h2>Base de datos Supabase</h2><p class="small">Carga desde Supabase los catálogos ya creados: profesionales, tipos de cita y consultas físicas.</p><label>Project URL</label><input id="supabaseUrlInput" placeholder="https://xxxx.supabase.co"><label>anon public key</label><textarea id="supabaseKeyInput" placeholder="Pega publishable key (sb_publishable_...) o anon public key" style="min-height:90px"></textarea><div class="ynea-supabase-actions"><button type="button" onclick="guardarConexionSupabaseYnea()">Guardar conexión</button><button type="button" class="secondary" onclick="cargarCatalogosSupabaseYnea()">Cargar catálogos desde Supabase</button><button type="button" class="secondary" onclick="probarSupabaseYnea()">Probar conexión</button></div><p class="small" id="supabaseYneaStatus" style="margin-top:10px">Sin comprobar.</p>`;
+    card.innerHTML=`<h2>Base de datos Supabase</h2><p class="small">Carga desde Supabase los catálogos ya creados: profesionales, tipos de cita y consultas físicas.</p><label>Project URL</label><input id="supabaseUrlInput" placeholder="https://xxxx.supabase.co"><label>anon public key</label><textarea id="supabaseKeyInput" placeholder="eyJhbGciOi..." style="min-height:90px"></textarea><div class="ynea-supabase-actions"><button type="button" onclick="guardarConexionSupabaseYnea()">Guardar conexión</button><button type="button" class="secondary" onclick="cargarCatalogosSupabaseYnea()">Cargar catálogos desde Supabase</button><button type="button" class="secondary" onclick="probarSupabaseYnea()">Probar conexión</button></div><p class="small" id="supabaseYneaStatus" style="margin-top:10px">Sin comprobar.</p>`;
     config.insertBefore(card,config.firstChild);
     if($('supabaseUrlInput')) $('supabaseUrlInput').value=localStorage.getItem(STORAGE_URL)||'';
     if($('supabaseKeyInput')) $('supabaseKeyInput').value=localStorage.getItem(STORAGE_KEY)||'';
@@ -4583,23 +4548,31 @@ th,td{padding:4px !important;font-size:12px !important;}
   };
   window.probarSupabaseYnea=async function(){
     try{
-      const [p,t,c]=await Promise.all([restSelect('profesionales',5),restSelect('tipos_cita',5),restSelect('consultas',5)]);
-      status(`Conexión OK. Leídos: profesionales ${p.length}, tipos_cita ${t.length}, consultas ${c.length}.`);
-      console.log('Profesionales Supabase',p); console.log('Tipos cita Supabase',t); console.log('Consultas Supabase',c);
+      const sb=supabaseClient();
+      const [p,t,c]=await Promise.all([sb.from('profesionales').select('*').limit(5),sb.from('tipos_cita').select('*').limit(5),sb.from('consultas').select('*').limit(5)]);
+      if(p.error) throw new Error('profesionales: '+p.error.message);
+      if(t.error) throw new Error('tipos_cita: '+t.error.message);
+      if(c.error) throw new Error('consultas: '+c.error.message);
+      status(`Conexión OK. Leídos: profesionales ${p.data.length}, tipos_cita ${t.data.length}, consultas ${c.data.length}.`);
+      console.log('Profesionales Supabase',p.data); console.log('Tipos cita Supabase',t.data); console.log('Consultas Supabase',c.data);
     }catch(e){status(e.message||String(e),true); alert('Error Supabase: '+(e.message||e));}
   };
   async function loadCatalogs(silent=false){
     const d=getData(); if(!d) return false;
+    const sb=supabaseClient();
     if(!silent) status('Cargando catálogos desde Supabase...');
-    const [pData,tData,cData]=await Promise.all([restSelect('profesionales'),restSelect('tipos_cita'),restSelect('consultas')]);
-    const profesionales=unique((pData||[]).filter(isActive).map(pickName));
-    const tipos=unique((tData||[]).filter(isActive).map(pickName));
-    const consultas=unique((cData||[]).filter(isActive).map(pickName));
+    const [pRes,tRes,cRes]=await Promise.all([sb.from('profesionales').select('*'),sb.from('tipos_cita').select('*'),sb.from('consultas').select('*')]);
+    if(pRes.error) throw new Error('profesionales: '+pRes.error.message);
+    if(tRes.error) throw new Error('tipos_cita: '+tRes.error.message);
+    if(cRes.error) throw new Error('consultas: '+cRes.error.message);
+    const profesionales=unique((pRes.data||[]).filter(isActive).map(pickName));
+    const tipos=unique((tRes.data||[]).filter(isActive).map(pickName));
+    const consultas=unique((cRes.data||[]).filter(isActive).map(pickName));
     if(profesionales.length) d.profesionales=profesionales;
     if(tipos.length) d.tipos=tipos;
     if(consultas.length) d.consultas=consultas;
     d.duracionesTipo=d.duracionesTipo||{};
-    (tData||[]).forEach(row=>{const n=pickName(row); if(n) d.duracionesTipo[n]=pickDuration(row);});
+    (tRes.data||[]).forEach(row=>{const n=pickName(row); if(n) d.duracionesTipo[n]=pickDuration(row);});
     d.caracteristicasTipo=d.caracteristicasTipo||{}; (d.tipos||[]).forEach(t=>{if(!d.caracteristicasTipo[t]) d.caracteristicasTipo[t]={descripcion:'',color:'',activo:true};});
     d.tiposPorProfesional=d.tiposPorProfesional||{};
     ensureAccess(); persist();
@@ -4693,6 +4666,174 @@ th,td{padding:4px !important;font-size:12px !important;}
       status('Conexión guardada. Cargando catálogos automáticamente...');
       try{await loadCatalogs(true);}catch(e){status('No se pudieron cargar catálogos automáticamente: '+(e.message||e),true);}
     }
+  });
+})();
+</script>
+
+
+
+<!-- ===== YNEA PATCH: pacientes editables + móvil compacto ===== -->
+<style id="ynea-patch-compacto-pacientes-mobile">
+/* Ocultar textos explicativos azules y textos de ayuda encima de calendarios */
+.notice{display:none !important;}
+#semanaView .card > p.small,
+#mensualView .card > p.small{display:none !important;}
+
+/* Citas más compactas en escritorio y móvil */
+.appt{padding:3px 5px !important; line-height:1.12 !important; font-size:11px !important; min-height:0 !important;}
+.appt strong{font-size:11px !important; line-height:1.1 !important;}
+.appt span{font-size:10px !important; line-height:1.1 !important;}
+.badge{font-size:9px !important; padding:1px 5px !important; margin-top:2px !important;}
+.slot{min-height:28px !important;}
+#weekTable td,#weekTable th{padding:3px !important;}
+
+/* Pacientes SIEMPRE en tabla, también en móvil */
+#pacientesTable{width:100% !important; min-width:720px !important; border-collapse:collapse !important; table-layout:auto !important;}
+#pacientesTable thead{display:table-header-group !important;}
+#pacientesTable tbody{display:table-row-group !important;}
+#pacientesTable tr{display:table-row !important; background:#fff !important; border:0 !important; box-shadow:none !important; margin:0 !important; padding:0 !important;}
+#pacientesTable th,#pacientesTable td{display:table-cell !important; border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size:12px !important; vertical-align:top !important;}
+#pacientesTable tbody tr{cursor:pointer !important;}
+#pacientesTable tbody tr:hover{background:#fff1f7 !important;}
+#pacientesView .tableWrap{overflow:auto !important; border:1px solid #e5e7eb !important; border-radius:14px !important; background:#fff !important;}
+
+@media(max-width:900px){
+  body{font-size:12px !important; padding-bottom:72px !important;}
+  header{padding:6px 8px !important; gap:6px !important; min-height:48px !important;}
+  .yneaBrandTitle{gap:7px !important;}
+  .yneaBrandTitle img{height:34px !important; max-width:58px !important;}
+  .yneaBrandTitle .brandText{font-size:14px !important; max-width:calc(100vw - 92px) !important;}
+  .container{padding:8px !important;}
+  .card{padding:9px !important; margin-bottom:8px !important; border-radius:14px !important;}
+  .card h2{font-size:15px !important; margin-bottom:7px !important;}
+  label{font-size:11px !important; margin:4px 0 2px !important;}
+  input,select,textarea{font-size:12px !important; padding:6px 8px !important; min-height:30px !important; border-radius:9px !important;}
+  button{font-size:12px !important; padding:6px 8px !important; min-height:30px !important; border-radius:9px !important;}
+
+  /* Controles superiores de semana/mes compactos y estéticos */
+  #semanaView .weekbar,
+  #mensualView .weekbar{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:6px !important;
+    align-items:end !important;
+    margin-bottom:6px !important;
+  }
+  #semanaView .weekbar > div,
+  #mensualView .weekbar > div{min-width:0 !important; width:100% !important;}
+  #semanaView .weekbar button,
+  #mensualView .weekbar button{width:100% !important; min-width:0 !important; white-space:nowrap !important;}
+  #semanaView .weekbar div:has(#weekPicker),
+  #mensualView .weekbar div:has(#monthPicker){grid-column:auto !important;}
+  #semanaView .weekbar div:has(#weekProf),
+  #semanaView .weekbar div:has(#weekConsulta),
+  #mensualView .weekbar div:has(#monthProf){grid-column:1/-1 !important;}
+
+  /* Calendarios compactos: mantienen tabla de 5 días, no fichas gigantes */
+  .tableWrap{overflow:auto !important; max-height:none !important; border:1px solid #f3cfe0 !important; border-radius:12px !important; background:#fff !important;}
+  #weekTable,#monthTable{width:100% !important; min-width:620px !important; table-layout:fixed !important; border-collapse:collapse !important; border-spacing:0 !important;}
+  #weekTable thead,#monthTable thead{display:table-header-group !important;}
+  #weekTable tbody,#monthTable tbody{display:table-row-group !important;}
+  #weekTable tr,#monthTable tr{display:table-row !important; margin:0 !important; padding:0 !important; box-shadow:none !important; border:0 !important; background:transparent !important;}
+  #weekTable th,#weekTable td,#monthTable th,#monthTable td{display:table-cell !important; padding:2px 3px !important; font-size:10px !important; min-width:0 !important; border:1px solid #f3cfe0 !important; vertical-align:top !important;}
+  #weekTable .time{position:sticky !important; left:0 !important; background:#fff !important; font-size:10px !important; width:42px !important;}
+  #weekTable .slot{min-height:22px !important; height:auto !important;}
+  #weekTable .appt{padding:2px 4px !important; font-size:9px !important; border-radius:6px !important;}
+  #weekTable .appt strong{font-size:9px !important;}
+  #weekTable .appt span{font-size:8px !important;}
+
+  #monthTable .month-day{height:42px !important; min-height:42px !important; padding:3px !important; border-radius:6px !important; overflow:hidden !important;}
+  #monthTable .day-num{font-size:10px !important;}
+  #monthTable .day-count,#monthTable .day-empty{font-size:8px !important; padding:1px 4px !important; margin-top:2px !important;}
+  #monthTable .month-mini-list{font-size:8px !important; max-height:78px !important; overflow:auto !important;}
+
+  /* Pacientes en tabla compacta */
+  #pacientesView .grid{display:block !important;}
+  #pacientesView .card:first-child{margin-bottom:8px !important;}
+  #pacientesTable{min-width:650px !important;}
+  #pacientesTable th,#pacientesTable td{font-size:11px !important; padding:5px 6px !important;}
+
+  /* Sin botón flotante ni autoguardado visible */
+  .appFab,.autosaveBar{display:none !important;}
+}
+</style>
+<script id="ynea-patch-pacientes-editables">
+(function(){
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+  function getData(){return window.data || (typeof data!=='undefined' ? data : null);}
+  function persist(){try{ if(typeof save==='function') save(); else localStorage.setItem('agendaClinicaYneaV1',JSON.stringify(getData())); }catch(e){console.warn(e);} }
+  function emailOk(v){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||'').trim());}
+
+  window.editarPacienteYnea=function(id){
+    const d=getData(); if(!d) return alert('No se han cargado los datos.');
+    const p=(d.pacientes||[]).find(x=>String(x.id)===String(id));
+    if(!p) return alert('No encuentro este paciente.');
+    const nombre=prompt('Nombre del paciente:',p.nombre||''); if(nombre===null) return;
+    const telefono=prompt('Teléfono obligatorio:',p.telefono||''); if(telefono===null) return;
+    const email=prompt('Email obligatorio:',p.email||''); if(email===null) return;
+    if(!String(nombre).trim()) return alert('El nombre es obligatorio.');
+    if(!String(telefono).trim()) return alert('El teléfono es obligatorio.');
+    if(!String(email).trim()) return alert('El email es obligatorio.');
+    if(!emailOk(email)) return alert('Introduce un email válido.');
+    const obs=prompt('Observaciones:',p.obs||''); if(obs===null) return;
+    p.nombre=String(nombre).trim(); p.telefono=String(telefono).trim(); p.email=String(email).trim(); p.obs=String(obs||'').trim();
+    persist();
+    try{ if(typeof refreshAllSelects==='function') refreshAllSelects(); }catch(e){}
+    try{ if(typeof renderAll==='function') renderAll(); else renderPatients(); }catch(e){console.error(e);}
+  };
+
+  window.renderPatients=function(){
+    const d=getData(), table=$('pacientesTable'); if(!d||!table) return;
+    const rows=(d.pacientes||[]).map(p=>`<tr data-paciente-id="${esc(p.id)}"><td><b>${esc(p.nombre||'')}</b></td><td>${esc(p.telefono||'')}</td><td>${esc(p.email||'')}</td><td>${esc(p.obs||'')}</td></tr>`).join('');
+    table.innerHTML=`<thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Observaciones</th></tr></thead><tbody>${rows}</tbody>`;
+  };
+
+  // Delegación de click: funciona aunque la tabla se regenere después.
+  document.addEventListener('click',function(e){
+    const row=e.target.closest('#pacientesTable tbody tr');
+    if(!row) return;
+    e.preventDefault();
+    const id=row.getAttribute('data-paciente-id');
+    if(id) window.editarPacienteYnea(id);
+  },true);
+
+  const oldAddPaciente=window.addPaciente;
+  window.addPaciente=function(){
+    const nombre=($('pacNombre')?.value||'').trim();
+    const telefono=($('pacTelefono')?.value||'').trim();
+    const email=($('pacEmail')?.value||'').trim();
+    if(!nombre) return alert('Escribe el nombre del paciente.');
+    if(!telefono) return alert('El teléfono es obligatorio.');
+    if(!email) return alert('El email es obligatorio.');
+    if(!emailOk(email)) return alert('Introduce un email válido.');
+    if(typeof oldAddPaciente==='function') return oldAddPaciente();
+  };
+
+  // Rellenar profesionales en bloqueos tras cargar catálogos.
+  function fillBloqueos(){
+    const d=getData(), sel=$('bloqProfesionalNuevo'); if(!d||!sel) return;
+    const current=sel.value;
+    sel.innerHTML='<option value="todos">Todos los profesionales</option>'+(d.profesionales||[]).map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
+    if([...sel.options].some(o=>o.value===current)) sel.value=current;
+  }
+  const oldRefresh=window.refreshAllSelects;
+  window.refreshAllSelects=function(){
+    try{ if(typeof oldRefresh==='function') oldRefresh(); }catch(e){console.warn(e);}
+    fillBloqueos();
+  };
+  const oldRenderAll=window.renderAll;
+  window.renderAll=function(){
+    try{ if(typeof oldRenderAll==='function') oldRenderAll(); }catch(e){console.warn(e);}
+    try{ window.renderPatients(); }catch(e){console.error(e);}
+    fillBloqueos();
+    document.querySelectorAll('.notice,.autosaveBar,.appFab').forEach(el=>el.style.display='none');
+  };
+
+  document.addEventListener('DOMContentLoaded',function(){
+    try{ window.renderPatients(); }catch(e){}
+    try{ if(typeof refreshAllSelects==='function') refreshAllSelects(); }catch(e){}
+    document.querySelectorAll('.notice,.autosaveBar,.appFab').forEach(el=>el.style.display='none');
   });
 })();
 </script>
